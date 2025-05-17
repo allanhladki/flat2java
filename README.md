@@ -17,7 +17,19 @@ This library provides functionality to parse fixed-length text fields and conver
 ## Usage
 
 ```java
-// Example usage will be added as the library develops
+public class MyRecord {
+    @FlatField(position = 1, length = 10)
+    private String id;
+
+    @FlatField(position = 2, length = 8, dateTimeFormat = "yyyyMMdd")
+    private LocalDate date;
+
+    @FlatField(position = 3, length = 10, precision = 2)
+    private BigDecimal amount;
+}
+
+// Extract field metadata
+List<FieldMetadata> metadata = FieldMetadataExtractor.extract(MyRecord.class);
 ```
 
 ## Requirements
