@@ -43,7 +43,7 @@ Add the following dependency to your project:
 
 ```xml
 <dependency>
-    <groupId>com.github.allan</groupId>
+    <groupId>com.github.allan.flat2java</groupId>
     <artifactId>flat2java</artifactId>
     <version>0.0.1-1</version>
 </dependency>
