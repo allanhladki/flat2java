@@ -33,7 +33,7 @@ Add the following dependency to your project:
 <dependency>
     <groupId>com.github.allan</groupId>
     <artifactId>flat2java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1-1</version>
 </dependency>
 ```
 
