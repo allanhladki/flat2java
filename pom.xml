@@ -27,6 +27,7 @@
 
     <build>
         <plugins>
+
             <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -37,6 +38,31 @@
                     <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
+
+            <!-- Code Formatting Plugin -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                <java>
+                    <googleJavaFormat>
+                    <version>1.17.0</version>
+                    <style>GOOGLE</style>
+                    <reflowLongStrings>true</reflowLongStrings>
+                    <reorderImports>true</reorderImports>
+                    </googleJavaFormat>
+                </java>
+                <format>
+                    <includes>
+                    <include>src/**/*.java</include>
+                    <include>src/**/*.xml</include>
+                    <include>src/**/*.properties</include>
+                    </includes>
+                </format>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project> 
