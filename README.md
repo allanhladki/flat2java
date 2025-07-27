@@ -55,7 +55,7 @@ Add the following dependency to your project:
 
 ## Annotation Processor (Optional)
 
-The project also provides an optional annotation processor (`flat2java-processor`) for compile-time verifications . If you want to enable additional compile-time checks, see the [flat2java-processor README](flat2java-processor/README.md).
+The project also provides an optional, however recommended, annotation processor (`flat2java-processor`) for compile-time verifications. If you want to enable additional compile-time checks, see the [flat2java-processor README](flat2java-processor/README.md).
 
 ## License
 
