@@ -44,6 +44,24 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                 </configuration>
+                <executions>
+                <execution>
+                    <id>default-compile</id>
+                    <configuration>
+                        <compilerArgument>-proc:none</compilerArgument>
+                        <includes>
+                            <include>com/github/allanhladki/flat2java/processor/FlatFieldProcessor.java</include>
+                        </includes>
+                    </configuration>
+                </execution>
+                <execution>
+                    <id>compile-project</id>
+                    <phase>compile</phase>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -12,7 +12,7 @@ To use `flat2java-processor` in your Maven project for compile-time verification
 <dependency>
     <groupId>com.github.allanhladki.flat2java</groupId>
     <artifactId>flat2java-processor</artifactId>
-    <version>0.0.1-1</version>
+    <version>0.0.1-2</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -37,7 +37,7 @@ The annotation processor will be automatically invoked during compilation. Any c
             <path>
                 <groupId>com.github.allanhladki.flat2java</groupId>
                 <artifactId>flat2java-processor</artifactId>
-                <version>0.0.1-1</version>
+                <version>0.0.1-2</version>
             </path>
         </annotationProcessorPaths>
     </configuration>

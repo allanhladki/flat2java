@@ -52,7 +52,7 @@ public class FlatFieldProcessor extends AbstractProcessor {
         FlatField flatField = element.getAnnotation(FlatField.class);
         int length = flatField.length();
         if (length <= 0) {
-            printErrorMessage("@FlatField 'length' must be a positive integer.");
+            printErrorMessage("@FlatField 'length' must be a positive integer, current: " + length);
         }
     }
 

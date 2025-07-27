@@ -49,7 +49,7 @@ Add the following dependency to your project:
 <dependency>
     <groupId>com.github.allan</groupId>
     <artifactId>flat2java</artifactId>
-    <version>0.0.1-1</version>
+    <version>0.0.1-2</version>
 </dependency>
 ```
 
