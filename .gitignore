@@ -36,3 +36,7 @@ replay_pid*
 
 # Target
 /target/
+**/target/
+./target
+./target/*
+
