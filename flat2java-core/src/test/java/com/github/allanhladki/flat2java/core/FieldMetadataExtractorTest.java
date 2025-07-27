@@ -29,6 +29,7 @@ class FieldMetadataExtractorTest {
         private LocalDate expiryDate;
 
         // Non-annotated field
+        @SuppressWarnings("unused")
         private String ignored;
     }
 
