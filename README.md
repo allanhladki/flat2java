@@ -18,24 +18,28 @@ This library provides functionality to parse fixed-length text fields and conver
 
 ```java
 public class MyRecord {
-    @FlatField(position = 1, length = 10)
+    @FlatField(length = 10)
     private String id;
 
-    @FlatField(position = 2, length = 8, dateTimeFormat = "yyyyMMdd")
+    @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
     private LocalDate date;
 
-    @FlatField(position = 3, length = 10, precision = 2)
+    @FlatField(length = 10, precision = 2)
     private BigDecimal amount;
 }
 
-// Extract field metadata
+// Extract field metadata in declaration order
 List<FieldMetadata> metadata = FieldMetadataExtractor.extract(MyRecord.class);
 ```
+
+**Note:** The order of fields is determined by their declaration order in the class (and superclasses, if using inheritance).
 
 ## Requirements
 
 - Java 11 or higher
 - Maven 3.6 or higher
+- SLF4J with Logback for logging
+- JUnit 5 for testing
 
 ## Installation
 
@@ -43,7 +47,7 @@ Add the following dependency to your project:
 
 ```xml
 <dependency>
-    <groupId>com.github.allan.flat2java</groupId>
+    <groupId>com.github.allan</groupId>
     <artifactId>flat2java</artifactId>
     <version>0.0.1-1</version>
 </dependency>

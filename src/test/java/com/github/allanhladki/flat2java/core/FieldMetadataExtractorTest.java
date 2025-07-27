@@ -13,89 +13,98 @@ class FieldMetadataExtractorTest {
      * Test fixture class with annotated fields.
      */
     private static class TestRecord {
-        @FlatField(position = 1, length = 10)
+        @FlatField(length = 10)
         private String id;
 
-        @FlatField(position = 2, length = 8, dateTimeFormat = "yyyyMMdd")
+        @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
         private LocalDate date;
 
-        @FlatField(position = 3, length = 5)
+        @FlatField(length = 5)
         private Integer quantity;
 
-        @FlatField(position = 5, length = 8, dateTimeFormat = "ddMMyyyy")
+        @FlatField(length = 10, precision = 2)
+        private BigDecimal price;
+
+        @FlatField(length = 8, dateTimeFormat = "ddMMyyyy")
         private LocalDate expiryDate;
 
-        // The order is wrong on purpose 
-        @FlatField(position = 4, length = 10, precision = 2)
-        private BigDecimal price;
-        
         // Non-annotated field
-        @SuppressWarnings("unused")
         private String ignored;
     }
 
     @Test
     void shouldExtractAnnotatedFields() {
-        
+        // when
         List<FieldMetadata> metadata = FieldMetadataExtractor.extract(TestRecord.class);
 
+        // then
         assertNotNull(metadata, "Metadata list should not be null");
         assertEquals(5, metadata.size(), "Should find exactly 5 annotated fields");
 
-        // Verify first field (id)
-        FieldMetadata idField = metadata.get(0);
-        assertEquals("id", idField.getName());
-        assertEquals(1, idField.getPosition());
-        assertEquals(10, idField.getLength());
-        assertEquals(0, idField.getPrecision());
-        assertTrue(idField.getDateTimeFormat().isEmpty());
+        // Verify order and properties by declaration order
+        assertEquals("id", metadata.get(0).getName());
+        assertEquals(10, metadata.get(0).getLength());
 
-        // Verify second field (date)
-        FieldMetadata dateField = metadata.get(1);
-        assertEquals("date", dateField.getName());
-        assertEquals(2, dateField.getPosition());
-        assertEquals(8, dateField.getLength());
-        assertEquals(0, dateField.getPrecision());
-        assertEquals("yyyyMMdd", dateField.getDateTimeFormat());
+        assertEquals("date", metadata.get(1).getName());
+        assertEquals(8, metadata.get(1).getLength());
+        assertEquals("yyyyMMdd", metadata.get(1).getDateTimeFormat());
 
-        // Verify third field (quantity)
-        FieldMetadata quantityField = metadata.get(2);
-        assertEquals("quantity", quantityField.getName());
-        assertEquals(3, quantityField.getPosition());
-        assertEquals(5, quantityField.getLength());
-        assertEquals(0, quantityField.getPrecision());
-        assertTrue(quantityField.getDateTimeFormat().isEmpty());
+        assertEquals("quantity", metadata.get(2).getName());
+        assertEquals(5, metadata.get(2).getLength());
 
-        // Verify fourth field (price)
-        FieldMetadata priceField = metadata.get(3);
-        assertEquals("price", priceField.getName());
-        assertEquals(4, priceField.getPosition());
-        assertEquals(10, priceField.getLength());
-        assertEquals(2, priceField.getPrecision());
-        assertTrue(priceField.getDateTimeFormat().isEmpty());
+        assertEquals("price", metadata.get(3).getName());
+        assertEquals(10, metadata.get(3).getLength());
+        assertEquals(2, metadata.get(3).getPrecision());
 
-        // Verify fifth field (expiryDate)
-        FieldMetadata expiryDateField = metadata.get(4);
-        assertEquals("expiryDate", expiryDateField.getName());
-        assertEquals(5, expiryDateField.getPosition());
-        assertEquals(8, expiryDateField.getLength());
-        assertEquals(0, expiryDateField.getPrecision());
-        assertEquals("ddMMyyyy", expiryDateField.getDateTimeFormat());
+        assertEquals("expiryDate", metadata.get(4).getName());
+        assertEquals(8, metadata.get(4).getLength());
+        assertEquals("ddMMyyyy", metadata.get(4).getDateTimeFormat());
     }
 
     @Test
     void shouldHandleEmptyClass() {
-
+        // given
         class EmptyClass {}
 
+        // when
         List<FieldMetadata> metadata = FieldMetadataExtractor.extract(EmptyClass.class);
 
+        // then
         assertNotNull(metadata, "Metadata list should not be null");
         assertTrue(metadata.isEmpty(), "Should return empty list for class without annotations");
     }
 
     @Test
     void shouldThrowNullPointerExceptionForNullClass() {
+        // when/then
         assertThrows(NullPointerException.class, () -> FieldMetadataExtractor.extract(null));
+    }
+
+    @Test
+    void shouldExtractFieldsFromSuperclassAndSubclass() {
+
+        class SuperRecord {
+            @FlatField(length = 5)
+            private String superField1;
+
+            @FlatField(length = 5)
+            private String superField2;
+        }
+
+        class SubRecord extends SuperRecord {
+            @FlatField(length = 5)
+            private String subField1;
+
+            @FlatField(length = 5)
+            private String subField2;
+        }
+        
+        List<FieldMetadata> metadata = FieldMetadataExtractor.extractIncludingInherited(SubRecord.class);
+        assertNotNull(metadata, "Metadata list should not be null");
+        assertEquals(4, metadata.size(), "Should find 4 annotated fields from both superclass and subclass");
+        assertEquals("superField1", metadata.get(0).getName());
+        assertEquals("superField2", metadata.get(1).getName());
+        assertEquals("subField1", metadata.get(2).getName());
+        assertEquals("subField2", metadata.get(3).getName());
     }
 } 

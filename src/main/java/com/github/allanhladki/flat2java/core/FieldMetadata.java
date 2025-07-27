@@ -6,21 +6,18 @@ import java.util.Objects;
 
 /**
  * Represents the metadata of a field annotated with {@link FlatField}.
- * This class encapsulates all the information needed to process a field from a
- * flat file.
+ * This class encapsulates all the information needed to process a field from a flat file.
  */
 public class FieldMetadata {
     private final Field field;
     private final String name;
-    private final int position;
     private final int length;
     private final int precision;
     private final String dateTimeFormat;
     private final char padding;
 
     /**
-     * Creates a new FieldMetadata instance from a field and its FlatField
-     * annotation.
+     * Creates a new FieldMetadata instance from a field and its FlatField annotation.
      *
      * @param field      the Java field
      * @param annotation the FlatField annotation
@@ -34,7 +31,6 @@ public class FieldMetadata {
                 ? field.getName() 
                 : "unnamed") 
             : annotation.name();
-        this.position = annotation.position();
         this.length = annotation.length();
         this.precision = annotation.precision();
         this.dateTimeFormat = annotation.dateTimeFormat();
@@ -57,15 +53,6 @@ public class FieldMetadata {
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * Gets the field position in the flat file.
-     * 
-     * @return the position
-     */
-    public int getPosition() {
-        return position;
     }
 
     /**
@@ -118,8 +105,7 @@ public class FieldMetadata {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FieldMetadata that = (FieldMetadata) o;
-        return position == that.position &&
-               length == that.length &&
+        return length == that.length &&
                precision == that.precision &&
                padding == that.padding &&
                Objects.equals(field, that.field) &&
@@ -129,13 +115,13 @@ public class FieldMetadata {
 
     @Override
     public int hashCode() {
-        return Objects.hash(field, name, position, length, precision, dateTimeFormat, padding);
+        return Objects.hash(field, name, length, precision, dateTimeFormat, padding);
     }
 
     @Override
     public String toString() {
         return String.format(
-                "FieldMetadata{name='%s', position=%d, length=%d, precision=%d, dateTimeFormat='%s', padding='%c'}",
-                name, position, length, precision, dateTimeFormat, padding);
+                "FieldMetadata{name='%s', length=%d, precision=%d, dateTimeFormat='%s', padding='%c'}",
+                name, length, precision, dateTimeFormat, padding);
     }
 }

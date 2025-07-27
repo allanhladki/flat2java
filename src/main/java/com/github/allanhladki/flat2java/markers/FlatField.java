@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation to mark fields that should be mapped from flat file data.
- * This annotation is used to define the position, length, and format of fields in a flat file record.
+ * This annotation is used to define the length and format of fields in a flat file record.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -20,16 +20,10 @@ public @interface FlatField {
     String name() default "";
 
     /**
-     * The position of the field in the flat file record (1-based).
-     * @return the position
-     */
-    int position();
-
-    /**
      * The length of the field in the flat file record.
      * @return the field length
      */
-    int length() default 0;
+    int length();
 
     /**
      * The precision for decimal numbers (number of decimal places).
@@ -39,7 +33,7 @@ public @interface FlatField {
     int precision() default 0;
 
     /**
-     * The date format pattern to use when parsing date time fields.
+     * The date format pattern to use when parsing date fields.
      * Uses the standard Java date format patterns.
      * Example: "yyyyMMdd" for dates like "20240315"
      * @return the date format pattern
