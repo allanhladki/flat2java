@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.allanhladki.flat2java</groupId>
     <artifactId>flat2java</artifactId>
-    <version>0.0.1-1</version>
+    <version>0.0.1-2</version>
     <packaging>pom</packaging>
     <modules>
         <module>flat2java-core</module>

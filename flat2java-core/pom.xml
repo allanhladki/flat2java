@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.allanhladki.flat2java</groupId>
         <artifactId>flat2java</artifactId>
-        <version>0.0.1-1</version>
+        <version>0.0.1-2</version>
     </parent>
     <artifactId>flat2java-core</artifactId>
     <dependencies>
