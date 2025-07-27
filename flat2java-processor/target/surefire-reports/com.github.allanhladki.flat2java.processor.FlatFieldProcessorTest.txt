@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.github.allanhladki.flat2java.processor.FlatFieldProcessorTest
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.496 s -- in com.github.allanhladki.flat2java.processor.FlatFieldProcessorTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.526 s -- in com.github.allanhladki.flat2java.processor.FlatFieldProcessorTest

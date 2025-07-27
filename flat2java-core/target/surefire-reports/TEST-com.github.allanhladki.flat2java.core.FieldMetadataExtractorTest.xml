@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.144" tests="4" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.193" tests="4" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -12,7 +12,7 @@
     <property name="java.vm.specification.version" value="21"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="sun.boot.library.path" value="/home/linuxbrew/.linuxbrew/Cellar/openjdk@21/21.0.7/libexec/lib"/>
-    <property name="sun.java.command" value="/home/allan/projetos/flat2java/flat2java-core/target/surefire/surefirebooter-20250727172115542_3.jar /home/allan/projetos/flat2java/flat2java-core/target/surefire 2025-07-27T17-21-15_492-jvmRun1 surefire-20250727172115542_1tmp surefire_0-20250727172115542_2tmp"/>
+    <property name="sun.java.command" value="/home/allan/projetos/flat2java/flat2java-core/target/surefire/surefirebooter-20250727173804031_3.jar /home/allan/projetos/flat2java/flat2java-core/target/surefire 2025-07-27T17-38-03_956-jvmRun1 surefire-20250727173804031_1tmp surefire_0-20250727173804031_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/home/allan/projetos/flat2java/flat2java-core/target/test-classes:/home/allan/projetos/flat2java/flat2java-core/target/classes:/home/allan/.m2/repository/ch/qos/logback/logback-classic/1.4.14/logback-classic-1.4.14.jar:/home/allan/.m2/repository/ch/qos/logback/logback-core/1.4.14/logback-core-1.4.14.jar:/home/allan/.m2/repository/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7.jar:/home/allan/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.1/junit-jupiter-api-5.10.1.jar:/home/allan/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/allan/.m2/repository/org/junit/platform/junit-platform-commons/1.10.1/junit-platform-commons-1.10.1.jar:/home/allan/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/allan/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.1/junit-jupiter-engine-5.10.1.jar:/home/allan/.m2/repository/org/junit/platform/junit-platform-engine/1.10.1/junit-platform-engine-1.10.1.jar:/home/allan/.m2/repository/com/google/testing/compile/compile-testing/0.21.0/compile-testing-0.21.0.jar:/home/allan/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar:/home/allan/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/home/allan/.m2/repository/com/google/truth/truth/1.1.3/truth-1.1.3.jar:/home/allan/.m2/repository/com/google/auto/value/auto-value-annotations/1.8.1/auto-value-annotations-1.8.1.jar:/home/allan/.m2/repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.jar:/home/allan/.m2/repository/org/ow2/asm/asm/9.1/asm-9.1.jar:/home/allan/.m2/repository/com/google/guava/guava/31.1-jre/guava-31.1-jre.jar:/home/allan/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar:/home/allan/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/home/allan/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/home/allan/.m2/repository/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar:/home/allan/.m2/repository/com/google/auto/value/auto-value/1.10/auto-value-1.10.jar:/home/allan/.m2/repository/com/google/auto/auto-common/1.2.1/auto-common-1.2.1.jar:/home/allan/.m2/repository/org/checkerframework/checker-qual/3.26.0/checker-qual-3.26.0.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -27,7 +27,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
-    <property name="surefire.real.class.path" value="/home/allan/projetos/flat2java/flat2java-core/target/surefire/surefirebooter-20250727172115542_3.jar"/>
+    <property name="surefire.real.class.path" value="/home/allan/projetos/flat2java/flat2java-core/target/surefire/surefirebooter-20250727173804031_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.7"/>
     <property name="user.name" value="allan"/>
@@ -54,26 +54,26 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="shouldExtractAnnotatedFields" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.119">
-    <system-out><![CDATA[17:21:15.957 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$TestRecord
-17:21:15.960 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 5 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$TestRecord
+  <testcase name="shouldExtractAnnotatedFields" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.169">
+    <system-out><![CDATA[17:38:04.547 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$TestRecord
+17:38:04.551 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 5 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$TestRecord
 ]]></system-out>
   </testcase>
-  <testcase name="shouldExtractFieldsFromSuperclassAndSubclass" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.004">
-    <system-out><![CDATA[17:21:15.968 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class hierarchy starting with: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
-17:21:15.968 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Processing class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SuperRecord
-17:21:15.968 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SuperRecord
-17:21:15.969 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 2 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SuperRecord
-17:21:15.969 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Processing class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
-17:21:15.969 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
-17:21:15.969 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 2 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
-17:21:15.969 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found total of 4 annotated fields in class hierarchy
+  <testcase name="shouldExtractFieldsFromSuperclassAndSubclass" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.002">
+    <system-out><![CDATA[17:38:04.560 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class hierarchy starting with: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
+17:38:04.560 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Processing class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SuperRecord
+17:38:04.560 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SuperRecord
+17:38:04.560 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 2 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SuperRecord
+17:38:04.560 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Processing class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
+17:38:04.560 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
+17:38:04.561 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 2 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1SubRecord
+17:38:04.561 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found total of 4 annotated fields in class hierarchy
 ]]></system-out>
   </testcase>
-  <testcase name="shouldThrowNullPointerExceptionForNullClass" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.004"/>
-  <testcase name="shouldHandleEmptyClass" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.001">
-    <system-out><![CDATA[17:21:15.976 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1EmptyClass
-17:21:15.976 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 0 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1EmptyClass
+  <testcase name="shouldThrowNullPointerExceptionForNullClass" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.003"/>
+  <testcase name="shouldHandleEmptyClass" classname="com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest" time="0.002">
+    <system-out><![CDATA[17:38:04.567 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Extracting field metadata from class: com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1EmptyClass
+17:38:04.567 [main] DEBUG c.g.a.f.core.FieldMetadataExtractor - Found 0 annotated fields in class com.github.allanhladki.flat2java.core.FieldMetadataExtractorTest$1EmptyClass
 ]]></system-out>
   </testcase>
 </testsuite>
