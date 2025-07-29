@@ -1,12 +1,12 @@
-package com.github.allanhladki.flat2java.core;
+package com.github.allanhladki.flat2java.metadata;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
 /**
- * Represents the metadata of a field annotated with {@link FlatField}.
- * This class encapsulates all the information needed to process a field from a flat file.
+ * Represents the metadata of a field annotated with {@link FlatField}. This class encapsulates all
+ * the information needed to process a field from a flat file.
  */
 public class FieldMetadata {
     private final Field field;
@@ -19,18 +19,17 @@ public class FieldMetadata {
     /**
      * Creates a new FieldMetadata instance from a field and its FlatField annotation.
      *
-     * @param field      the Java field
+     * @param field the Java field
      * @param annotation the FlatField annotation
      * @throws NullPointerException if annotation is null
      */
     public FieldMetadata(Field field, FlatField annotation) {
         Objects.requireNonNull(annotation, "FlatField annotation cannot be null");
         this.field = field;
-        this.name = annotation.name().isBlank()
-            ?  (field != null 
-                ? field.getName() 
-                : "unnamed") 
-            : annotation.name();
+        this.name =
+                annotation.name().isBlank()
+                        ? (field != null ? field.getName() : "unnamed")
+                        : annotation.name();
         this.length = annotation.length();
         this.precision = annotation.precision();
         this.dateTimeFormat = annotation.dateTimeFormat();
@@ -39,7 +38,7 @@ public class FieldMetadata {
 
     /**
      * Gets the Java field.
-     * 
+     *
      * @return the field, may be null
      */
     public Field getField() {
@@ -48,7 +47,7 @@ public class FieldMetadata {
 
     /**
      * Gets the field name.
-     * 
+     *
      * @return the name, never null
      */
     public String getName() {
@@ -57,7 +56,7 @@ public class FieldMetadata {
 
     /**
      * Gets the field length.
-     * 
+     *
      * @return the length
      */
     public int getLength() {
@@ -66,7 +65,7 @@ public class FieldMetadata {
 
     /**
      * Gets the precision for decimal numbers.
-     * 
+     *
      * @return the precision
      */
     public int getPrecision() {
@@ -75,7 +74,7 @@ public class FieldMetadata {
 
     /**
      * Gets the date/time format pattern.
-     * 
+     *
      * @return the date/time format, may be empty but never null
      */
     public String getDateTimeFormat() {
@@ -84,7 +83,7 @@ public class FieldMetadata {
 
     /**
      * Gets the padding character.
-     * 
+     *
      * @return the padding character
      */
     public char getPadding() {
@@ -93,7 +92,7 @@ public class FieldMetadata {
 
     /**
      * Gets the field type.
-     * 
+     *
      * @return the field type, or Object.class if field is null
      */
     public Class<?> getType() {
@@ -105,12 +104,12 @@ public class FieldMetadata {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FieldMetadata that = (FieldMetadata) o;
-        return length == that.length &&
-               precision == that.precision &&
-               padding == that.padding &&
-               Objects.equals(field, that.field) &&
-               Objects.equals(name, that.name) &&
-               Objects.equals(dateTimeFormat, that.dateTimeFormat);
+        return length == that.length
+                && precision == that.precision
+                && padding == that.padding
+                && Objects.equals(field, that.field)
+                && Objects.equals(name, that.name)
+                && Objects.equals(dateTimeFormat, that.dateTimeFormat);
     }
 
     @Override

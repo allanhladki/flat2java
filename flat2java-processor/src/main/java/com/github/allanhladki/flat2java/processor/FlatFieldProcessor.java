@@ -1,6 +1,7 @@
 package com.github.allanhladki.flat2java.processor;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
+import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -12,7 +13,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
-import java.util.Set;
 
 @SupportedAnnotationTypes("com.github.allanhladki.flat2java.markers.FlatField")
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
@@ -37,15 +37,13 @@ public class FlatFieldProcessor extends AbstractProcessor {
         return false;
     }
 
-    /**
-     * Validates a field annotated with @FlatField.
-     */
+    /** Validates a field annotated with @FlatField. */
     private void validateFlatField(Element element) {
         this.element = element;
         validateFlatFieldLength();
     }
 
-    /* 
+    /*
      * Validates the length of the field annotated with @FlatField.
      */
     private void validateFlatFieldLength() {
@@ -62,4 +60,4 @@ public class FlatFieldProcessor extends AbstractProcessor {
     private void printErrorMessage(String message) {
         messager.printMessage(Diagnostic.Kind.ERROR, message, this.element);
     }
-} 
+}
