@@ -126,6 +126,61 @@ class FieldMetadataExtractorTest {
     }
 
     @Test
+    @DisplayName("Should throw exception for unsupported field type Object")
+    void shouldThrowExceptionForUnsupportedObjectType() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldMetadataExtractor.extract(TestFixtures.UnsupportedObjectRecord.class);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'unsupportedObjectField': unsupported field type 'Object'"));
+        assertTrue(exception.getMessage().contains("Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal, LocalDate, LocalDateTime"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception for unsupported field type Double")
+    void shouldThrowExceptionForUnsupportedDoubleType() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldMetadataExtractor.extract(TestFixtures.UnsupportedDoubleRecord.class);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'unsupportedDoubleField': unsupported field type 'Double'"));
+        assertTrue(exception.getMessage().contains("Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal, LocalDate, LocalDateTime"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception for unsupported field type Float")
+    void shouldThrowExceptionForUnsupportedFloatType() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldMetadataExtractor.extract(TestFixtures.UnsupportedFloatRecord.class);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'unsupportedFloatField': unsupported field type 'Float'"));
+        assertTrue(exception.getMessage().contains("Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal, LocalDate, LocalDateTime"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception for unsupported field type Boolean")
+    void shouldThrowExceptionForUnsupportedBooleanType() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldMetadataExtractor.extract(TestFixtures.UnsupportedBooleanRecord.class);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'unsupportedBooleanField': unsupported field type 'Boolean'"));
+        assertTrue(exception.getMessage().contains("Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal, LocalDate, LocalDateTime"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception for unsupported field type List")
+    void shouldThrowExceptionForUnsupportedListType() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldMetadataExtractor.extract(TestFixtures.UnsupportedListRecord.class);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'unsupportedListField': unsupported field type 'List'"));
+        assertTrue(exception.getMessage().contains("Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal, LocalDate, LocalDateTime"));
+    }
+
+    @Test
     @DisplayName("Should validate correct LocalDate format length")
     void shouldValidateCorrectLocalDateFormatLength() {
         // This should not throw an exception

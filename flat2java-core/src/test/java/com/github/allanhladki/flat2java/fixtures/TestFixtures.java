@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Unified test fixtures for flat2java library tests.
@@ -217,5 +218,45 @@ public class TestFixtures {
             this.zeroBigDecimalNoPrecision = zeroBigDecimalNoPrecision;
             this.zeroBigDecimalWithPrecision = zeroBigDecimalWithPrecision;
         }
+    }
+
+    /** Test fixture class for unsupported field type testing - Object. */
+    public static class UnsupportedObjectRecord {
+        @FlatField(length = 10)
+        public Object unsupportedObjectField;
+
+        public UnsupportedObjectRecord() {}
+    }
+
+    /** Test fixture class for unsupported field type testing - Double. */
+    public static class UnsupportedDoubleRecord {
+        @FlatField(length = 5)
+        public Double unsupportedDoubleField;
+
+        public UnsupportedDoubleRecord() {}
+    }
+
+    /** Test fixture class for unsupported field type testing - Float. */
+    public static class UnsupportedFloatRecord {
+        @FlatField(length = 8)
+        public Float unsupportedFloatField;
+
+        public UnsupportedFloatRecord() {}
+    }
+
+    /** Test fixture class for unsupported field type testing - Boolean. */
+    public static class UnsupportedBooleanRecord {
+        @FlatField(length = 3)
+        public Boolean unsupportedBooleanField;
+
+        public UnsupportedBooleanRecord() {}
+    }
+
+    /** Test fixture class for unsupported field type testing - List. */
+    public static class UnsupportedListRecord {
+        @FlatField(length = 10)
+        public List<String> unsupportedListField;
+
+        public UnsupportedListRecord() {}
     }
 } 

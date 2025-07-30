@@ -1,6 +1,7 @@
 package com.github.allanhladki.flat2java.metadata;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
+import com.github.allanhladki.flat2java.serializer.SerializationTypes;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -79,8 +80,25 @@ public class FieldMetadataExtractor {
      * @throws IllegalArgumentException if validation fails
      */
     private static void validateFieldMetadata(FieldMetadata metadata) {
+        validateFieldType(metadata);
         validateLengthAndPrecision(metadata);
         validateDateTimeFormatLength(metadata);
+    }
+
+    /**
+     * Validates that the field type is supported for serialization.
+     *
+     * @param metadata the field metadata to validate
+     * @throws IllegalArgumentException if validation fails
+     */
+    private static void validateFieldType(FieldMetadata metadata) {
+        Field field = metadata.getField();
+        if (!SerializationTypes.isSupportedField(field)) {
+            throw new IllegalArgumentException(
+                    String.format("Field '%s': unsupported field type '%s'. %s", 
+                                 metadata.getName(), field.getType().getSimpleName(),
+                                 SerializationTypes.getSupportedTypesDescription()));
+        }
     }
 
     /**
