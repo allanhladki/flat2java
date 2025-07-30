@@ -178,7 +178,7 @@ public class FieldSerializer {
         int targetLength = metadata.getLength();
         char paddingChar = metadata.getPadding();
         Field field = metadata.getField();
-        boolean isNumeric = isNumericField(field);
+        boolean isNumeric = SerializationTypes.isNumericField(field);
         char defaultPadding;
 
         try{
@@ -203,7 +203,7 @@ public class FieldSerializer {
             // Pad based on field type
             String padding = String.valueOf(paddingChar).repeat(targetLength - value.length());
             
-            if (isNumericField(field)) {
+            if (SerializationTypes.isNumericField(field)) {
                 // For numeric fields, add leading padding
                 return padding + value;
             }
@@ -214,19 +214,7 @@ public class FieldSerializer {
         return value;
     }
     
-    /**
-     * Determines if a field is numeric based on its type.
-     * 
-     * @param field the field to check
-     * @return true if the field is numeric, false otherwise
-     */
-    private static boolean isNumericField(Field field) {
-        Class<?> fieldType = field.getType();
-        return fieldType == Integer.class || fieldType == int.class ||
-               fieldType == Long.class || fieldType == long.class ||
-               fieldType == BigInteger.class ||
-               fieldType == BigDecimal.class;
-    }
+
 
     /**
      * Creates an empty field string with the appropriate length and padding.

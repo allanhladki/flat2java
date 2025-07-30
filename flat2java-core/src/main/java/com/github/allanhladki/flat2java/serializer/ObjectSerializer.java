@@ -206,7 +206,9 @@ public class ObjectSerializer {
         }
 
         throw new IllegalArgumentException(
-                String.format("Unsupported field type: %s for field '%s'",  fieldType.getSimpleName(), metadata.getName()));
+                String.format("Unsupported field type: %s for field '%s'. %s",  
+                             fieldType.getSimpleName(), metadata.getName(), 
+                             SerializationTypes.getSupportedTypesDescription()));
     }
 
 }
