@@ -83,15 +83,15 @@ public class FieldSerializer {
             throw new IllegalArgumentException("BigDecimal value must be non-negative, got: " + value);
         }
 
-        //TODO: create a enviroment variable to allow the user to choose the rounding mode.
-
         if (precision == 0) {
-            return serialize(value.intValue());
+            // Apply rounding mode when converting to integer
+            BigDecimal roundedValue = value.setScale(0, Flat2JavaConfig.getBigDecimalRoundingMode());
+            return serialize(roundedValue.intValue());
         }
 
         if (precision > 0) {
             // Scale the value to the specified precision
-            BigDecimal scaledValue = value.setScale(precision, RoundingMode.HALF_UP);
+            BigDecimal scaledValue = value.setScale(precision, Flat2JavaConfig.getBigDecimalRoundingMode());
             
             if (Flat2JavaConfig.isBigDecimalUseDecimalSeparator()) {
                 // Use decimal separator with custom character

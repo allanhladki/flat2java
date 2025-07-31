@@ -181,6 +181,50 @@ private BigDecimal amount; // 12.34 → "12,34"
 private BigDecimal amount; // 12.34 → "12;34"
 ```
 
+### FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE
+Sets the rounding mode for BigDecimal operations when precision scaling is required.
+
+- **Default:** `HALF_UP`
+- **Values:** Any valid Java `RoundingMode` enum value (e.g., `HALF_UP`, `HALF_DOWN`, `HALF_EVEN`, `UP`, `DOWN`, `CEILING`, `FLOOR`, `UNNECESSARY`)
+- **Description:** This setting controls how BigDecimal values are rounded when they need to be scaled to a specific precision. The rounding mode determines the behavior when a value cannot be represented exactly with the specified precision.
+
+**Available Rounding Modes:**
+- `HALF_UP`: Round towards the nearest neighbor, ties round up (default)
+- `HALF_DOWN`: Round towards the nearest neighbor, ties round down
+- `HALF_EVEN`: Round towards the nearest neighbor, ties round to even neighbor
+- `UP`: Round towards positive infinity
+- `DOWN`: Round towards zero
+- `CEILING`: Round towards positive infinity
+- `FLOOR`: Round towards negative infinity
+- `UNNECESSARY`: No rounding needed (throws exception if rounding would be necessary)
+
+**Example:**
+```bash
+# Use HALF_DOWN rounding (ties round down)
+export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_DOWN"
+
+# Use HALF_EVEN rounding (Banker's rounding)
+export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_EVEN"
+
+# Use UP rounding (always round up)
+export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="UP"
+```
+
+**Usage Examples:**
+```java
+// With FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_UP" (default)
+@FlatField(length = 8, precision = 2)
+private BigDecimal amount; // 12.345 → "12.35"
+
+// With FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_DOWN"
+@FlatField(length = 8, precision = 2)
+private BigDecimal amount; // 12.345 → "12.34"
+
+// With FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_EVEN"
+@FlatField(length = 8, precision = 2)
+private BigDecimal amount; // 12.345 → "12.34", 12.335 → "12.34"
+```
+
 ## Annotation Processor (Optional)
 
 The project also provides an optional, however recommended, annotation processor (`flat2java-processor`) for compile-time verifications. If you want to enable additional compile-time checks, see the [flat2java-processor README](flat2java-processor/README.md).

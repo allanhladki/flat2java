@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -32,6 +33,7 @@ class FieldSerializerTest {
         mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn('0');
         mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(false);
         mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn('.');
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
     }
 
     @AfterEach
@@ -552,6 +554,404 @@ class FieldSerializerTest {
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
         assertEquals("0000.00", formatted); // 7 chars total, left-padded with zeros
+    }
+
+    // ==================== ROUNDING MODE TESTS ====================
+
+    @Test
+    @DisplayName("Should use HALF_UP rounding mode (default)")
+    void testHalfUpRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Test cases where HALF_UP rounds up on ties
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
+        assertEquals("1235", result1); // 12.345 → 12.35 → 1235 (no decimal separator)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.335"), 2);
+        assertEquals("1234", result2); // 12.335 → 12.34 → 1234 (no decimal separator)
+    }
+
+    @Test
+    @DisplayName("Should use HALF_DOWN rounding mode")
+    void testHalfDownRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_DOWN);
+        
+        // Test cases where HALF_DOWN rounds down on ties
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
+        assertEquals("1234", result1); // 12.345 → 12.34 → 1234 (no decimal separator)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.335"), 2);
+        assertEquals("1233", result2); // 12.335 → 12.33 → 1233 (no decimal separator)
+    }
+
+    @Test
+    @DisplayName("Should use HALF_EVEN rounding mode (Banker's rounding)")
+    void testHalfEvenRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_EVEN);
+        
+        // Test cases where HALF_EVEN rounds to even on ties
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
+        assertEquals("1234", result1); // 12.345 → 12.34 → 1234 (rounds to even)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.335"), 2);
+        assertEquals("1234", result2); // 12.335 → 12.34 → 1234 (rounds to even)
+        
+        String result3 = FieldSerializer.serialize(new BigDecimal("12.355"), 2);
+        assertEquals("1236", result3); // 12.355 → 12.36 → 1236 (rounds to even)
+    }
+
+    @Test
+    @DisplayName("Should use UP rounding mode")
+    void testUpRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UP);
+        
+        // Test cases where UP always rounds up
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.341"), 2);
+        assertEquals("1235", result1); // 12.341 → 12.35 → 1235 (always up)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.300"), 2);
+        assertEquals("1230", result2); // 12.300 → 12.30 → 1230 (no rounding needed, exact value)
+    }
+
+    @Test
+    @DisplayName("Should use DOWN rounding mode")
+    void testDownRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.DOWN);
+        
+        // Test cases where DOWN always rounds down
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.349"), 2);
+        assertEquals("1234", result1); // 12.349 → 12.34 → 1234 (always down)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.399"), 2);
+        assertEquals("1239", result2); // 12.399 → 12.39 → 1239 (always down)
+    }
+
+    @Test
+    @DisplayName("Should use CEILING rounding mode")
+    void testCeilingRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.CEILING);
+        
+        // Test cases where CEILING rounds towards positive infinity
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.341"), 2);
+        assertEquals("1235", result1); // 12.341 → 12.35 → 1235 (towards positive infinity)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.300"), 2);
+        assertEquals("1230", result2); // 12.300 → 12.30 → 1230 (no rounding needed, exact value)
+    }
+
+    @Test
+    @DisplayName("Should use FLOOR rounding mode")
+    void testFloorRoundingMode() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.FLOOR);
+        
+        // Test cases where FLOOR rounds towards negative infinity
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.349"), 2);
+        assertEquals("1234", result1); // 12.349 → 12.34 → 1234 (towards negative infinity)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.399"), 2);
+        assertEquals("1239", result2); // 12.399 → 12.39 → 1239 (towards negative infinity)
+    }
+
+    @Test
+    @DisplayName("Should use UNNECESSARY rounding mode for exact values")
+    void testUnnecessaryRoundingModeExact() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UNNECESSARY);
+        
+        // Test cases where UNNECESSARY works for exact values
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.34"), 2);
+        assertEquals("1234", result1); // 12.34 is exact, no rounding needed
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.00"), 2);
+        assertEquals("1200", result2); // 12.00 is exact, no rounding needed
+    }
+
+    @Test
+    @DisplayName("Should throw exception for UNNECESSARY rounding mode when rounding is needed")
+    void testUnnecessaryRoundingModeThrowsException() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UNNECESSARY);
+        
+        // Test that UNNECESSARY throws exception when rounding would be needed
+        assertThrows(ArithmeticException.class, () -> {
+            FieldSerializer.serialize(new BigDecimal("12.345"), 2);
+        });
+        
+        assertThrows(ArithmeticException.class, () -> {
+            FieldSerializer.serialize(new BigDecimal("12.341"), 2);
+        });
+    }
+
+    @Test
+    @DisplayName("Should use rounding mode with decimal separator enabled")
+    void testRoundingModeWithDecimalSeparator() {
+        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_DOWN);
+        
+        // Test rounding mode with decimal separator
+        String result = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
+        assertEquals("12.34", result); // 12.345 → 12.34 with HALF_DOWN
+    }
+
+    @Test
+    @DisplayName("Should use rounding mode with custom decimal separator")
+    void testRoundingModeWithCustomDecimalSeparator() {
+        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(',');
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Test rounding mode with custom decimal separator
+        String result = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
+        assertEquals("12,35", result); // 12.345 → 12.35 with HALF_UP and comma separator
+    }
+
+    @Test
+    @DisplayName("Should use rounding mode for precision 0 (integer conversion)")
+    void testRoundingModeWithPrecisionZero() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Test rounding mode when precision is 0 (converts to integer)
+        String result = FieldSerializer.serialize(new BigDecimal("12.5"), 0);
+        assertEquals("13", result); // 12.5 → 13 with HALF_UP
+    }
+
+    @Test
+    @DisplayName("Should use rounding mode for high precision values")
+    void testRoundingModeWithHighPrecision() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_EVEN);
+        
+        // Test rounding mode with high precision
+        String result = FieldSerializer.serialize(new BigDecimal("12.3456789"), 4);
+        assertEquals("123457", result); // 12.3456789 → 12.3457 → 123457 with HALF_EVEN
+    }
+
+    @Test
+    @DisplayName("Should use rounding mode for edge case values")
+    void testRoundingModeWithEdgeCases() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Test edge cases
+        String result1 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
+        assertEquals("1", result1); // 0.005 → 0.01 → 1 with HALF_UP (raw value, no padding)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("999.999"), 2);
+        assertEquals("100000", result2); // 999.999 → 1000.00 → 100000 with HALF_UP (raw value, no padding)
+    }
+
+    @Test
+    @DisplayName("Should use rounding mode with proper field formatting (leading zeros)")
+    void testRoundingModeWithFieldFormatting() throws Exception {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Create a field metadata with length 7 (to show padding)
+        class EdgeCaseTestClass {
+            @FlatField(length = 7, precision = 2)
+            public BigDecimal edgeCaseField;
+        }
+        
+        Field field = EdgeCaseTestClass.class.getDeclaredField("edgeCaseField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        // Test edge case with proper formatting (including leading zeros)
+        String serialized = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
+        assertEquals("1", serialized); // Raw serialization (no padding)
+        
+        String formatted = FieldSerializer.formatToLength(serialized, metadata);
+        assertEquals("0000001", formatted); // Formatted with leading zeros to reach length 7
+    }
+
+    // ==================== NUMBERS LESS THAN 1 TESTS ====================
+
+    @Test
+    @DisplayName("Should serialize numbers less than 1 correctly (no decimal separator)")
+    void testNumbersLessThanOneSerialization() {
+        // Test raw serialization of numbers less than 1
+        String result1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
+        assertEquals("50", result1); // 0.5 → 50 (representing 50 cents)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
+        assertEquals("25", result2); // 0.25 → 25 (representing 25 cents)
+        
+        String result3 = FieldSerializer.serialize(new BigDecimal("0.125"), 3);
+        assertEquals("125", result3); // 0.125 → 125 (representing 125 thousandths)
+        
+        String result4 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
+        assertEquals("1", result4); // 0.01 → 1 (representing 1 cent)
+        
+        String result5 = FieldSerializer.serialize(new BigDecimal("0.001"), 3);
+        assertEquals("1", result5); // 0.001 → 1 (representing 1 thousandth)
+    }
+
+    @Test
+    @DisplayName("Should format numbers less than 1 with proper leading zeros (no decimal separator)")
+    void testNumbersLessThanOneFormatting() throws Exception {
+        // Create field metadata with length 8
+        class LessThanOneTestClass {
+            @FlatField(length = 8, precision = 2)
+            public BigDecimal lessThanOneField;
+        }
+        
+        Field field = LessThanOneTestClass.class.getDeclaredField("lessThanOneField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        // Test formatting with leading zeros
+        String serialized1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
+        assertEquals("50", serialized1); // Raw serialization
+        
+        String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
+        assertEquals("00000050", formatted1); // 8 chars total, left-padded with zeros
+        
+        String serialized2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
+        assertEquals("25", serialized2); // Raw serialization
+        
+        String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
+        assertEquals("00000025", formatted2); // 8 chars total, left-padded with zeros
+        
+        String serialized3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
+        assertEquals("1", serialized3); // Raw serialization
+        
+        String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
+        assertEquals("00000001", formatted3); // 8 chars total, left-padded with zeros
+    }
+
+    @Test
+    @DisplayName("Should serialize numbers less than 1 with decimal separator enabled")
+    void testNumbersLessThanOneWithDecimalSeparator() {
+        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        
+        // Test with decimal separator enabled
+        String result1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
+        assertEquals("0.50", result1); // 0.5 → 0.50 (with decimal separator)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
+        assertEquals("0.25", result2); // 0.25 → 0.25 (with decimal separator)
+        
+        String result3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
+        assertEquals("0.01", result3); // 0.01 → 0.01 (with decimal separator)
+        
+        String result4 = FieldSerializer.serialize(new BigDecimal("0.125"), 3);
+        assertEquals("0.125", result4); // 0.125 → 0.125 (with decimal separator)
+    }
+
+    @Test
+    @DisplayName("Should format numbers less than 1 with decimal separator and proper padding")
+    void testNumbersLessThanOneWithDecimalSeparatorAndPadding() throws Exception {
+        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        
+        // Create field metadata with length 10
+        class LessThanOneDecimalTestClass {
+            @FlatField(length = 10, precision = 2)
+            public BigDecimal lessThanOneDecimalField;
+        }
+        
+        Field field = LessThanOneDecimalTestClass.class.getDeclaredField("lessThanOneDecimalField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        // Test formatting with decimal separator and padding
+        String serialized1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
+        assertEquals("0.50", serialized1); // Raw serialization with decimal separator
+        
+        String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
+        assertEquals("0000000.50", formatted1); // 8 chars total, left-padded with zeros
+        
+        String serialized2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
+        assertEquals("0.25", serialized2); // Raw serialization with decimal separator
+        
+        String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
+        assertEquals("0000000.25", formatted2); // 8 chars total, left-padded with zeros
+        
+        String serialized3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
+        assertEquals("0.01", serialized3); // Raw serialization with decimal separator
+        
+        String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
+        assertEquals("0000000.01", formatted3); // 8 chars total, left-padded with zeros
+    }
+
+    @Test
+    @DisplayName("Should handle very small numbers less than 1 with different precisions")
+    void testVerySmallNumbersLessThanOne() {
+        // Test very small numbers with different precisions
+        String result1 = FieldSerializer.serialize(new BigDecimal("0.001"), 3);
+        assertEquals("1", result1); // 0.001 → 1 (representing 1 thousandth)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("0.0001"), 4);
+        assertEquals("1", result2); // 0.0001 → 1 (representing 1 ten-thousandth)
+        
+        String result3 = FieldSerializer.serialize(new BigDecimal("0.00001"), 5);
+        assertEquals("1", result3); // 0.00001 → 1 (representing 1 hundred-thousandth)
+        
+        // Test with decimal separator
+        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        
+        String result4 = FieldSerializer.serialize(new BigDecimal("0.001"), 3);
+        assertEquals("0.001", result4); // 0.001 → 0.001 (with decimal separator)
+        
+        String result5 = FieldSerializer.serialize(new BigDecimal("0.0001"), 4);
+        assertEquals("0.0001", result5); // 0.0001 → 0.0001 (with decimal separator)
+    }
+
+    @Test
+    @DisplayName("Should handle edge cases for numbers less than 1 with rounding")
+    void testNumbersLessThanOneWithRounding() {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Test edge cases with rounding
+        String result1 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
+        assertEquals("1", result1); // 0.005 → 0.01 → 1 (HALF_UP rounding)
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("0.004"), 2);
+        assertEquals("0", result2); // 0.004 → 0.00 → 0 (HALF_UP rounding)
+        
+        String result3 = FieldSerializer.serialize(new BigDecimal("0.006"), 2);
+        assertEquals("1", result3); // 0.006 → 0.01 → 1 (HALF_UP rounding)
+        
+        // Test with different rounding modes
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_DOWN);
+        
+        String result4 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
+        assertEquals("0", result4); // 0.005 → 0.00 → 0 (HALF_DOWN rounding)
+        
+        String result5 = FieldSerializer.serialize(new BigDecimal("0.006"), 2);
+        assertEquals("1", result5); // 0.006 → 0.01 → 1 (HALF_DOWN rounding)
+    }
+
+    @Test
+    @DisplayName("Should format edge cases for numbers less than 1 with proper padding")
+    void testNumbersLessThanOneEdgeCasesWithPadding() throws Exception {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
+        // Create field metadata with length 6
+        class EdgeCaseLessThanOneTestClass {
+            @FlatField(length = 6, precision = 2)
+            public BigDecimal edgeCaseLessThanOneField;
+        }
+        
+        Field field = EdgeCaseLessThanOneTestClass.class.getDeclaredField("edgeCaseLessThanOneField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        // Test edge cases with proper padding
+        String serialized1 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
+        assertEquals("1", serialized1); // 0.005 → 0.01 → 1 (HALF_UP rounding)
+        
+        String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
+        assertEquals("000001", formatted1); // 6 chars total, left-padded with zeros
+        
+        String serialized2 = FieldSerializer.serialize(new BigDecimal("0.004"), 2);
+        assertEquals("0", serialized2); // 0.004 → 0.00 → 0 (HALF_UP rounding)
+        
+        String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
+        assertEquals("000000", formatted2); // 6 chars total, left-padded with zeros
+        
+        // Test with decimal separator
+        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        
+        String serialized3 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
+        assertEquals("0.01", serialized3); // 0.005 → 0.01 (with decimal separator)
+        
+        String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
+        assertEquals("000.01", formatted3); // 6 chars total, left-padded with zeros
     }
 
 } 

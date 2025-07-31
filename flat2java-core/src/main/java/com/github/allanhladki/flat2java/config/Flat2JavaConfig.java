@@ -2,6 +2,7 @@ package com.github.allanhladki.flat2java.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.math.RoundingMode;
 
 /**
  * Configuration class for flat2java library settings. This class manages all environment variables
@@ -15,18 +16,21 @@ public class Flat2JavaConfig {
     private static final String DEFAULT_NUMERIC_PADDING_ENV_VAR = "FLAT2JAVA_DEFAULT_NUMERIC_PADDING";
     private static final String BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR";
     private static final String BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR";
+    private static final String BIGDECIMAL_ROUNDING_MODE_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE";
 
     /** Default configuration values */
     private static final boolean DEFAULT_NULL_HANDLING = true;
     private static final char DEFAULT_NUMERIC_PADDING = '0';
     private static final boolean DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR = false;
     private static final char DEFAULT_BIGDECIMAL_DECIMAL_SEPARATOR = '.';
+    private static final RoundingMode DEFAULT_BIGDECIMAL_ROUNDING_MODE = RoundingMode.HALF_UP;
 
     /** Cached configuration values */
     private static final boolean ALLOW_NULL_VALUES = getNullHandlingConfig();
     private static final char NUMERIC_PADDING = getNumericPaddingConfig();
     private static final boolean BIGDECIMAL_USE_DECIMAL_SEPARATOR = getBigDecimalUseDecimalSeparatorConfig();
     private static final char BIGDECIMAL_DECIMAL_SEPARATOR = getBigDecimalDecimalSeparatorConfig();
+    private static final RoundingMode BIGDECIMAL_ROUNDING_MODE = getBigDecimalRoundingModeConfig();
 
     /** Private constructor to prevent instantiation */
     private Flat2JavaConfig() {
@@ -130,6 +134,35 @@ public class Flat2JavaConfig {
     }
 
     /**
+     * Gets the BigDecimal rounding mode configuration from environment variable.
+     *
+     * @return the rounding mode to use for BigDecimal operations
+     */
+    private static RoundingMode getBigDecimalRoundingModeConfig() {
+        String envValue = System.getenv(BIGDECIMAL_ROUNDING_MODE_ENV_VAR);
+        if (envValue == null) {
+            logger.trace(
+                    "Environment variable {} not set, using default: {}",
+                    BIGDECIMAL_ROUNDING_MODE_ENV_VAR,
+                    DEFAULT_BIGDECIMAL_ROUNDING_MODE);
+            return DEFAULT_BIGDECIMAL_ROUNDING_MODE;
+        }
+
+        try {
+            RoundingMode config = RoundingMode.valueOf(envValue.toUpperCase());
+            logger.trace("Environment variable {} set to: {}", BIGDECIMAL_ROUNDING_MODE_ENV_VAR, config);
+            return config;
+        } catch (IllegalArgumentException e) {
+            logger.warn(
+                    "Environment variable {} has an invalid value '{}', using default: {}",
+                    BIGDECIMAL_ROUNDING_MODE_ENV_VAR,
+                    envValue,
+                    DEFAULT_BIGDECIMAL_ROUNDING_MODE);
+            return DEFAULT_BIGDECIMAL_ROUNDING_MODE;
+        }
+    }
+
+    /**
      * Checks if null values are allowed in serialization.
      *
      * @return true if null values should be serialized to empty strings, false if exceptions should
@@ -200,5 +233,23 @@ public class Flat2JavaConfig {
      */
     public static String getBigDecimalDecimalSeparatorEnvVarName() {
         return BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR;
+    }
+
+    /**
+     * Gets the environment variable name for BigDecimal rounding mode configuration.
+     *
+     * @return the environment variable name
+     */
+    public static String getBigDecimalRoundingModeEnvVarName() {
+        return BIGDECIMAL_ROUNDING_MODE_ENV_VAR;
+    }
+
+    /**
+     * Gets the rounding mode for BigDecimal operations.
+     *
+     * @return the rounding mode to use for BigDecimal operations
+     */
+    public static RoundingMode getBigDecimalRoundingMode() {
+        return BIGDECIMAL_ROUNDING_MODE;
     }
 }
