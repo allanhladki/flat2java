@@ -33,7 +33,7 @@ class FieldSerializerTest {
         mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn('0');
         mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(false);
         mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn('.');
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UNNECESSARY);
     }
 
     @AfterEach
@@ -56,7 +56,7 @@ class FieldSerializerTest {
         assertEquals("Hello", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("Hello   ", formatted); // 8 chars total, right-padded with spaces
+        assertEquals("Hello   ", formatted); // Field length: 8, right-padded with spaces
     }
 
     @Test
@@ -70,7 +70,7 @@ class FieldSerializerTest {
         assertEquals("VeryLongString", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("VeryLong", formatted); // truncated to 8 chars
+        assertEquals("VeryLong", formatted); // Field length: 8, truncated to fit
     }
 
     // ==================== INTEGER TESTS ====================
@@ -87,7 +87,7 @@ class FieldSerializerTest {
         assertEquals("123", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000123", formatted); // 8 chars total, left-padded with zeros
+        assertEquals("00000123", formatted); // Field length: 8, left-padded with zeros
     }
 
     @Test
@@ -103,7 +103,7 @@ class FieldSerializerTest {
         assertEquals("123", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("     123", formatted); // 8 chars total, left-padded with spaces
+        assertEquals("     123", formatted); // Field length: 8, left-padded with spaces
     }
 
     // ==================== LONG TESTS ====================
@@ -119,7 +119,7 @@ class FieldSerializerTest {
         assertEquals("123456789", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("123456789", formatted); // 9 chars total, exact length
+        assertEquals("123456789", formatted); // Field length: 9, exact length (no padding needed)
     }
 
     // ==================== BIGINTEGER TESTS ====================
@@ -135,7 +135,7 @@ class FieldSerializerTest {
         assertEquals("12345678", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("012345678", formatted); // 9 chars total, exact length
+        assertEquals("012345678", formatted); // Field length: 9, left-padded with zeros
     }
 
     // ==================== BIGDECIMAL TESTS ====================
@@ -150,6 +150,9 @@ class FieldSerializerTest {
     @Test
     @DisplayName("Should serialize BigDecimal field with precision 2 correctly (no decimal separator)")
     void testSerializeBigDecimalPrecision2() throws Exception {
+        // Mock HALF_UP rounding mode for this test since we're testing rounding behavior
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
         String result = FieldSerializer.serialize(new BigDecimal("123.456"), 2);
         assertEquals("12346", result); // 2 decimal places, rounded, no separator
     }
@@ -157,6 +160,9 @@ class FieldSerializerTest {
     @Test
     @DisplayName("Should serialize BigDecimal field with precision 0 correctly")
     void testSerializeBigDecimalPrecision0() throws Exception {
+        // Mock HALF_UP rounding mode for this test since we're testing rounding behavior
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
+        
         String result = FieldSerializer.serialize(new BigDecimal("123.45"), 0);
         assertEquals("123", result); // 0 precision means it must be an integer
     }
@@ -218,7 +224,7 @@ class FieldSerializerTest {
         assertEquals("23450", serialized); // Verify serialization (no decimal separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0023450", formatted); // 7 chars total, left-padded with zeros
+        assertEquals("0023450", formatted); // Field length: 7, precision: 3, left-padded with zeros
     }
 
     @Test
@@ -234,7 +240,7 @@ class FieldSerializerTest {
         assertEquals("23.450", serialized); // Verify serialization (with decimal separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("023.450", formatted); // 7 chars total, left-padded with zeros
+        assertEquals("023.450", formatted); // Field length: 7, precision: 3, left-padded with zeros
     }
 
     @Test
@@ -254,7 +260,7 @@ class FieldSerializerTest {
         assertEquals("12345", serialized); // Verify serialization (no decimal separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("*****12345", formatted); // 10 chars total, left-padded with asterisks
+        assertEquals("*****12345", formatted); // Field length: 10, precision: 2, left-padded with asterisks
     }
 
     @Test
@@ -276,7 +282,7 @@ class FieldSerializerTest {
         assertEquals("123.45", serialized); // Verify serialization (with decimal separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("****123.45", formatted); // 10 chars total, left-padded with asterisks
+        assertEquals("****123.45", formatted); // Field length: 10, precision: 2, left-padded with asterisks
     }
 
     @Test
@@ -299,7 +305,7 @@ class FieldSerializerTest {
         assertEquals("123,45", serialized); // Verify serialization (with comma separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("****123,45", formatted); // 10 chars total, left-padded with asterisks
+        assertEquals("****123,45", formatted); // Field length: 10, precision: 2, left-padded with asterisks
     }
 
     // ==================== LOCALDATE TESTS ====================
@@ -316,7 +322,7 @@ class FieldSerializerTest {
         assertEquals("20240315", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("20240315", formatted); // 8 chars total, exact length
+        assertEquals("20240315", formatted); // Field length: 8, exact length (no padding needed)
     }
 
     // ==================== LOCALDATETIME TESTS ====================
@@ -333,7 +339,7 @@ class FieldSerializerTest {
         assertEquals("20240315143045", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("20240315143045", formatted); // 14 chars total, exact length
+        assertEquals("20240315143045", formatted); // Field length: 14, exact length (no padding needed)
     }
 
     // ==================== ERROR TESTS ====================
@@ -481,7 +487,7 @@ class FieldSerializerTest {
         assertEquals("0", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // 5 chars total, left-padded with zeros
+        assertEquals("00000", formatted); // Field length: 5, left-padded with zeros
     }
 
     @Test
@@ -495,7 +501,7 @@ class FieldSerializerTest {
         assertEquals("0", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // 5 chars total, left-padded with zeros
+        assertEquals("00000", formatted); // Field length: 5, left-padded with zeros
     }
 
     @Test
@@ -509,7 +515,7 @@ class FieldSerializerTest {
         assertEquals("0", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // 5 chars total, left-padded with zeros
+        assertEquals("00000", formatted); // Field length: 5, left-padded with zeros
     }
 
     @Test
@@ -523,7 +529,7 @@ class FieldSerializerTest {
         assertEquals("0", serialized); // Verify serialization
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // 5 chars total, left-padded with zeros
+        assertEquals("00000", formatted); // Field length: 5, precision: 0, left-padded with zeros
     }
 
     @Test
@@ -537,7 +543,7 @@ class FieldSerializerTest {
         assertEquals("0", serialized); // Verify serialization (no decimal separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0000000", formatted); // 7 chars total, left-padded with zeros
+        assertEquals("0000000", formatted); // Field length: 7, precision: 2, left-padded with zeros
     }
 
     @Test
@@ -553,13 +559,24 @@ class FieldSerializerTest {
         assertEquals("0.00", serialized); // Verify serialization (with decimal separator)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0000.00", formatted); // 7 chars total, left-padded with zeros
+        assertEquals("0000.00", formatted); // Field length: 7, precision: 2, left-padded with zeros
     }
 
     // ==================== ROUNDING MODE TESTS ====================
 
     @Test
-    @DisplayName("Should use HALF_UP rounding mode (default)")
+    @DisplayName("Should use UNNECESSARY rounding mode (default)")
+    void testUnnecessaryRoundingModeDefault() {
+        // Test that UNNECESSARY works for exact values (default behavior)
+        String result1 = FieldSerializer.serialize(new BigDecimal("12.34"), 2);
+        assertEquals("1234", result1); // 12.34 is exact, no rounding needed
+        
+        String result2 = FieldSerializer.serialize(new BigDecimal("12.00"), 2);
+        assertEquals("1200", result2); // 12.00 is exact, no rounding needed
+    }
+
+    @Test
+    @DisplayName("Should use HALF_UP rounding mode")
     void testHalfUpRoundingMode() {
         mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
         
@@ -655,8 +672,7 @@ class FieldSerializerTest {
     @Test
     @DisplayName("Should use UNNECESSARY rounding mode for exact values")
     void testUnnecessaryRoundingModeExact() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UNNECESSARY);
-        
+        // UNNECESSARY is now the default, so we don't need to mock it
         // Test cases where UNNECESSARY works for exact values
         String result1 = FieldSerializer.serialize(new BigDecimal("12.34"), 2);
         assertEquals("1234", result1); // 12.34 is exact, no rounding needed
@@ -668,8 +684,7 @@ class FieldSerializerTest {
     @Test
     @DisplayName("Should throw exception for UNNECESSARY rounding mode when rounding is needed")
     void testUnnecessaryRoundingModeThrowsException() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UNNECESSARY);
-        
+        // UNNECESSARY is now the default, so we don't need to mock it
         // Test that UNNECESSARY throws exception when rounding would be needed
         assertThrows(ArithmeticException.class, () -> {
             FieldSerializer.serialize(new BigDecimal("12.345"), 2);
@@ -756,7 +771,7 @@ class FieldSerializerTest {
         assertEquals("1", serialized); // Raw serialization (no padding)
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0000001", formatted); // Formatted with leading zeros to reach length 7
+        assertEquals("0000001", formatted); // Field length: 7, precision: 2, left-padded with zeros
     }
 
     // ==================== NUMBERS LESS THAN 1 TESTS ====================
@@ -799,19 +814,19 @@ class FieldSerializerTest {
         assertEquals("50", serialized1); // Raw serialization
         
         String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
-        assertEquals("00000050", formatted1); // 8 chars total, left-padded with zeros
+        assertEquals("00000050", formatted1); // Field length: 8, precision: 2, left-padded with zeros
         
         String serialized2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
         assertEquals("25", serialized2); // Raw serialization
         
         String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
-        assertEquals("00000025", formatted2); // 8 chars total, left-padded with zeros
+        assertEquals("00000025", formatted2); // Field length: 8, precision: 2, left-padded with zeros
         
         String serialized3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
         assertEquals("1", serialized3); // Raw serialization
         
         String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
-        assertEquals("00000001", formatted3); // 8 chars total, left-padded with zeros
+        assertEquals("00000001", formatted3); // Field length: 8, precision: 2, left-padded with zeros
     }
 
     @Test
@@ -853,19 +868,19 @@ class FieldSerializerTest {
         assertEquals("0.50", serialized1); // Raw serialization with decimal separator
         
         String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
-        assertEquals("0000000.50", formatted1); // 8 chars total, left-padded with zeros
+        assertEquals("0000000.50", formatted1); // Field length: 10, precision: 2, left-padded with zeros
         
         String serialized2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
         assertEquals("0.25", serialized2); // Raw serialization with decimal separator
         
         String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
-        assertEquals("0000000.25", formatted2); // 8 chars total, left-padded with zeros
+        assertEquals("0000000.25", formatted2); // Field length: 10, precision: 2, left-padded with zeros
         
         String serialized3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
         assertEquals("0.01", serialized3); // Raw serialization with decimal separator
         
         String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
-        assertEquals("0000000.01", formatted3); // 8 chars total, left-padded with zeros
+        assertEquals("0000000.01", formatted3); // Field length: 10, precision: 2, left-padded with zeros
     }
 
     @Test
@@ -936,13 +951,13 @@ class FieldSerializerTest {
         assertEquals("1", serialized1); // 0.005 → 0.01 → 1 (HALF_UP rounding)
         
         String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
-        assertEquals("000001", formatted1); // 6 chars total, left-padded with zeros
+        assertEquals("000001", formatted1); // Field length: 6, precision: 2, left-padded with zeros
         
         String serialized2 = FieldSerializer.serialize(new BigDecimal("0.004"), 2);
         assertEquals("0", serialized2); // 0.004 → 0.00 → 0 (HALF_UP rounding)
         
         String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
-        assertEquals("000000", formatted2); // 6 chars total, left-padded with zeros
+        assertEquals("000000", formatted2); // Field length: 6, precision: 2, left-padded with zeros
         
         // Test with decimal separator
         mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
@@ -951,7 +966,7 @@ class FieldSerializerTest {
         assertEquals("0.01", serialized3); // 0.005 → 0.01 (with decimal separator)
         
         String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
-        assertEquals("000.01", formatted3); // 6 chars total, left-padded with zeros
+        assertEquals("000.01", formatted3); // Field length: 6, precision: 2, left-padded with zeros
     }
 
 } 

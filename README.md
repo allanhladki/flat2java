@@ -184,9 +184,11 @@ private BigDecimal amount; // 12.34 → "12;34"
 ### FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE
 Sets the rounding mode for BigDecimal operations when precision scaling is required.
 
-- **Default:** `HALF_UP`
+- **Default:** `UNNECESSARY`
 - **Values:** Any valid Java `RoundingMode` enum value (e.g., `HALF_UP`, `HALF_DOWN`, `HALF_EVEN`, `UP`, `DOWN`, `CEILING`, `FLOOR`, `UNNECESSARY`)
 - **Description:** This setting controls how BigDecimal values are rounded when they need to be scaled to a specific precision. The rounding mode determines the behavior when a value cannot be represented exactly with the specified precision.
+
+**Important Note:** Rounding is not encouraged in fixed-length string formats since they work with a fixed number of decimals. It is recommended to perform rounding in the application that uses this library before passing values to the serializer. The default `UNNECESSARY` mode will throw an exception if rounding would be required, ensuring data integrity and preventing unexpected precision loss.
 
 **Available Rounding Modes:**
 - `HALF_UP`: Round towards the nearest neighbor, ties round up (default)
@@ -212,7 +214,11 @@ export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="UP"
 
 **Usage Examples:**
 ```java
-// With FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_UP" (default)
+// With FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="UNNECESSARY" (default)
+@FlatField(length = 8, precision = 2)
+private BigDecimal amount; // 12.34 → "12.34" (exact precision, no rounding)
+
+// With FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_UP"
 @FlatField(length = 8, precision = 2)
 private BigDecimal amount; // 12.345 → "12.35"
 

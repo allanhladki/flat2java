@@ -23,7 +23,7 @@ public class Flat2JavaConfig {
     private static final char DEFAULT_NUMERIC_PADDING = '0';
     private static final boolean DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR = false;
     private static final char DEFAULT_BIGDECIMAL_DECIMAL_SEPARATOR = '.';
-    private static final RoundingMode DEFAULT_BIGDECIMAL_ROUNDING_MODE = RoundingMode.HALF_UP;
+    private static final RoundingMode DEFAULT_BIGDECIMAL_ROUNDING_MODE = RoundingMode.UNNECESSARY;
 
     /** Cached configuration values */
     private static final boolean ALLOW_NULL_VALUES = getNullHandlingConfig();
