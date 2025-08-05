@@ -9,6 +9,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,8 +24,10 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("FieldSerializer Tests")
 class FieldSerializerTest {
 
     private MockedStatic<Flat2JavaConfig> mockedConfig;
@@ -45,38 +51,36 @@ class FieldSerializerTest {
 
     // ==================== STRING TESTS ====================
 
-    @Test
-    @DisplayName("Should format String field to length with right padding")
-    void testFormatStringToLength() throws Exception {
+    @ParameterizedTest
+    @MethodSource("stringSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format string fields correctly")
+    void testStringSerializationAndFormatting(String inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        String serialized = FieldSerializer.serialize("Hello");
-        assertEquals("Hello", serialized); // Verify serialization
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue);
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("Hello   ", formatted); // Field length: 8, right-padded with spaces
+        assertEquals(expectedFormatted, formatted);
+    }
+
+    static Stream<Arguments> stringSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of("Hello", "Hello", "Hello   "),
+            Arguments.of("Test", "Test", "Test    "),
+            Arguments.of("VeryLongString", "VeryLongString", "VeryLong"),
+            Arguments.of("", "", "        "),
+            Arguments.of("123", "123", "123     ")
+        );
     }
 
     @Test
-    @DisplayName("Should truncate String field that exceeds length")
-    void testTruncateStringField() throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize("VeryLongString");
-        assertEquals("VeryLongString", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("VeryLong", formatted); // Field length: 8, truncated to fit
-    }
-
-    @Test
-    @DisplayName("Should throw exception when truncation exception is enabled and string exceeds length")
-    void testThrowExceptionOnStringTruncation() throws Exception {
-        // Enable string truncation exception
+    @DisplayName("Should throw exception when string truncation is enabled")
+    void testStringTruncationException() throws Exception {
         mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(true);
         mockedConfig.when(Flat2JavaConfig::getThrowOnStringTruncationEnvVarName).thenReturn("FLAT2JAVA_THROW_ON_STRING_TRUNCATION");
         
@@ -85,970 +89,407 @@ class FieldSerializerTest {
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
         String serialized = FieldSerializer.serialize("VeryLongString");
-        assertEquals("VeryLongString", serialized); // Verify serialization
+        assertEquals("VeryLongString", serialized);
         
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             FieldSerializer.formatToLength(serialized, metadata);
         });
         
         assertTrue(exception.getMessage().contains("Field 'stringField' value 'VeryLongString' (length 14) exceeds target length 8"));
-        assertTrue(exception.getMessage().contains("FLAT2JAVA_THROW_ON_STRING_TRUNCATION=false"));
     }
 
-    @Test
-    @DisplayName("Should truncate string when truncation exception is disabled (default)")
-    void testTruncateStringWhenExceptionDisabled() throws Exception {
-        // Disable string truncation exception (default behavior)
-        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(false);
-        
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
+    // ==================== NUMERIC TESTS ====================
+
+    @ParameterizedTest
+    @MethodSource("integerSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format integer fields correctly")
+    void testIntegerSerializationAndFormatting(Integer inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        String serialized = FieldSerializer.serialize("VeryLongString");
-        assertEquals("VeryLongString", serialized); // Verify serialization
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue);
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("VeryLong", formatted); // Field length: 8, truncated to fit
+        assertEquals(expectedFormatted, formatted);
     }
 
-    @Test
-    @DisplayName("Should always throw exception for numeric field regardless of truncation setting")
-    void testAlwaysThrowExceptionOnNumericFieldTruncation() throws Exception {
-        // Test with truncation exception disabled (should still throw for numeric fields)
-        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(false);
-        
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(123456789);
-        assertEquals("123456789", serialized); // Verify serialization
-        
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.formatToLength(serialized, metadata);
-        });
-        
-        assertTrue(exception.getMessage().contains("Field 'intField' value '123456789' (length 9) exceeds target length 8"));
-        assertTrue(exception.getMessage().contains("Numeric fields cannot be truncated to prevent data corruption"));
+    static Stream<Arguments> integerSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of(123, "123", "00000123"),
+            Arguments.of(0, "0", "00000000"),
+            Arguments.of(99999999, "99999999", "99999999"),
+            Arguments.of(1, "1", "00000001")
+        );
     }
 
-    @Test
-    @DisplayName("Should always throw exception for numeric field even when truncation is enabled")
-    void testAlwaysThrowExceptionOnNumericFieldTruncationWhenEnabled() throws Exception {
-        // Test with truncation exception enabled (should still throw for numeric fields)
-        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getThrowOnStringTruncationEnvVarName).thenReturn("FLAT2JAVA_THROW_ON_STRING_TRUNCATION");
-        
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(123456789);
-        assertEquals("123456789", serialized); // Verify serialization
-        
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.formatToLength(serialized, metadata);
-        });
-        
-        assertTrue(exception.getMessage().contains("Field 'intField' value '123456789' (length 9) exceeds target length 8"));
-        assertTrue(exception.getMessage().contains("Numeric fields cannot be truncated to prevent data corruption"));
-    }
-
-    // ==================== INTEGER TESTS ====================
-
-
-    @Test
-    @DisplayName("Should format Integer field to length with leading zeros")
-    void testFormatIntegerToLength() throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(123);
-        assertEquals("123", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000123", formatted); // Field length: 8, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should format Integer field with space padding when configured")
-    void testFormatIntegerWithSpacePadding() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn(FlatField.Defaults.PADDING);
-        
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(123);
-        assertEquals("123", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("     123", formatted); // Field length: 8, left-padded with spaces
-    }
-
-    // ==================== LONG TESTS ====================
-
-    @Test
-    @DisplayName("Should format Long field to length with leading zeros")
-    void testFormatLongToLength() throws Exception {
+    @ParameterizedTest
+    @MethodSource("longSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format long fields correctly")
+    void testLongSerializationAndFormatting(Long inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("longField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        String serialized = FieldSerializer.serialize(123456789L);
-        assertEquals("123456789", serialized); // Verify serialization
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue);
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("123456789", formatted); // Field length: 9, exact length (no padding needed)
+        assertEquals(expectedFormatted, formatted);
     }
 
-    // ==================== BIGINTEGER TESTS ====================
+    static Stream<Arguments> longSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of(123L, "123", "000000123"),
+            Arguments.of(0L, "0", "000000000"),
+            Arguments.of(999999999L, "999999999", "999999999"),
+            Arguments.of(1L, "1", "000000001")
+        );
+    }
 
-    @Test
-    @DisplayName("Should format BigInteger field to length with leading zeros")
-    void testFormatBigIntegerToLength() throws Exception {
+    @ParameterizedTest
+    @MethodSource("bigIntegerSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format BigInteger fields correctly")
+    void testBigIntegerSerializationAndFormatting(BigInteger inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        String serialized = FieldSerializer.serialize(new BigInteger("12345678"));
-        assertEquals("12345678", serialized); // Verify serialization
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue);
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("012345678", formatted); // Field length: 9, left-padded with zeros
+        assertEquals(expectedFormatted, formatted);
+    }
+
+    static Stream<Arguments> bigIntegerSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of(BigInteger.valueOf(123), "123", "000000123"),
+            Arguments.of(BigInteger.ZERO, "0", "000000000"),
+            Arguments.of(new BigInteger("999999999"), "999999999", "999999999"),
+            Arguments.of(BigInteger.ONE, "1", "000000001")
+        );
     }
 
     // ==================== BIGDECIMAL TESTS ====================
 
-    @Test
-    @DisplayName("Should serialize BigDecimal field with precision 3 correctly (no decimal separator)")
-    void testSerializeBigDecimalPrecision3() throws Exception {
-        String result = FieldSerializer.serialize(new BigDecimal("123.45"), 3);
-        assertEquals("123450", result); // 3 decimal places, no separator
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with precision 2 correctly (no decimal separator)")
-    void testSerializeBigDecimalPrecision2() throws Exception {
-        // Mock HALF_UP rounding mode for this test since we're testing rounding behavior
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        String result = FieldSerializer.serialize(new BigDecimal("123.456"), 2);
-        assertEquals("12346", result); // 2 decimal places, rounded, no separator
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with precision 0 correctly")
-    void testSerializeBigDecimalPrecision0() throws Exception {
-        // Mock HALF_UP rounding mode for this test since we're testing rounding behavior
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        String result = FieldSerializer.serialize(new BigDecimal("123.45"), 0);
-        assertEquals("123", result); // 0 precision means it must be an integer
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with precision 4 correctly (no decimal separator)")
-    void testSerializeBigDecimalPrecision4() throws Exception {
-        String result = FieldSerializer.serialize(new BigDecimal("123.4"), 4);
-        assertEquals("1234000", result); // 4 decimal places, no separator
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with decimal separator when enabled")
-    void testSerializeBigDecimalWithDecimalSeparator() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        String result = FieldSerializer.serialize(new BigDecimal("123.45"), 3);
-        assertEquals("123.450", result); // 3 decimal places with separator
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with custom decimal separator")
-    void testSerializeBigDecimalWithCustomSeparator() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(',');
-        
-        String result = FieldSerializer.serialize(new BigDecimal("123.45"), 3);
-        assertEquals("123,450", result); // Uses comma as decimal separator
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with semicolon decimal separator")
-    void testSerializeBigDecimalWithSemicolonSeparator() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(';');
-        
-        String result = FieldSerializer.serialize(new BigDecimal("123.45"), 2);
-        assertEquals("123;45", result); // Uses semicolon as decimal separator
-    }
-
-    @Test
-    @DisplayName("Should serialize BigDecimal field with default decimal separator")
-    void testSerializeBigDecimalWithDefaultSeparator() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn('.');
-        
-        String result = FieldSerializer.serialize(new BigDecimal("123.45"), 3);
-        assertEquals("123.450", result); // Uses default dot as decimal separator
-    }
-
-    @Test
-    @DisplayName("Should format BigDecimal field to length with leading zeros (no decimal separator)")
-    void testFormatBigDecimalToLength() throws Exception {
+    @ParameterizedTest
+    @MethodSource("bigDecimalSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format BigDecimal fields correctly")
+    void testBigDecimalSerializationAndFormatting(BigDecimal inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        String serialized = FieldSerializer.serialize(new BigDecimal("23.45"), 3);
-        assertEquals("23450", serialized); // Verify serialization (no decimal separator)
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue, annotation.precision());
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0023450", formatted); // Field length: 7, precision: 3, left-padded with zeros
+        assertEquals(expectedFormatted, formatted);
     }
 
-    @Test
-    @DisplayName("Should format BigDecimal field with decimal separator when enabled")
-    void testFormatBigDecimalWithDecimalSeparator() throws Exception {
+    static Stream<Arguments> bigDecimalSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of(new BigDecimal("123.456"), "123456", "0123456"),
+            Arguments.of(BigDecimal.ZERO, "0", "0000000"),
+            Arguments.of(new BigDecimal("999.999"), "999999", "0999999"),
+            Arguments.of(new BigDecimal("0.001"), "1", "0000001")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("bigDecimalDecimalSeparatorTestCases")
+    @DisplayName("Should serialize BigDecimal with decimal separator when enabled")
+    void testBigDecimalWithDecimalSeparator(BigDecimal inputValue, char separator, String expectedSerialized) {
         mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(separator);
         
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(new BigDecimal("23.45"), 3);
-        assertEquals("23.450", serialized); // Verify serialization (with decimal separator)
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("023.450", formatted); // Field length: 7, precision: 3, left-padded with zeros
+        String result = FieldSerializer.serialize(inputValue, 2);
+        assertEquals(expectedSerialized, result);
     }
 
-    @Test
-    @DisplayName("Should format BigDecimal field with custom padding character (no decimal separator)")
-    void testFormatBigDecimalWithCustomPadding() throws Exception {
-        // Create a test class with custom padding
-        class CustomPaddingTestClass {
-            @FlatField(length = 10, precision = 2, padding = '*')
-            public BigDecimal customField;
-        }
-        
-        Field field = CustomPaddingTestClass.class.getDeclaredField("customField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(new BigDecimal("123.45"), 2);
-        assertEquals("12345", serialized); // Verify serialization (no decimal separator)
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("*****12345", formatted); // Field length: 10, precision: 2, left-padded with asterisks
+    static Stream<Arguments> bigDecimalDecimalSeparatorTestCases() {
+        return Stream.of(
+            Arguments.of(new BigDecimal("123.45"), '.', "123.45"),
+            Arguments.of(new BigDecimal("123.45"), ',', "123,45"),
+            Arguments.of(new BigDecimal("123.45"), ';', "123;45"),
+            Arguments.of(new BigDecimal("123"), '.', "123.00")
+        );
     }
 
-    @Test
-    @DisplayName("Should format BigDecimal field with custom padding and decimal separator")
-    void testFormatBigDecimalWithCustomPaddingAndSeparator() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        // Create a test class with custom padding
-        class CustomPaddingTestClass {
-            @FlatField(length = 10, precision = 2, padding = '*')
-            public BigDecimal customField;
-        }
-        
-        Field field = CustomPaddingTestClass.class.getDeclaredField("customField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(new BigDecimal("123.45"), 2);
-        assertEquals("123.45", serialized); // Verify serialization (with decimal separator)
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("****123.45", formatted); // Field length: 10, precision: 2, left-padded with asterisks
-    }
+    // ==================== DATE/TIME TESTS ====================
 
-    @Test
-    @DisplayName("Should format BigDecimal field with custom padding and comma separator")
-    void testFormatBigDecimalWithCustomPaddingAndCommaSeparator() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(',');
-        
-        // Create a test class with custom padding
-        class CustomPaddingTestClass {
-            @FlatField(length = 10, precision = 2, padding = '*')
-            public BigDecimal customField;
-        }
-        
-        Field field = CustomPaddingTestClass.class.getDeclaredField("customField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(new BigDecimal("123.45"), 2);
-        assertEquals("123,45", serialized); // Verify serialization (with comma separator)
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("****123,45", formatted); // Field length: 10, precision: 2, left-padded with asterisks
-    }
-
-    // ==================== LOCALDATE TESTS ====================
-
-    @Test
-    @DisplayName("Should format LocalDate field to length with right padding")
-    void testFormatLocalDateToLength() throws Exception {
+    @ParameterizedTest
+    @MethodSource("localDateSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format LocalDate fields correctly")
+    void testLocalDateSerializationAndFormatting(LocalDate inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("dateField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        LocalDate date = LocalDate.of(2024, 3, 15);
-        String serialized = FieldSerializer.serialize(date, "yyyyMMdd");
-        assertEquals("20240315", serialized); // Verify serialization
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue, "yyyyMMdd");
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("20240315", formatted); // Field length: 8, exact length (no padding needed)
+        assertEquals(expectedFormatted, formatted);
     }
 
-    // ==================== LOCALDATETIME TESTS ====================
+    static Stream<Arguments> localDateSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of(LocalDate.of(2024, 3, 15), "20240315", "20240315"),
+            Arguments.of(LocalDate.of(2024, 12, 31), "20241231", "20241231"),
+            Arguments.of(LocalDate.of(2024, 1, 1), "20240101", "20240101")
+        );
+    }
 
-    @Test
-    @DisplayName("Should format LocalDateTime field to length with right padding")
-    void testFormatLocalDateTimeToLength() throws Exception {
+    @ParameterizedTest
+    @MethodSource("localDateTimeSerializationAndFormattingTestCases")
+    @DisplayName("Should serialize and format LocalDateTime fields correctly")
+    void testLocalDateTimeSerializationAndFormatting(LocalDateTime inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("dateTimeField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        LocalDateTime dateTime = LocalDateTime.of(2024, 3, 15, 14, 30, 45);
-        String serialized = FieldSerializer.serialize(dateTime, "yyyyMMddHHmmss");
-        assertEquals("20240315143045", serialized); // Verify serialization
+        // Test serialization
+        String serialized = FieldSerializer.serialize(inputValue, "yyyyMMddHHmmss");
+        assertEquals(expectedSerialized, serialized);
         
+        // Test formatting to length
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("20240315143045", formatted); // Field length: 14, exact length (no padding needed)
+        assertEquals(expectedFormatted, formatted);
+    }
+
+    static Stream<Arguments> localDateTimeSerializationAndFormattingTestCases() {
+        return Stream.of(
+            Arguments.of(LocalDateTime.of(2024, 3, 15, 12, 30, 45), "20240315123045", "20240315123045"),
+            Arguments.of(LocalDateTime.of(2024, 12, 31, 23, 59, 59), "20241231235959", "20241231235959"),
+            Arguments.of(LocalDateTime.of(2024, 1, 1, 0, 0, 0), "20240101000000", "20240101000000")
+        );
     }
 
     // ==================== ERROR TESTS ====================
 
-    @Test
-    @DisplayName("Should throw exception for unsupported types")
-    void testUnsupportedType() throws Exception {
-        // Create a test class with an unsupported field type
-        class UnsupportedTestClass {
-            @FlatField(length = 8)
-            private Object unsupportedField;
+    @ParameterizedTest
+    @ValueSource(classes = {String.class, Integer.class, BigDecimal.class})
+    @DisplayName("Should throw NullPointerException for null values")
+    void testNullValues(Class<?> type) {
+        if (type == BigDecimal.class) {
+            assertThrows(NullPointerException.class, () -> {
+                FieldSerializer.serialize((BigDecimal) null, 2);
+            });
+        } else if (type == Integer.class) {
+            assertThrows(NullPointerException.class, () -> {
+                FieldSerializer.serialize((Integer) null);
+            });
+        } else {
+            assertThrows(NullPointerException.class, () -> {
+                FieldSerializer.serialize((String) null);
+            });
         }
-        
-        UnsupportedTestClass testObject = new UnsupportedTestClass();
-        testObject.unsupportedField = new Object();
-        
-        assertThrows(IllegalArgumentException.class, () -> {
-            ObjectSerializer.serialize(testObject);
-        });
+    }
+
+    @ParameterizedTest
+    @MethodSource("negativeValueTestCases")
+    @DisplayName("Should throw exception for negative values")
+    void testNegativeValues(Object value) {
+        if (value instanceof BigDecimal) {
+            assertThrows(IllegalArgumentException.class, () -> {
+                FieldSerializer.serialize((BigDecimal) value, 2);
+            });
+        } else if (value instanceof Integer) {
+            assertThrows(IllegalArgumentException.class, () -> {
+                FieldSerializer.serialize((Integer) value);
+            });
+        } else if (value instanceof Long) {
+            assertThrows(IllegalArgumentException.class, () -> {
+                FieldSerializer.serialize((Long) value);
+            });
+        } else if (value instanceof BigInteger) {
+            assertThrows(IllegalArgumentException.class, () -> {
+                FieldSerializer.serialize((BigInteger) value);
+            });
+        }
+    }
+
+    static Stream<Arguments> negativeValueTestCases() {
+        return Stream.of(
+            Arguments.of(-123),
+            Arguments.of(-123L),
+            Arguments.of(BigInteger.valueOf(-123)),
+            Arguments.of(new BigDecimal("-123.45"))
+        );
     }
 
     @Test
     @DisplayName("Should throw exception for LocalDate without format")
-    void testLocalDateWithoutFormat() throws Exception {
-        // Test the FieldSerializer directly for LocalDate without format
-        LocalDate date = LocalDate.of(2024, 3, 15);
-        
+    void testLocalDateWithoutFormat() {
         assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.serialize(date, ""); // Empty format should cause exception
+            FieldSerializer.serialize(LocalDate.of(2024, 3, 15), "");
         });
     }
 
     @Test
-    @DisplayName("Should throw NullPointerException for null String")
-    void testNullString() {
-        assertThrows(NullPointerException.class, () -> {
-            FieldSerializer.serialize((String) null);
-        });
-    }
-
-    @Test
-    @DisplayName("Should throw NullPointerException for null Integer")
-    void testNullInteger() {
-        assertThrows(NullPointerException.class, () -> {
-            FieldSerializer.serialize((Integer) null);
-        });
-    }
-
-    @Test
-    @DisplayName("Should throw NullPointerException for null BigDecimal")
-    void testNullBigDecimal() {
-        assertThrows(NullPointerException.class, () -> {
-            FieldSerializer.serialize((BigDecimal) null, 2);
-        });
-    }
-
-    // ==================== POSITIVE VALUE VALIDATION TESTS ====================
-
-    @Test
-    @DisplayName("Should throw exception for negative Integer")
-    void testNegativeInteger() {
+    @DisplayName("Should throw exception for LocalDateTime without format")
+    void testLocalDateTimeWithoutFormat() {
         assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.serialize(-123);
+            FieldSerializer.serialize(LocalDateTime.of(2024, 3, 15, 12, 30, 45), "");
         });
-    }
-
-    @Test
-    @DisplayName("Should throw exception for negative Long")
-    void testNegativeLong() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.serialize(-123L);
-        });
-    }
-
-    @Test
-    @DisplayName("Should throw exception for negative BigInteger")
-    void testNegativeBigInteger() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.serialize(new BigInteger("-123"));
-        });
-    }
-
-    @Test
-    @DisplayName("Should throw exception for negative BigDecimal")
-    void testNegativeBigDecimal() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            FieldSerializer.serialize(new BigDecimal("-123.45"), 2);
-        });
-    }
-
-    // ==================== ZERO VALUE TESTS ====================
-
-    @Test
-    @DisplayName("Should serialize zero Integer correctly")
-    void testZeroInteger() {
-        String result = FieldSerializer.serialize(0);
-        assertEquals("0", result);
-    }
-
-    @Test
-    @DisplayName("Should serialize zero Long correctly")
-    void testZeroLong() {
-        String result = FieldSerializer.serialize(0L);
-        assertEquals("0", result);
-    }
-
-    @Test
-    @DisplayName("Should serialize zero BigInteger correctly")
-    void testZeroBigInteger() {
-        String result = FieldSerializer.serialize(BigInteger.ZERO);
-        assertEquals("0", result);
-    }
-
-    @Test
-    @DisplayName("Should serialize zero BigDecimal with precision 0 correctly")
-    void testZeroBigDecimalNoPrecision() {
-        String result = FieldSerializer.serialize(BigDecimal.ZERO, 0);
-        assertEquals("0", result);
-    }
-
-    @Test
-    @DisplayName("Should serialize zero BigDecimal with precision 2 correctly")
-    void testZeroBigDecimalWithPrecision() {
-        String result = FieldSerializer.serialize(BigDecimal.ZERO, 2);
-        assertEquals("0", result); // BigDecimal.ZERO with precision 2 becomes "0" (no decimal separator by default)
-    }
-
-    @Test
-    @DisplayName("Should serialize zero BigDecimal with precision 2 and decimal separator")
-    void testZeroBigDecimalWithPrecisionAndSeparator() {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        String result = FieldSerializer.serialize(BigDecimal.ZERO, 2);
-        assertEquals("0.00", result);
-    }
-
-    @Test
-    @DisplayName("Should format zero Integer to length with leading zeros")
-    void testFormatZeroIntegerToLength() throws Exception {
-        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroInteger");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(0);
-        assertEquals("0", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // Field length: 5, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should format zero Long to length with leading zeros")
-    void testFormatZeroLongToLength() throws Exception {
-        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroLong");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(0L);
-        assertEquals("0", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // Field length: 5, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should format zero BigInteger to length with leading zeros")
-    void testFormatZeroBigIntegerToLength() throws Exception {
-        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroBigInteger");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(BigInteger.ZERO);
-        assertEquals("0", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // Field length: 5, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should format zero BigDecimal with precision 0 to length")
-    void testFormatZeroBigDecimalNoPrecisionToLength() throws Exception {
-        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroBigDecimalNoPrecision");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(BigDecimal.ZERO, 0);
-        assertEquals("0", serialized); // Verify serialization
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("00000", formatted); // Field length: 5, precision: 0, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should format zero BigDecimal with precision 2 to length")
-    void testFormatZeroBigDecimalWithPrecisionToLength() throws Exception {
-        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroBigDecimalWithPrecision");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(BigDecimal.ZERO, 2);
-        assertEquals("0", serialized); // Verify serialization (no decimal separator)
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0000000", formatted); // Field length: 7, precision: 2, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should format zero BigDecimal with precision 2 and decimal separator to length")
-    void testFormatZeroBigDecimalWithPrecisionAndSeparatorToLength() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroBigDecimalWithPrecision");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        String serialized = FieldSerializer.serialize(BigDecimal.ZERO, 2);
-        assertEquals("0.00", serialized); // Verify serialization (with decimal separator)
-        
-        String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0000.00", formatted); // Field length: 7, precision: 2, left-padded with zeros
     }
 
     // ==================== ROUNDING MODE TESTS ====================
 
-    @Test
-    @DisplayName("Should use UNNECESSARY rounding mode (default)")
-    void testUnnecessaryRoundingModeDefault() {
-        // Test that UNNECESSARY works for exact values (default behavior)
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.34"), 2);
-        assertEquals("1234", result1); // 12.34 is exact, no rounding needed
+    @ParameterizedTest
+    @MethodSource("roundingModeTestCases")
+    @DisplayName("Should use different rounding modes correctly")
+    void testRoundingModes(BigDecimal value, RoundingMode roundingMode, String expected) {
+        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(roundingMode);
         
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.00"), 2);
-        assertEquals("1200", result2); // 12.00 is exact, no rounding needed
+        String result = FieldSerializer.serialize(value, 2);
+        assertEquals(expected, result);
     }
 
-    @Test
-    @DisplayName("Should use HALF_UP rounding mode")
-    void testHalfUpRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Test cases where HALF_UP rounds up on ties
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
-        assertEquals("1235", result1); // 12.345 → 12.35 → 1235 (no decimal separator)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.335"), 2);
-        assertEquals("1234", result2); // 12.335 → 12.34 → 1234 (no decimal separator)
+    static Stream<Arguments> roundingModeTestCases() {
+        return Stream.of(
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.HALF_UP, "12346"),
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.HALF_DOWN, "12346"),
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.HALF_EVEN, "12346"),
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.UP, "12346"),
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.DOWN, "12345"),
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.CEILING, "12346"),
+            Arguments.of(new BigDecimal("123.456"), RoundingMode.FLOOR, "12345")
+        );
     }
 
-    @Test
-    @DisplayName("Should use HALF_DOWN rounding mode")
-    void testHalfDownRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_DOWN);
-        
-        // Test cases where HALF_DOWN rounds down on ties
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
-        assertEquals("1234", result1); // 12.345 → 12.34 → 1234 (no decimal separator)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.335"), 2);
-        assertEquals("1233", result2); // 12.335 → 12.33 → 1233 (no decimal separator)
-    }
+    // ==================== NUMERIC FIELD TRUNCATION TESTS ====================
 
     @Test
-    @DisplayName("Should use HALF_EVEN rounding mode (Banker's rounding)")
-    void testHalfEvenRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_EVEN);
-        
-        // Test cases where HALF_EVEN rounds to even on ties
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
-        assertEquals("1234", result1); // 12.345 → 12.34 → 1234 (rounds to even)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.335"), 2);
-        assertEquals("1234", result2); // 12.335 → 12.34 → 1234 (rounds to even)
-        
-        String result3 = FieldSerializer.serialize(new BigDecimal("12.355"), 2);
-        assertEquals("1236", result3); // 12.355 → 12.36 → 1236 (rounds to even)
-    }
-
-    @Test
-    @DisplayName("Should use UP rounding mode")
-    void testUpRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UP);
-        
-        // Test cases where UP always rounds up
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.341"), 2);
-        assertEquals("1235", result1); // 12.341 → 12.35 → 1235 (always up)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.300"), 2);
-        assertEquals("1230", result2); // 12.300 → 12.30 → 1230 (no rounding needed, exact value)
-    }
-
-    @Test
-    @DisplayName("Should use DOWN rounding mode")
-    void testDownRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.DOWN);
-        
-        // Test cases where DOWN always rounds down
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.349"), 2);
-        assertEquals("1234", result1); // 12.349 → 12.34 → 1234 (always down)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.399"), 2);
-        assertEquals("1239", result2); // 12.399 → 12.39 → 1239 (always down)
-    }
-
-    @Test
-    @DisplayName("Should use CEILING rounding mode")
-    void testCeilingRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.CEILING);
-        
-        // Test cases where CEILING rounds towards positive infinity
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.341"), 2);
-        assertEquals("1235", result1); // 12.341 → 12.35 → 1235 (towards positive infinity)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.300"), 2);
-        assertEquals("1230", result2); // 12.300 → 12.30 → 1230 (no rounding needed, exact value)
-    }
-
-    @Test
-    @DisplayName("Should use FLOOR rounding mode")
-    void testFloorRoundingMode() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.FLOOR);
-        
-        // Test cases where FLOOR rounds towards negative infinity
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.349"), 2);
-        assertEquals("1234", result1); // 12.349 → 12.34 → 1234 (towards negative infinity)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.399"), 2);
-        assertEquals("1239", result2); // 12.399 → 12.39 → 1239 (towards negative infinity)
-    }
-
-    @Test
-    @DisplayName("Should use UNNECESSARY rounding mode for exact values")
-    void testUnnecessaryRoundingModeExact() {
-        // UNNECESSARY is now the default, so we don't need to mock it
-        // Test cases where UNNECESSARY works for exact values
-        String result1 = FieldSerializer.serialize(new BigDecimal("12.34"), 2);
-        assertEquals("1234", result1); // 12.34 is exact, no rounding needed
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("12.00"), 2);
-        assertEquals("1200", result2); // 12.00 is exact, no rounding needed
-    }
-
-    @Test
-    @DisplayName("Should throw exception for UNNECESSARY rounding mode when rounding is needed")
-    void testUnnecessaryRoundingModeThrowsException() {
-        // UNNECESSARY is now the default, so we don't need to mock it
-        // Test that UNNECESSARY throws exception when rounding would be needed
-        assertThrows(ArithmeticException.class, () -> {
-            FieldSerializer.serialize(new BigDecimal("12.345"), 2);
-        });
-        
-        assertThrows(ArithmeticException.class, () -> {
-            FieldSerializer.serialize(new BigDecimal("12.341"), 2);
-        });
-    }
-
-    @Test
-    @DisplayName("Should use rounding mode with decimal separator enabled")
-    void testRoundingModeWithDecimalSeparator() {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_DOWN);
-        
-        // Test rounding mode with decimal separator
-        String result = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
-        assertEquals("12.34", result); // 12.345 → 12.34 with HALF_DOWN
-    }
-
-    @Test
-    @DisplayName("Should use rounding mode with custom decimal separator")
-    void testRoundingModeWithCustomDecimalSeparator() {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(',');
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Test rounding mode with custom decimal separator
-        String result = FieldSerializer.serialize(new BigDecimal("12.345"), 2);
-        assertEquals("12,35", result); // 12.345 → 12.35 with HALF_UP and comma separator
-    }
-
-    @Test
-    @DisplayName("Should use rounding mode for precision 0 (integer conversion)")
-    void testRoundingModeWithPrecisionZero() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Test rounding mode when precision is 0 (converts to integer)
-        String result = FieldSerializer.serialize(new BigDecimal("12.5"), 0);
-        assertEquals("13", result); // 12.5 → 13 with HALF_UP
-    }
-
-    @Test
-    @DisplayName("Should use rounding mode for high precision values")
-    void testRoundingModeWithHighPrecision() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_EVEN);
-        
-        // Test rounding mode with high precision
-        String result = FieldSerializer.serialize(new BigDecimal("12.3456789"), 4);
-        assertEquals("123457", result); // 12.3456789 → 12.3457 → 123457 with HALF_EVEN
-    }
-
-    @Test
-    @DisplayName("Should use rounding mode for edge case values")
-    void testRoundingModeWithEdgeCases() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Test edge cases
-        String result1 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
-        assertEquals("1", result1); // 0.005 → 0.01 → 1 with HALF_UP (raw value, no padding)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("999.999"), 2);
-        assertEquals("100000", result2); // 999.999 → 1000.00 → 100000 with HALF_UP (raw value, no padding)
-    }
-
-    @Test
-    @DisplayName("Should use rounding mode with proper field formatting (leading zeros)")
-    void testRoundingModeWithFieldFormatting() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Create a field metadata with length 7 (to show padding)
-        class EdgeCaseTestClass {
-            @FlatField(length = 7, precision = 2)
-            public BigDecimal edgeCaseField;
-        }
-        
-        Field field = EdgeCaseTestClass.class.getDeclaredField("edgeCaseField");
+    @DisplayName("Should always throw exception for numeric field truncation")
+    void testNumericFieldTruncation() throws Exception {
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        // Test edge case with proper formatting (including leading zeros)
-        String serialized = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
-        assertEquals("1", serialized); // Raw serialization (no padding)
+        String serialized = FieldSerializer.serialize(123456789);
+        assertEquals("123456789", serialized);
+        
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldSerializer.formatToLength(serialized, metadata);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'intField' value '123456789' (length 9) exceeds target length 8"));
+        assertTrue(exception.getMessage().contains("Numeric fields cannot be truncated"));
+    }
+
+    @Test
+    @DisplayName("Should handle space padding for numeric fields when configured")
+    void testNumericFieldWithSpacePadding() throws Exception {
+        mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn(' ');
+        
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        String serialized = FieldSerializer.serialize(123);
+        assertEquals("123", serialized);
         
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("0000001", formatted); // Field length: 7, precision: 2, left-padded with zeros
+        assertEquals("     123", formatted); // Space padding instead of zeros
     }
 
-    // ==================== NUMBERS LESS THAN 1 TESTS ====================
+    // ==================== ZERO VALUE TESTS ====================
 
-    @Test
-    @DisplayName("Should serialize numbers less than 1 correctly (no decimal separator)")
-    void testNumbersLessThanOneSerialization() {
-        // Test raw serialization of numbers less than 1
-        String result1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
-        assertEquals("50", result1); // 0.5 → 50 (representing 50 cents)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
-        assertEquals("25", result2); // 0.25 → 25 (representing 25 cents)
-        
-        String result3 = FieldSerializer.serialize(new BigDecimal("0.125"), 3);
-        assertEquals("125", result3); // 0.125 → 125 (representing 125 thousandths)
-        
-        String result4 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
-        assertEquals("1", result4); // 0.01 → 1 (representing 1 cent)
-        
-        String result5 = FieldSerializer.serialize(new BigDecimal("0.001"), 3);
-        assertEquals("1", result5); // 0.001 → 1 (representing 1 thousandth)
-    }
-
-    @Test
-    @DisplayName("Should format numbers less than 1 with proper leading zeros (no decimal separator)")
-    void testNumbersLessThanOneFormatting() throws Exception {
-        // Create field metadata with length 8
-        class LessThanOneTestClass {
-            @FlatField(length = 8, precision = 2)
-            public BigDecimal lessThanOneField;
-        }
-        
-        Field field = LessThanOneTestClass.class.getDeclaredField("lessThanOneField");
+    @ParameterizedTest
+    @MethodSource("zeroValueTestCases")
+    @DisplayName("Should serialize and format zero values correctly")
+    void testZeroValues(Object value, String expectedSerialized, String expectedFormatted) throws Exception {
+        Field field = TestFixtures.ZeroValueRecord.class.getDeclaredField("zeroInteger");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
         
-        // Test formatting with leading zeros
-        String serialized1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
-        assertEquals("50", serialized1); // Raw serialization
-        
-        String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
-        assertEquals("00000050", formatted1); // Field length: 8, precision: 2, left-padded with zeros
-        
-        String serialized2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
-        assertEquals("25", serialized2); // Raw serialization
-        
-        String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
-        assertEquals("00000025", formatted2); // Field length: 8, precision: 2, left-padded with zeros
-        
-        String serialized3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
-        assertEquals("1", serialized3); // Raw serialization
-        
-        String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
-        assertEquals("00000001", formatted3); // Field length: 8, precision: 2, left-padded with zeros
-    }
-
-    @Test
-    @DisplayName("Should serialize numbers less than 1 with decimal separator enabled")
-    void testNumbersLessThanOneWithDecimalSeparator() {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        // Test with decimal separator enabled
-        String result1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
-        assertEquals("0.50", result1); // 0.5 → 0.50 (with decimal separator)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
-        assertEquals("0.25", result2); // 0.25 → 0.25 (with decimal separator)
-        
-        String result3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
-        assertEquals("0.01", result3); // 0.01 → 0.01 (with decimal separator)
-        
-        String result4 = FieldSerializer.serialize(new BigDecimal("0.125"), 3);
-        assertEquals("0.125", result4); // 0.125 → 0.125 (with decimal separator)
-    }
-
-    @Test
-    @DisplayName("Should format numbers less than 1 with decimal separator and proper padding")
-    void testNumbersLessThanOneWithDecimalSeparatorAndPadding() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        // Create field metadata with length 10
-        class LessThanOneDecimalTestClass {
-            @FlatField(length = 10, precision = 2)
-            public BigDecimal lessThanOneDecimalField;
+        // Test serialization
+        String serialized;
+        if (value instanceof BigDecimal) {
+            serialized = FieldSerializer.serialize((BigDecimal) value, 2);
+        } else if (value instanceof Integer) {
+            serialized = FieldSerializer.serialize((Integer) value);
+        } else if (value instanceof Long) {
+            serialized = FieldSerializer.serialize((Long) value);
+        } else if (value instanceof BigInteger) {
+            serialized = FieldSerializer.serialize((BigInteger) value);
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass());
         }
         
-        Field field = LessThanOneDecimalTestClass.class.getDeclaredField("lessThanOneDecimalField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        assertEquals(expectedSerialized, serialized);
         
-        // Test formatting with decimal separator and padding
-        String serialized1 = FieldSerializer.serialize(new BigDecimal("0.5"), 2);
-        assertEquals("0.50", serialized1); // Raw serialization with decimal separator
-        
-        String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
-        assertEquals("0000000.50", formatted1); // Field length: 10, precision: 2, left-padded with zeros
-        
-        String serialized2 = FieldSerializer.serialize(new BigDecimal("0.25"), 2);
-        assertEquals("0.25", serialized2); // Raw serialization with decimal separator
-        
-        String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
-        assertEquals("0000000.25", formatted2); // Field length: 10, precision: 2, left-padded with zeros
-        
-        String serialized3 = FieldSerializer.serialize(new BigDecimal("0.01"), 2);
-        assertEquals("0.01", serialized3); // Raw serialization with decimal separator
-        
-        String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
-        assertEquals("0000000.01", formatted3); // Field length: 10, precision: 2, left-padded with zeros
+        // Test formatting to length
+        String formatted = FieldSerializer.formatToLength(serialized, metadata);
+        assertEquals(expectedFormatted, formatted);
     }
+
+    static Stream<Arguments> zeroValueTestCases() {
+        return Stream.of(
+            Arguments.of(0, "0", "00000"),
+            Arguments.of(0L, "0", "00000"),
+            Arguments.of(BigInteger.ZERO, "0", "00000"),
+            Arguments.of(BigDecimal.ZERO, "0", "00000")
+        );
+    }
+
+    // ==================== TEST RECORD INTEGRATION TESTS ====================
 
     @Test
-    @DisplayName("Should handle very small numbers less than 1 with different precisions")
-    void testVerySmallNumbersLessThanOne() {
-        // Test very small numbers with different precisions
-        String result1 = FieldSerializer.serialize(new BigDecimal("0.001"), 3);
-        assertEquals("1", result1); // 0.001 → 1 (representing 1 thousandth)
+    @DisplayName("Should serialize and format TestRecord fields correctly")
+    void testTestRecordIntegration() throws Exception {
+        // Test string field
+        Field stringField = TestFixtures.TestRecord.class.getDeclaredField("id");
+        FlatField stringAnnotation = stringField.getAnnotation(FlatField.class);
+        FieldMetadata stringMetadata = new FieldMetadata(stringField, stringAnnotation);
         
-        String result2 = FieldSerializer.serialize(new BigDecimal("0.0001"), 4);
-        assertEquals("1", result2); // 0.0001 → 1 (representing 1 ten-thousandth)
+        String stringSerialized = FieldSerializer.serialize("TEST123");
+        assertEquals("TEST123", stringSerialized);
+        String stringFormatted = FieldSerializer.formatToLength(stringSerialized, stringMetadata);
+        assertEquals("TEST123   ", stringFormatted); // length 10, right-padded
         
-        String result3 = FieldSerializer.serialize(new BigDecimal("0.00001"), 5);
-        assertEquals("1", result3); // 0.00001 → 1 (representing 1 hundred-thousandth)
+        // Test numeric field
+        Field numericField = TestFixtures.TestRecord.class.getDeclaredField("quantity");
+        FlatField numericAnnotation = numericField.getAnnotation(FlatField.class);
+        FieldMetadata numericMetadata = new FieldMetadata(numericField, numericAnnotation);
         
-        // Test with decimal separator
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
+        String numericSerialized = FieldSerializer.serialize(123);
+        assertEquals("123", numericSerialized);
+        String numericFormatted = FieldSerializer.formatToLength(numericSerialized, numericMetadata);
+        assertEquals("00123", numericFormatted); // length 5, left-padded with zeros
         
-        String result4 = FieldSerializer.serialize(new BigDecimal("0.001"), 3);
-        assertEquals("0.001", result4); // 0.001 → 0.001 (with decimal separator)
+        // Test BigDecimal field
+        Field bigDecimalField = TestFixtures.TestRecord.class.getDeclaredField("price");
+        FlatField bigDecimalAnnotation = bigDecimalField.getAnnotation(FlatField.class);
+        FieldMetadata bigDecimalMetadata = new FieldMetadata(bigDecimalField, bigDecimalAnnotation);
         
-        String result5 = FieldSerializer.serialize(new BigDecimal("0.0001"), 4);
-        assertEquals("0.0001", result5); // 0.0001 → 0.0001 (with decimal separator)
+        String bigDecimalSerialized = FieldSerializer.serialize(new BigDecimal("123.45"), 2);
+        assertEquals("12345", bigDecimalSerialized);
+        String bigDecimalFormatted = FieldSerializer.formatToLength(bigDecimalSerialized, bigDecimalMetadata);
+        assertEquals("0000012345", bigDecimalFormatted); // length 10, left-padded with zeros
+        
+        // Test date field
+        Field dateField = TestFixtures.TestRecord.class.getDeclaredField("date");
+        FlatField dateAnnotation = dateField.getAnnotation(FlatField.class);
+        FieldMetadata dateMetadata = new FieldMetadata(dateField, dateAnnotation);
+        
+        String dateSerialized = FieldSerializer.serialize(LocalDate.of(2024, 3, 15), "yyyyMMdd");
+        assertEquals("20240315", dateSerialized);
+        String dateFormatted = FieldSerializer.formatToLength(dateSerialized, dateMetadata);
+        assertEquals("20240315", dateFormatted); // length 8, exact match
     }
-
-    @Test
-    @DisplayName("Should handle edge cases for numbers less than 1 with rounding")
-    void testNumbersLessThanOneWithRounding() {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Test edge cases with rounding
-        String result1 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
-        assertEquals("1", result1); // 0.005 → 0.01 → 1 (HALF_UP rounding)
-        
-        String result2 = FieldSerializer.serialize(new BigDecimal("0.004"), 2);
-        assertEquals("0", result2); // 0.004 → 0.00 → 0 (HALF_UP rounding)
-        
-        String result3 = FieldSerializer.serialize(new BigDecimal("0.006"), 2);
-        assertEquals("1", result3); // 0.006 → 0.01 → 1 (HALF_UP rounding)
-        
-        // Test with different rounding modes
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_DOWN);
-        
-        String result4 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
-        assertEquals("0", result4); // 0.005 → 0.00 → 0 (HALF_DOWN rounding)
-        
-        String result5 = FieldSerializer.serialize(new BigDecimal("0.006"), 2);
-        assertEquals("1", result5); // 0.006 → 0.01 → 1 (HALF_DOWN rounding)
-    }
-
-    @Test
-    @DisplayName("Should format edge cases for numbers less than 1 with proper padding")
-    void testNumbersLessThanOneEdgeCasesWithPadding() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.HALF_UP);
-        
-        // Create field metadata with length 6
-        class EdgeCaseLessThanOneTestClass {
-            @FlatField(length = 6, precision = 2)
-            public BigDecimal edgeCaseLessThanOneField;
-        }
-        
-        Field field = EdgeCaseLessThanOneTestClass.class.getDeclaredField("edgeCaseLessThanOneField");
-        FlatField annotation = field.getAnnotation(FlatField.class);
-        FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
-        // Test edge cases with proper padding
-        String serialized1 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
-        assertEquals("1", serialized1); // 0.005 → 0.01 → 1 (HALF_UP rounding)
-        
-        String formatted1 = FieldSerializer.formatToLength(serialized1, metadata);
-        assertEquals("000001", formatted1); // Field length: 6, precision: 2, left-padded with zeros
-        
-        String serialized2 = FieldSerializer.serialize(new BigDecimal("0.004"), 2);
-        assertEquals("0", serialized2); // 0.004 → 0.00 → 0 (HALF_UP rounding)
-        
-        String formatted2 = FieldSerializer.formatToLength(serialized2, metadata);
-        assertEquals("000000", formatted2); // Field length: 6, precision: 2, left-padded with zeros
-        
-        // Test with decimal separator
-        mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
-        
-        String serialized3 = FieldSerializer.serialize(new BigDecimal("0.005"), 2);
-        assertEquals("0.01", serialized3); // 0.005 → 0.01 (with decimal separator)
-        
-        String formatted3 = FieldSerializer.formatToLength(serialized3, metadata);
-        assertEquals("000.01", formatted3); // Field length: 6, precision: 2, left-padded with zeros
-    }
-
 } 
