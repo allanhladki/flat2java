@@ -43,3 +43,7 @@ replay_pid*
 # EditorConfig
 .editorconfig
 
+# Project Review and Analysis Files
+PROJECT_REVIEW.md
+TODO.md
+

@@ -25,10 +25,12 @@ public class FieldMetadata {
      */
     public FieldMetadata(Field field, FlatField annotation) {
         Objects.requireNonNull(annotation, "FlatField annotation cannot be null");
+        Objects.requireNonNull(field, "Field cannot be null");
+        
         this.field = field;
         this.name =
                 annotation.name().isBlank()
-                        ? (field != null ? field.getName() : "unnamed")
+                        ? field.getName()
                         : annotation.name();
         this.length = annotation.length();
         this.precision = annotation.precision();
@@ -93,10 +95,10 @@ public class FieldMetadata {
     /**
      * Gets the field type.
      *
-     * @return the field type, or Object.class if field is null
+     * @return the field type
      */
     public Class<?> getType() {
-        return field != null ? field.getType() : Object.class;
+        return field.getType();
     }
 
     @Override

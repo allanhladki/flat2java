@@ -14,11 +14,31 @@ import java.lang.annotation.Target;
 public @interface FlatField {
 
     /**
+     * Default values for annotation attributes.
+     */
+    final class Defaults {
+        /** Default name value (empty string) */
+        public static final String NAME = "";
+        
+        /** Default precision value */
+        public static final int PRECISION = 0;
+        
+        /** Default date/time format value (empty string) */
+        public static final String DATE_TIME_FORMAT = "";
+        
+        /** Default padding character (space) */
+        public static final char PADDING = ' ';
+        
+        /** Private constructor to prevent instantiation */
+        private Defaults() {}
+    }
+
+    /**
      * The name of the field.
      *
      * @return the name
      */
-    String name() default "";
+    String name() default Defaults.NAME;
 
     /**
      * The length of the field in the flat file record.
@@ -32,7 +52,7 @@ public @interface FlatField {
      *
      * @return the precision
      */
-    int precision() default 0;
+    int precision() default Defaults.PRECISION;
 
     /**
      * The date format pattern to use when parsing date fields. Uses the standard Java date format
@@ -40,12 +60,12 @@ public @interface FlatField {
      *
      * @return the date format pattern
      */
-    String dateTimeFormat() default "";
+    String dateTimeFormat() default Defaults.DATE_TIME_FORMAT;
 
     /**
      * Optional padding character used in the field.
      *
      * @return the padding character, default is space
      */
-    char padding() default ' ';
+    char padding() default Defaults.PADDING;
 }

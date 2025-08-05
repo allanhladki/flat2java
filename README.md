@@ -1,20 +1,25 @@
 # Flat2Java
 
-A Java library for converting positional plain-text (fixed-length fields) to Java objects, similar to COBOL's data structures.
+A Java library for serializing Java objects to fixed-length flat file formats, similar to COBOL's data structures.
 
 ## Description
 
-This library provides functionality to parse fixed-length text fields and convert them into Java objects. It's particularly useful when working with legacy systems or flat file formats that use fixed-length field definitions.
+This library provides functionality to serialize Java objects into fixed-length text fields for flat file formats. It's particularly useful when working with legacy systems or flat file formats that use fixed-length field definitions.
+
+**Note**: Currently, this library supports **serialization only** (Java objects → flat file strings). Deserialization support (flat file strings → Java objects) is planned for future releases.
 
 ## Features
 
-- Parse fixed-length text fields into Java objects
-- Support for different data types (String, Integer, Date, etc.)
-- Annotation-based field mapping
-- Customizable field definitions
+- Serialize Java objects to fixed-length text fields
+- Support for multiple data types (String, Integer, Long, BigInteger, BigDecimal, LocalDate, LocalDateTime)
+- Annotation-based field mapping with `@FlatField`
+- Customizable field definitions (length, precision, padding, date formats)
+- Environment-based configuration
+- Comprehensive validation and error handling
+- Compile-time validation with annotation processor
 - Easy to use API
 
-## Usage
+## Quick Start
 
 ```java
 public class MyRecord {
@@ -28,8 +33,14 @@ public class MyRecord {
     private BigDecimal amount;
 }
 
-// Extract field metadata in declaration order
-List<FieldMetadata> metadata = FieldMetadataExtractor.extract(MyRecord.class);
+// Serialize an object to flat file format
+MyRecord record = new MyRecord();
+record.setId("1234567890");
+record.setDate(LocalDate.of(2024, 3, 15));
+record.setAmount(new BigDecimal("99.99"));
+
+String flatFileString = ObjectSerializer.serialize(record);
+// Result: "1234567890 2024031500000009999"
 ```
 
 **Note:** The order of fields is determined by their declaration order in the class (and superclasses, if using inheritance).
@@ -93,8 +104,8 @@ public class ExampleRecord {
 
 - Java 11 or higher
 - Maven 3.6 or higher
-- SLF4J with Logback for logging
-- JUnit 5 for testing
+- SLF4J with Logback for logging (runtime dependency)
+- JUnit 5 for testing (test dependency)
 
 ## Installation
 
@@ -102,11 +113,41 @@ Add the following dependency to your project:
 
 ```xml
 <dependency>
-    <groupId>com.github.allan</groupId>
-    <artifactId>flat2java</artifactId>
+    <groupId>com.github.allanhladki</groupId>
+    <artifactId>flat2java-core</artifactId>
     <version>0.0.1-2</version>
 </dependency>
 ```
+
+### Optional: Annotation Processor
+
+For compile-time validation, add the annotation processor:
+
+```xml
+<dependency>
+    <groupId>com.github.allanhladki</groupId>
+    <artifactId>flat2java-processor</artifactId>
+    <version>0.0.1-2</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+## Error Handling
+
+The library provides comprehensive error handling with custom exceptions:
+
+- `Flat2JavaException`: Base exception for all library errors
+- `SerializationException`: Thrown during serialization failures
+- `ValidationException`: Thrown during validation failures
+
+All exceptions include detailed error messages to help diagnose issues.
+
+## Limitations
+
+- **Serialization Only**: Currently supports only serialization (Java objects → flat file strings)
+- **Fixed Field Types**: Limited to supported data types (see @FlatField documentation)
+- **No File I/O**: Library handles string conversion only, not file operations
+- **No Deserialization**: Cannot read flat files back into Java objects (planned for future release)
 
 ## Environment Variables
 
@@ -231,9 +272,29 @@ private BigDecimal amount; // 12.345 → "12.34"
 private BigDecimal amount; // 12.345 → "12.34", 12.335 → "12.34"
 ```
 
+## Troubleshooting
+
+### Common Issues
+
+1. **"Field length must be positive"**: Ensure all `@FlatField` annotations have a positive `length` value
+2. **"Precision must be smaller than length"**: For BigDecimal fields, precision should be less than the total field length
+3. **"Invalid dateTimeFormat"**: Check that date format patterns are valid Java date format strings
+4. **"Unsupported field type"**: Only supported types can be serialized (String, Integer, Long, BigInteger, BigDecimal, LocalDate, LocalDateTime)
+5. **"Rounding necessary"**: With UNNECESSARY rounding mode, ensure BigDecimal values match the specified precision exactly
+
+### Performance Tips
+
+- Use the annotation processor for compile-time validation
+- Consider caching serialized results for frequently used objects
+- For large datasets, process records in batches
+
 ## Annotation Processor (Optional)
 
 The project also provides an optional, however recommended, annotation processor (`flat2java-processor`) for compile-time verifications. If you want to enable additional compile-time checks, see the [flat2java-processor README](flat2java-processor/README.md).
+
+## Contributing
+
+Contributions are welcome! Please ensure all tests pass before submitting a pull request.
 
 ## License
 

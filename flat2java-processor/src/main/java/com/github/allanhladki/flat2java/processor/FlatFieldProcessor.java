@@ -41,6 +41,9 @@ public class FlatFieldProcessor extends AbstractProcessor {
     private void validateFlatField(Element element) {
         this.element = element;
         validateFlatFieldLength();
+        validateFlatFieldPrecision();
+        validateFlatFieldDateTimeFormat();
+        validateFlatFieldType();
     }
 
     /*
@@ -52,6 +55,48 @@ public class FlatFieldProcessor extends AbstractProcessor {
         if (length <= 0) {
             printErrorMessage("@FlatField 'length' must be a positive integer, current: " + length);
         }
+    }
+
+    /*
+     * Validates the precision of the field annotated with @FlatField.
+     */
+    private void validateFlatFieldPrecision() {
+        FlatField flatField = element.getAnnotation(FlatField.class);
+        int precision = flatField.precision();
+        int length = flatField.length();
+        
+        if (precision < 0) {
+            printErrorMessage("@FlatField 'precision' must be a non-negative integer, current: " + precision);
+        }
+        
+        if (precision >= length) {
+            printErrorMessage("@FlatField 'precision' (" + precision + ") must be smaller than 'length' (" + length + ")");
+        }
+    }
+
+    /*
+     * Validates the dateTimeFormat of the field annotated with @FlatField.
+     */
+    private void validateFlatFieldDateTimeFormat() {
+        FlatField flatField = element.getAnnotation(FlatField.class);
+        String dateTimeFormat = flatField.dateTimeFormat();
+        
+        if (dateTimeFormat != null && !dateTimeFormat.isEmpty()) {
+            try {
+                java.time.format.DateTimeFormatter.ofPattern(dateTimeFormat);
+            } catch (Exception e) {
+                printErrorMessage("@FlatField 'dateTimeFormat' has invalid pattern: " + dateTimeFormat + " - " + e.getMessage());
+            }
+        }
+    }
+
+    /*
+     * Validates the field type is supported.
+     */
+    private void validateFlatFieldType() {
+        // Note: This is a basic validation. More comprehensive type checking would require
+        // more complex analysis of the field's type and the supported types in the library.
+        // For now, we'll rely on runtime validation in the FieldMetadataExtractor.
     }
 
     /*

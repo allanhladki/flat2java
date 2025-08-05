@@ -93,7 +93,7 @@ class FieldSerializerTest {
     @Test
     @DisplayName("Should format Integer field with space padding when configured")
     void testFormatIntegerWithSpacePadding() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn(' ');
+        mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn(FlatField.Defaults.PADDING);
         
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
         FlatField annotation = field.getAnnotation(FlatField.class);

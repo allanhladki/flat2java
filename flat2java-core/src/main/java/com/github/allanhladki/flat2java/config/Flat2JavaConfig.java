@@ -52,9 +52,18 @@ public class Flat2JavaConfig {
             return DEFAULT_NULL_HANDLING;
         }
 
-        boolean config = Boolean.parseBoolean(envValue);
-        logger.trace("Environment variable {} set to: {}", NULL_HANDLING_ENV_VAR, config);
-        return config;
+        try {
+            boolean config = Boolean.parseBoolean(envValue);
+            logger.trace("Environment variable {} set to: {}", NULL_HANDLING_ENV_VAR, config);
+            return config;
+        } catch (Exception e) {
+            logger.warn(
+                    "Environment variable {} has invalid value '{}', using default: {}",
+                    NULL_HANDLING_ENV_VAR,
+                    envValue,
+                    DEFAULT_NULL_HANDLING);
+            return DEFAULT_NULL_HANDLING;
+        }
     }
 
     /**
@@ -100,9 +109,18 @@ public class Flat2JavaConfig {
             return DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR;
         }
 
-        boolean config = Boolean.parseBoolean(envValue);
-        logger.trace("Environment variable {} set to: {}", BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR, config);
-        return config;
+        try {
+            boolean config = Boolean.parseBoolean(envValue);
+            logger.trace("Environment variable {} set to: {}", BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR, config);
+            return config;
+        } catch (Exception e) {
+            logger.warn(
+                    "Environment variable {} has invalid value '{}', using default: {}",
+                    BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR,
+                    envValue,
+                    DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR);
+            return DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR;
+        }
     }
 
     /**
@@ -154,12 +172,30 @@ public class Flat2JavaConfig {
             return config;
         } catch (IllegalArgumentException e) {
             logger.warn(
-                    "Environment variable {} has an invalid value '{}', using default: {}",
+                    "Environment variable {} has an invalid value '{}', using default: {}. Valid values: {}",
                     BIGDECIMAL_ROUNDING_MODE_ENV_VAR,
                     envValue,
-                    DEFAULT_BIGDECIMAL_ROUNDING_MODE);
+                    DEFAULT_BIGDECIMAL_ROUNDING_MODE,
+                    getValidRoundingModes());
             return DEFAULT_BIGDECIMAL_ROUNDING_MODE;
         }
+    }
+
+    /**
+     * Gets a comma-separated list of valid rounding mode values for error messages.
+     *
+     * @return string containing valid rounding mode values
+     */
+    private static String getValidRoundingModes() {
+        RoundingMode[] modes = RoundingMode.values();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < modes.length; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(modes[i].name());
+        }
+        return sb.toString();
     }
 
     /**
@@ -227,7 +263,7 @@ public class Flat2JavaConfig {
     }
 
     /**
-     * Gets the environment variable name for BigDecimal decimal separator character configuration.
+     * Gets the environment variable name for BigDecimal decimal separator configuration.
      *
      * @return the environment variable name
      */

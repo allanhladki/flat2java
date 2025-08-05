@@ -17,6 +17,13 @@ import org.slf4j.LoggerFactory;
  * Utility class for serializing field values of specific types to strings.
  * This class provides type-specific serialization methods that can be used
  * independently or by the ObjectSerializer.
+ * 
+ * <p>This class handles the conversion of Java objects to string representations
+ * suitable for fixed-length flat file formats. It supports various data types
+ * including strings, numbers, dates, and times.</p>
+ * 
+ * <p>All serialization methods perform validation and throw appropriate exceptions
+ * for invalid input values.</p>
  */
 public class FieldSerializer {
     private static final Logger logger = LoggerFactory.getLogger(FieldSerializer.class);
@@ -179,16 +186,9 @@ public class FieldSerializer {
         char paddingChar = metadata.getPadding();
         Field field = metadata.getField();
         boolean isNumeric = SerializationTypes.isNumericField(field);
-        char defaultPadding;
 
-        try{
-            defaultPadding = (char) FlatField.class.getMethod("padding").getDefaultValue();
-        } catch (NoSuchMethodException e) {
-            logger.error("Failed to get default padding value", e);
-            defaultPadding = ' ';
-        }
-
-        if (isNumeric && paddingChar == defaultPadding) {
+        // Use configuration's default numeric padding for numeric fields if annotation uses default padding
+        if (isNumeric && paddingChar == FlatField.Defaults.PADDING) {
             paddingChar = Flat2JavaConfig.getDefaultNumericPadding();
         }
 
