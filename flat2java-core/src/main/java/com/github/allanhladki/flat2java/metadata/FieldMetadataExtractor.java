@@ -2,6 +2,7 @@ package com.github.allanhladki.flat2java.metadata;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.serializer.SerializationTypes;
+
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -77,7 +78,7 @@ public class FieldMetadataExtractor {
      * Validates field metadata for various constraints.
      *
      * @param metadata the field metadata to validate
-     * @throws IllegalArgumentException if validation fails
+     * @throws ValidationException if validation fails
      */
     private static void validateFieldMetadata(FieldMetadata metadata) {
         validateFieldType(metadata);

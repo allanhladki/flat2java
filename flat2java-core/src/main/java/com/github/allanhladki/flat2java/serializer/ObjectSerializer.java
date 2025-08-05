@@ -1,6 +1,7 @@
 package com.github.allanhladki.flat2java.serializer;
 
 import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
+
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
 
@@ -53,7 +54,6 @@ public class ObjectSerializer {
      * @throws IllegalArgumentException if the object has no annotated fields
      */
     public static String serialize(Object object, boolean includeInherited) {
-
         Objects.requireNonNull(object, "Object cannot be null");
 
         logger.debug(
@@ -130,7 +130,6 @@ public class ObjectSerializer {
                     String.format(
                             "Field '%s' cannot be null. Set %s=true to allow null field values.",
                             metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
-
         }
 
         logger.debug(
@@ -158,18 +157,7 @@ public class ObjectSerializer {
             return FieldSerializer.createEmptyField(metadata);
         }
 
-        String serializedValue;
-
-        try {
-            serializedValue = serializeValue(fieldValue, metadata);
-        } catch (Exception e) {
-            logger.error("Failed to serialize field '{}' with value '{}'", 
-                        metadata.getName(), fieldValue, e);
-            throw new IllegalArgumentException(
-                String.format("Failed to serialize field '%s' with value '%s': %s", 
-                             metadata.getName(), fieldValue, e.getMessage()), e);
-        }
-
+        String serializedValue = serializeValue(fieldValue, metadata);
         return FieldSerializer.formatToLength(serializedValue, metadata);
     }
 

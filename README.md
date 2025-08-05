@@ -17,11 +17,18 @@ This library provides functionality to serialize Java objects into fixed-length 
 - Environment-based configuration
 - Comprehensive validation and error handling
 - Compile-time validation with annotation processor
-- Easy to use API
+- Interface-based architecture with dependency injection support
+- Automatic exception translation with interceptors
+- Easy to use API with both interface and static utility approaches
 
 ## Quick Start
 
+### Interface-Based Approach (Recommended)
+
 ```java
+import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
+import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+
 public class MyRecord {
     @FlatField(length = 10)
     private String id;
@@ -33,7 +40,31 @@ public class MyRecord {
     private BigDecimal amount;
 }
 
-// Serialize an object to flat file format
+
+**Note:** The order of fields is determined by their declaration order in the class (and superclasses, if using inheritance).
+
+// Create factory and get intercepted services
+Flat2JavaFactory factory = new Flat2JavaFactory();
+ObjectSerializationInterface objectSerializer = factory.getObjectSerializationInterface();
+
+// Serialize an object with automatic exception translation
+MyRecord record = new MyRecord();
+record.setId("1234567890");
+record.setDate(LocalDate.of(2024, 3, 15));
+record.setAmount(new BigDecimal("99.99"));
+
+String flatFileString = objectSerializer.serialize(record);
+// Result: "1234567890 2024031500000009999"
+```
+
+### Static Utility Approach (Legacy)
+
+```java
+import com.github.allanhladki.flat2java.serializer.ObjectSerializer;
+
+// Same MyRecord class as above...
+
+// Serialize an object using static methods
 MyRecord record = new MyRecord();
 record.setId("1234567890");
 record.setDate(LocalDate.of(2024, 3, 15));
@@ -43,7 +74,140 @@ String flatFileString = ObjectSerializer.serialize(record);
 // Result: "1234567890 2024031500000009999"
 ```
 
-**Note:** The order of fields is determined by their declaration order in the class (and superclasses, if using inheritance).
+
+## Architecture
+
+### Interface-Based Architecture
+
+The library provides an interface-based architecture that supports dependency injection and automatic exception translation:
+
+#### Core Interfaces
+
+- **`FieldSerializationInterface`** - Serializes individual field values
+- **`ObjectSerializationInterface`** - Serializes entire objects
+- **`FieldMetadataInterface`** - Extracts field metadata from classes
+
+#### Factory Pattern
+
+The `Flat2JavaFactory` creates properly configured service instances with automatic exception translation:
+
+```java
+Flat2JavaFactory factory = new Flat2JavaFactory();
+
+// Get intercepted services with automatic exception translation
+FieldSerializationInterface fieldSerializer = factory.getFieldSerializationInterface();
+ObjectSerializationInterface objectSerializer = factory.getObjectSerializationInterface();
+FieldMetadataInterface metadataExtractor = factory.getFieldMetadataInterface();
+```
+
+#### Exception Translation
+
+All services automatically translate standard Java exceptions to project-specific exceptions:
+
+- `NullPointerException` → `SerializationException`
+- `IllegalArgumentException` → `ValidationException`
+- Other exceptions → `SerializationException` or `ValidationException` based on context
+
+#### Benefits
+
+- **Clean separation of concerns** - interfaces vs implementations
+- **Dependency injection ready** - easy to mock for testing
+- **Automatic exception translation** - consistent error handling
+- **Extensible design** - new implementations can be added
+- **Backward compatibility** - static utility methods still available
+- **Dependency injection ready** - works with Jakarta CDI, Spring, Quarkus, etc.
+
+## Dependency Injection Examples
+
+### Jakarta CDI (Quarkus, WildFly, etc.)
+
+```java
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+
+@ApplicationScoped
+public class FlatFileService {
+    
+    @Inject
+    private ObjectSerializationInterface objectSerializer;
+    
+    public String serializeRecord(MyRecord record) {
+        return objectSerializer.serialize(record);
+    }
+}
+```
+
+### Spring Framework
+
+```java
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+
+@Service
+public class FlatFileService {
+    
+    @Autowired
+    private ObjectSerializationInterface objectSerializer;
+    
+    public String serializeRecord(MyRecord record) {
+        return objectSerializer.serialize(record);
+    }
+}
+```
+
+### Manual Configuration (No DI Framework)
+
+```java
+import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
+import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+
+public class FlatFileService {
+    
+    private final ObjectSerializationInterface objectSerializer;
+    
+    public FlatFileService() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
+        this.objectSerializer = factory.getObjectSerializationInterface();
+    }
+    
+    public String serializeRecord(MyRecord record) {
+        return objectSerializer.serialize(record);
+    }
+}
+```
+
+### Custom Bean Configuration (Spring Boot)
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
+import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+
+@Configuration
+public class Flat2JavaConfig {
+    
+    @Bean
+    public ObjectSerializationInterface objectSerializationInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
+        return factory.getObjectSerializationInterface();
+    }
+    
+    @Bean
+    public FieldSerializationInterface fieldSerializationInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
+        return factory.getFieldSerializationInterface();
+    }
+    
+    @Bean
+    public FieldMetadataInterface fieldMetadataInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
+        return factory.getFieldMetadataInterface();
+    }
+}
+```
 
 ## @FlatField Annotation Attributes
 

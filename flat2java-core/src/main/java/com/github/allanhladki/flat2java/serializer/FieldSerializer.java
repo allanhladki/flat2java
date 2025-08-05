@@ -6,7 +6,6 @@ import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -83,12 +82,12 @@ public class FieldSerializer {
      * Serializes a BigDecimal value with precision formatting.
      */
     public static String serialize(BigDecimal value, int precision) {
-        if (value == null) {
-            throw new NullPointerException("BigDecimal value cannot be null");
-        }
-        if (value.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("BigDecimal value must be non-negative, got: " + value);
-        }
+            if (value == null) {
+                throw new NullPointerException("BigDecimal value cannot be null");
+            }
+            if (value.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("BigDecimal value must be non-negative, got: " + value);
+            }
 
         if (precision == 0) {
             // Apply rounding mode when converting to integer
