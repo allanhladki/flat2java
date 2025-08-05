@@ -38,6 +38,8 @@ public class FieldMetadata {
         this.padding = annotation.padding();
     }
 
+
+
     /**
      * Gets the Java field.
      *
