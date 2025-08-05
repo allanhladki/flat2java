@@ -73,6 +73,88 @@ class FieldSerializerTest {
         assertEquals("VeryLong", formatted); // Field length: 8, truncated to fit
     }
 
+    @Test
+    @DisplayName("Should throw exception when truncation exception is enabled and string exceeds length")
+    void testThrowExceptionOnStringTruncation() throws Exception {
+        // Enable string truncation exception
+        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(true);
+        mockedConfig.when(Flat2JavaConfig::getThrowOnStringTruncationEnvVarName).thenReturn("FLAT2JAVA_THROW_ON_STRING_TRUNCATION");
+        
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        String serialized = FieldSerializer.serialize("VeryLongString");
+        assertEquals("VeryLongString", serialized); // Verify serialization
+        
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldSerializer.formatToLength(serialized, metadata);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'stringField' value 'VeryLongString' (length 14) exceeds target length 8"));
+        assertTrue(exception.getMessage().contains("FLAT2JAVA_THROW_ON_STRING_TRUNCATION=false"));
+    }
+
+    @Test
+    @DisplayName("Should truncate string when truncation exception is disabled (default)")
+    void testTruncateStringWhenExceptionDisabled() throws Exception {
+        // Disable string truncation exception (default behavior)
+        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(false);
+        
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        String serialized = FieldSerializer.serialize("VeryLongString");
+        assertEquals("VeryLongString", serialized); // Verify serialization
+        
+        String formatted = FieldSerializer.formatToLength(serialized, metadata);
+        assertEquals("VeryLong", formatted); // Field length: 8, truncated to fit
+    }
+
+    @Test
+    @DisplayName("Should always throw exception for numeric field regardless of truncation setting")
+    void testAlwaysThrowExceptionOnNumericFieldTruncation() throws Exception {
+        // Test with truncation exception disabled (should still throw for numeric fields)
+        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(false);
+        
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        String serialized = FieldSerializer.serialize(123456789);
+        assertEquals("123456789", serialized); // Verify serialization
+        
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldSerializer.formatToLength(serialized, metadata);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'intField' value '123456789' (length 9) exceeds target length 8"));
+        assertTrue(exception.getMessage().contains("Numeric fields cannot be truncated to prevent data corruption"));
+    }
+
+    @Test
+    @DisplayName("Should always throw exception for numeric field even when truncation is enabled")
+    void testAlwaysThrowExceptionOnNumericFieldTruncationWhenEnabled() throws Exception {
+        // Test with truncation exception enabled (should still throw for numeric fields)
+        mockedConfig.when(Flat2JavaConfig::isThrowOnStringTruncationEnabled).thenReturn(true);
+        mockedConfig.when(Flat2JavaConfig::getThrowOnStringTruncationEnvVarName).thenReturn("FLAT2JAVA_THROW_ON_STRING_TRUNCATION");
+        
+        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
+        FlatField annotation = field.getAnnotation(FlatField.class);
+        FieldMetadata metadata = new FieldMetadata(field, annotation);
+        
+        String serialized = FieldSerializer.serialize(123456789);
+        assertEquals("123456789", serialized); // Verify serialization
+        
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            FieldSerializer.formatToLength(serialized, metadata);
+        });
+        
+        assertTrue(exception.getMessage().contains("Field 'intField' value '123456789' (length 9) exceeds target length 8"));
+        assertTrue(exception.getMessage().contains("Numeric fields cannot be truncated to prevent data corruption"));
+    }
+
     // ==================== INTEGER TESTS ====================
 
 

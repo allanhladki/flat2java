@@ -17,6 +17,7 @@ public class Flat2JavaConfig {
     private static final String BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR";
     private static final String BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR";
     private static final String BIGDECIMAL_ROUNDING_MODE_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE";
+    private static final String THROW_ON_STRING_TRUNCATION_ENV_VAR = "FLAT2JAVA_THROW_ON_STRING_TRUNCATION";
 
     /** Default configuration values */
     private static final boolean DEFAULT_NULL_HANDLING = true;
@@ -24,6 +25,7 @@ public class Flat2JavaConfig {
     private static final boolean DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR = false;
     private static final char DEFAULT_BIGDECIMAL_DECIMAL_SEPARATOR = '.';
     private static final RoundingMode DEFAULT_BIGDECIMAL_ROUNDING_MODE = RoundingMode.UNNECESSARY;
+    private static final boolean DEFAULT_THROW_ON_STRING_TRUNCATION = false;
 
     /** Cached configuration values */
     private static final boolean ALLOW_NULL_VALUES = getNullHandlingConfig();
@@ -31,6 +33,7 @@ public class Flat2JavaConfig {
     private static final boolean BIGDECIMAL_USE_DECIMAL_SEPARATOR = getBigDecimalUseDecimalSeparatorConfig();
     private static final char BIGDECIMAL_DECIMAL_SEPARATOR = getBigDecimalDecimalSeparatorConfig();
     private static final RoundingMode BIGDECIMAL_ROUNDING_MODE = getBigDecimalRoundingModeConfig();
+    private static final boolean THROW_ON_STRING_TRUNCATION = getThrowOnStringTruncationConfig();
 
     /** Private constructor to prevent instantiation */
     private Flat2JavaConfig() {
@@ -199,6 +202,35 @@ public class Flat2JavaConfig {
     }
 
     /**
+     * Gets the string truncation configuration from environment variable.
+     *
+     * @return true if exceptions should be thrown when strings are truncated, false if truncation should be allowed
+     */
+    private static boolean getThrowOnStringTruncationConfig() {
+        String envValue = System.getenv(THROW_ON_STRING_TRUNCATION_ENV_VAR);
+        if (envValue == null) {
+            logger.trace(
+                    "Environment variable {} not set, using default: {}",
+                    THROW_ON_STRING_TRUNCATION_ENV_VAR,
+                    DEFAULT_THROW_ON_STRING_TRUNCATION);
+            return DEFAULT_THROW_ON_STRING_TRUNCATION;
+        }
+
+        try {
+            boolean config = Boolean.parseBoolean(envValue);
+            logger.trace("Environment variable {} set to: {}", THROW_ON_STRING_TRUNCATION_ENV_VAR, config);
+            return config;
+        } catch (Exception e) {
+            logger.warn(
+                    "Environment variable {} has invalid value '{}', using default: {}",
+                    THROW_ON_STRING_TRUNCATION_ENV_VAR,
+                    envValue,
+                    DEFAULT_THROW_ON_STRING_TRUNCATION);
+            return DEFAULT_THROW_ON_STRING_TRUNCATION;
+        }
+    }
+
+    /**
      * Checks if null values are allowed in serialization.
      *
      * @return true if null values should be serialized to empty strings, false if exceptions should
@@ -287,5 +319,23 @@ public class Flat2JavaConfig {
      */
     public static RoundingMode getBigDecimalRoundingMode() {
         return BIGDECIMAL_ROUNDING_MODE;
+    }
+
+    /**
+     * Checks if exceptions should be thrown when strings are truncated during formatting.
+     *
+     * @return true if exceptions should be thrown when strings are truncated, false if truncation should be allowed
+     */
+    public static boolean isThrowOnStringTruncationEnabled() {
+        return THROW_ON_STRING_TRUNCATION;
+    }
+
+    /**
+     * Gets the environment variable name for string truncation configuration.
+     *
+     * @return the environment variable name
+     */
+    public static String getThrowOnStringTruncationEnvVarName() {
+        return THROW_ON_STRING_TRUNCATION_ENV_VAR;
     }
 }

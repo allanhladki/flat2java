@@ -37,7 +37,6 @@ public class FieldSerializer {
         }
         return value;
     }
-    //TODO: Option to throw exception if truncate the string is needed.
 
     /**
      * Serializes an Integer value.
@@ -192,7 +191,22 @@ public class FieldSerializer {
         }
 
         if (value.length() > targetLength) {
-            // Truncate if too long
+            // Always throw exception for numeric fields to prevent data corruption
+            if (SerializationTypes.isNumericField(field)) {
+                throw new IllegalArgumentException(
+                    String.format("Field '%s' value '%s' (length %d) exceeds target length %d. Numeric fields cannot be truncated to prevent data corruption.",
+                                 metadata.getName(), value, value.length(), targetLength));
+            }
+            
+            // For non-numeric fields, check if we should throw an exception or truncate
+            if (Flat2JavaConfig.isThrowOnStringTruncationEnabled()) {
+                throw new IllegalArgumentException(
+                    String.format("Field '%s' value '%s' (length %d) exceeds target length %d. Set %s=false to allow truncation.",
+                                 metadata.getName(), value, value.length(), targetLength,
+                                 Flat2JavaConfig.getThrowOnStringTruncationEnvVarName()));
+            }
+            
+            // Truncate if too long (only for non-numeric fields)
             logger.warn("Field '{}' value '{}' (length {}) exceeds target length {}, truncating", 
                        metadata.getName(), value, value.length(), targetLength);
             return value.substring(0, targetLength);

@@ -436,6 +436,42 @@ private BigDecimal amount; // 12.345 → "12.34"
 private BigDecimal amount; // 12.345 → "12.34", 12.335 → "12.34"
 ```
 
+### FLAT2JAVA_THROW_ON_STRING_TRUNCATION
+Controls whether an exception should be thrown when a string field's value exceeds its defined length.
+
+- **Default:** `false`
+- **Values:** `true` or `false`
+- **Description:** When set to `false` (default), string values that exceed their field length are automatically truncated to fit. When set to `true`, an `IllegalArgumentException` is thrown when a string value is too long for its field, allowing you to handle data validation at the application level.
+
+**Important Note:** Numeric fields (Integer, Long, BigInteger, BigDecimal) always throw exceptions when their values exceed the field length, regardless of this setting. This prevents data corruption that could occur from truncating numeric values.
+
+**Example:**
+```bash
+# Throw exceptions when strings are truncated (strict validation)
+export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="true"
+
+# Allow string truncation (default behavior)
+export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="false"
+```
+
+**Usage Examples:**
+```java
+@FlatField(length = 5)
+private String shortField; // "Hello" → "Hello", "VeryLongString" → throws exception if enabled
+
+// With FLAT2JAVA_THROW_ON_STRING_TRUNCATION=true
+// "VeryLongString" → IllegalArgumentException: "Field 'shortField' value 'VeryLongString' (length 14) exceeds target length 5"
+
+// With FLAT2JAVA_THROW_ON_STRING_TRUNCATION=false (default)
+// "VeryLongString" → "VeryL" (truncated)
+
+@FlatField(length = 3)
+private Integer numericField; // 123 → "123", 1234 → always throws exception (numeric field)
+
+// Numeric fields always throw exceptions regardless of FLAT2JAVA_THROW_ON_STRING_TRUNCATION setting
+// 1234 → IllegalArgumentException: "Field 'numericField' value '1234' (length 4) exceeds target length 3. Numeric fields cannot be truncated to prevent data corruption."
+```
+
 ## Troubleshooting
 
 ### Common Issues
