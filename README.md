@@ -1,16 +1,15 @@
 # Flat2Java
 
-A Java library for serializing Java objects to fixed-length flat file formats, similar to COBOL's data structures.
+A Java library for serializing and deserializing Java objects to/from fixed-length flat file formats, similar to COBOL's data structures.
 
 ## Description
 
-This library provides functionality to serialize Java objects into fixed-length text fields for flat file formats. It's particularly useful when working with legacy systems or flat file formats that use fixed-length field definitions.
-
-**Note**: Currently, this library supports **serialization only** (Java objects → flat file strings). Deserialization support (flat file strings → Java objects) is planned for future releases.
+This library provides functionality to serialize Java objects into fixed-length text fields for flat file formats and deserialize them back to Java objects. It's particularly useful when working with legacy systems or flat file formats that use fixed-length field definitions.
 
 ## Features
 
 - Serialize Java objects to fixed-length text fields
+- Deserialize flat file strings back to Java objects
 - Support for multiple data types (String, Integer, Long, BigInteger, BigDecimal, LocalDate, LocalDateTime)
 - Annotation-based field mapping with `@FlatField`
 - Customizable field definitions (length, precision, padding, date formats)
@@ -20,6 +19,8 @@ This library provides functionality to serialize Java objects into fixed-length 
 - Interface-based architecture with dependency injection support
 - Automatic exception translation with interceptors
 - Easy to use API with both interface and static utility approaches
+- Consistent padding handling between serialization and deserialization
+- Support for inheritance in object deserialization
 
 ## Quick Start
 
@@ -55,25 +56,121 @@ record.setAmount(new BigDecimal("99.99"));
 
 String flatFileString = objectSerializer.serialize(record);
 // Result: "1234567890 2024031500000009999"
+
+// Deserialize back to object
+MyRecord deserializedRecord = objectSerializer.deserialize(flatFileString, MyRecord.class);
+// deserializedRecord now contains the same data as the original record
 ```
 
-### Static Utility Approach (Legacy)
+## Deserialization Features
+
+### Basic Deserialization
+
+The library can deserialize flat file strings back to Java objects:
+
+```java
+import com.github.allanhladki.flat2java.deserializer.ObjectDeserializer;
+
+// Deserialize a flat string to a Java object
+String flatString = "1234567890 2024031500000009999";
+MyRecord record = ObjectDeserializer.deserialize(flatString, MyRecord.class);
+
+// The record now contains:
+// record.getId() = "1234567890"
+// record.getDate() = LocalDate.of(2024, 3, 15)
+// record.getAmount() = new BigDecimal("99.99")
+```
+
+### Inheritance Support
+
+When deserializing objects with inheritance, you can control whether to include superclass fields:
+
+```java
+public class SuperRecord {
+    @FlatField(length = 5)
+    private String superField1;
+    
+    @FlatField(length = 5)
+    private String superField2;
+}
+
+public class SubRecord extends SuperRecord {
+    @FlatField(length = 5)
+    private String subField1;
+    
+    @FlatField(length = 5)
+    private String subField2;
+}
+
+// Deserialize with inheritance (includes superclass fields)
+String flatWithInheritance = "supe1supe2sub1 sub2 ";
+SubRecord record = ObjectDeserializer.deserialize(flatWithInheritance, SubRecord.class, true);
+
+// Deserialize without inheritance (only subclass fields)
+String flatWithoutInheritance = "sub1 sub2 ";
+SubRecord record = ObjectDeserializer.deserialize(flatWithoutInheritance, SubRecord.class, false);
+```
+
+### Null String Value Handling
+
+The library handles null string values consistently between serialization and deserialization:
+
+- **String fields**: Null values are represented as padding characters and deserialized back to `null`
+- **Numeric fields**: Cannot be null - must contain valid values
+- **Date/Time fields**: Cannot be null - must contain valid values
+- **Primitive types** (int, long, etc.): Attempting to deserialize null values will throw a `NullPointerException`
+
+### Padding Consistency
+
+The library ensures consistent padding behavior:
+- Numeric fields always use zero padding (`'0'`) for consistency and reliability
+- String fields use the configured null value padding (default: space)
+- Custom padding specified in `@FlatField` annotations takes precedence over configuration
+
+## Round-Trip Operations
+
+The library supports complete round-trip operations, allowing you to serialize an object to a flat string and then deserialize it back to an identical object:
 
 ```java
 import com.github.allanhladki.flat2java.serializer.ObjectSerializer;
+import com.github.allanhladki.flat2java.deserializer.ObjectDeserializer;
 
-// Same MyRecord class as above...
-
-// Serialize an object using static methods
-MyRecord record = new MyRecord();
-record.setId("1234567890");
-record.setDate(LocalDate.of(2024, 3, 15));
-record.setAmount(new BigDecimal("99.99"));
-
-String flatFileString = ObjectSerializer.serialize(record);
-// Result: "1234567890 2024031500000009999"
+public class RoundTripExample {
+    public static void main(String[] args) {
+        // Create a record
+        MyRecord original = new MyRecord();
+        original.setId("TEST123");
+        original.setDate(LocalDate.of(2024, 3, 15));
+        original.setAmount(new BigDecimal("99.99"));
+        original.setQuantity(42);
+        
+        // Serialize to flat string
+        String flatString = ObjectSerializer.serialize(original);
+        System.out.println("Serialized: " + flatString);
+        
+        // Deserialize back to object
+        MyRecord deserialized = ObjectDeserializer.deserialize(flatString, MyRecord.class);
+        
+        // Verify round-trip integrity
+        assertEquals(original.getId(), deserialized.getId());
+        assertEquals(original.getDate(), deserialized.getDate());
+        assertEquals(original.getAmount(), deserialized.getAmount());
+        assertEquals(original.getQuantity(), deserialized.getQuantity());
+        
+        System.out.println("Round-trip successful!");
+    }
+}
 ```
 
+### Round-Trip Best Practices
+
+1. **Consistent Padding**: Ensure that your `@FlatField` annotations use consistent padding characters, or rely on the library's default padding configuration.
+
+2. **Field Length Validation**: The library automatically validates that serialized strings match the expected length for deserialization.
+
+3. **Null Value Handling**: Be aware that primitive types cannot be null, so use wrapper types (Integer, Long, BigDecimal) if you need to represent missing values.
+
+4. **Inheritance Considerations**: When using inheritance, ensure that the `inherited` parameter is consistent between serialization and deserialization operations.
 
 ## Architecture
 
@@ -228,7 +325,7 @@ The `@FlatField` annotation is used to mark fields that should be mapped from fl
   - `"yyyyMMddHHmmss"` for date-times like "20240315143045"
   - `"ddMMyyyy"` for dates like "15032024"
 
-- **`padding`** (char): Optional padding character used in the field. Defaults to space (`' '`). This character is used to pad the field to its specified length.
+- **`padding`** (char): Optional padding character used in the field. Defaults to space (`' '`). This character is used to pad the field to its specified length. **Note:** For numeric fields, this setting is ignored - numeric fields are always padded with zeros (`'0'`) for consistency.
 
 ### Examples
 
@@ -242,7 +339,7 @@ public class ExampleRecord {
     @FlatField(length = 8, padding = '*')
     private String code;
 
-    // Integer field (uses numeric padding from environment variable)
+    // Integer field (always uses zero padding, regardless of annotation)
     @FlatField(length = 5)
     private Integer quantity;
 
@@ -308,36 +405,39 @@ All exceptions include detailed error messages to help diagnose issues.
 
 ## Limitations
 
-- **Serialization Only**: Currently supports only serialization (Java objects → flat file strings)
 - **Fixed Field Types**: Limited to supported data types (see @FlatField documentation)
 - **No File I/O**: Library handles string conversion only, not file operations
-- **No Deserialization**: Cannot read flat files back into Java objects (planned for future release)
+- **Padding Requirements**: Fields must have consistent padding between serialization and deserialization for proper round-trip operations
 
 ## Environment Variables
 
 The library supports configuration through environment variables to customize its behavior:
 
-### FLAT2JAVA_ALLOW_NULL_VALUES
-Controls whether null field values are allowed during serialization.
+### FLAT2JAVA_ALLOW_NULL_STRINGS
+Controls whether null string field values are allowed during serialization.
 
 - **Default:** `true`
 - **Values:** `true` or `false`
-- **Description:** When set to `true`, null field values are serialized as empty strings with appropriate padding. When set to `false`, a `NullPointerException` is thrown for null field values.
+- **Description:** When set to `true`, null string field values are serialized as empty strings with appropriate padding. When set to `false`, a `NullPointerException` is thrown for null string field values. Note that numeric and date/time fields cannot be null regardless of this setting.
 
-### FLAT2JAVA_DEFAULT_NUMERIC_PADDING
-Sets the default padding character for numeric fields when the `@FlatField` annotation doesn't specify a custom padding.
 
-- **Default:** `0`
-- **Values:** Any single character (e.g., `0`, ` `, `*`)
-- **Description:** This character is used to pad numeric fields to their specified length. If you want numeric fields to be padded with spaces instead of zeros, set this variable to a space character. Note that if a field explicitly specifies a padding character in the `@FlatField` annotation, that value takes precedence over this environment variable.
+### FLAT2JAVA_NULL_VALUE_PADDING
+Sets the default padding character for null values when the `@FlatField` annotation doesn't specify a custom padding.
+
+- **Default:** ` ` (space)
+- **Values:** Any single character (e.g., ` `, `0`, `*`)
+- **Description:** This character is used to pad null values for non-numeric fields. It ensures consistency between serialization and deserialization of null values. Note that if a field explicitly specifies a padding character in the `@FlatField` annotation, that value takes precedence over this environment variable.
 
 **Example:**
 ```bash
-# Use spaces for numeric padding
-export FLAT2JAVA_DEFAULT_NUMERIC_PADDING=" "
+# Use spaces for null value padding (default)
+export FLAT2JAVA_NULL_VALUE_PADDING=" "
 
-# Use asterisks for numeric padding  
-export FLAT2JAVA_DEFAULT_NUMERIC_PADDING="*"
+# Use zeros for null value padding
+export FLAT2JAVA_NULL_VALUE_PADDING="0"
+
+# Use asterisks for null value padding
+export FLAT2JAVA_NULL_VALUE_PADDING="*"
 ```
 
 ### FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR
@@ -481,6 +581,10 @@ private Integer numericField; // 123 → "123", 1234 → always throws exception
 3. **"Invalid dateTimeFormat"**: Check that date format patterns are valid Java date format strings
 4. **"Unsupported field type"**: Only supported types can be serialized (String, Integer, Long, BigInteger, BigDecimal, LocalDate, LocalDateTime)
 5. **"Rounding necessary"**: With UNNECESSARY rounding mode, ensure BigDecimal values match the specified precision exactly
+6. **"Input length does not match expected total length"**: The flat string length must match the sum of all field lengths. Check your field definitions and ensure inheritance settings are correct
+7. **"Field 'fieldName': invalid [type] 'value'"**: The field value cannot be parsed to the expected type. Check that the input string contains valid data for the field type
+8. **"NullPointerException on primitive field"**: Primitive types cannot be null. Use wrapper types (Integer, Long, BigDecimal) if you need to represent missing values
+9. **"Padding mismatch between serialization and deserialization"**: Ensure consistent padding configuration. Use `FLAT2JAVA_NULL_VALUE_PADDING` environment variable for null value padding. Note that numeric fields are always padded with zeros for consistency.
 
 ### Performance Tips
 

@@ -36,7 +36,6 @@ class FieldSerializerTest {
     void setUp() {
         // Default configuration
         mockedConfig = Mockito.mockStatic(Flat2JavaConfig.class);
-        mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn('0');
         mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(false);
         mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn('.');
         mockedConfig.when(Flat2JavaConfig::getBigDecimalRoundingMode).thenReturn(RoundingMode.UNNECESSARY);
@@ -392,10 +391,8 @@ class FieldSerializerTest {
     }
 
     @Test
-    @DisplayName("Should handle space padding for numeric fields when configured")
-    void testNumericFieldWithSpacePadding() throws Exception {
-        mockedConfig.when(Flat2JavaConfig::getDefaultNumericPadding).thenReturn(' ');
-        
+    @DisplayName("Should always use zero padding for numeric fields regardless of annotation")
+    void testNumericFieldsAlwaysUseZeroPadding() throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
@@ -403,8 +400,9 @@ class FieldSerializerTest {
         String serialized = FieldSerializer.serialize(123);
         assertEquals("123", serialized);
         
+        // Even with space padding annotation, numeric fields should use zero padding
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
-        assertEquals("     123", formatted); // Space padding instead of zeros
+        assertEquals("00000123", formatted); // Zero padding, not space padding
     }
 
     // ==================== ZERO VALUE TESTS ====================

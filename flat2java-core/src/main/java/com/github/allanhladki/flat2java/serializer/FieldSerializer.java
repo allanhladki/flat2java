@@ -1,16 +1,17 @@
 package com.github.allanhladki.flat2java.serializer;
 
-import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
+import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for serializing field values of specific types to strings.
@@ -136,7 +137,7 @@ public class FieldSerializer {
      */
     public static String serialize(LocalDate value, String dateTimeFormat) {
         if (value == null) {
-            throw new NullPointerException("LocalDate value cannot be null");
+            throw new NullPointerException("LocalDate value cannot be null - date/time fields must contain valid values");
         }
         if (dateTimeFormat.isEmpty()) {
             throw new IllegalArgumentException("DateTime format is required for LocalDate field");
@@ -156,7 +157,7 @@ public class FieldSerializer {
      */
     public static String serialize(LocalDateTime value, String dateTimeFormat) {
         if (value == null) {
-            throw new NullPointerException("LocalDateTime value cannot be null");
+            throw new NullPointerException("LocalDateTime value cannot be null - date/time fields must contain valid values");
         }
         if (dateTimeFormat.isEmpty()) {
             throw new IllegalArgumentException("DateTime format is required for LocalDateTime field");
@@ -185,9 +186,9 @@ public class FieldSerializer {
         Field field = metadata.getField();
         boolean isNumeric = SerializationTypes.isNumericField(field);
 
-        // Use configuration's default numeric padding for numeric fields if annotation uses default padding
-        if (isNumeric && paddingChar == FlatField.Defaults.PADDING) {
-            paddingChar = Flat2JavaConfig.getDefaultNumericPadding();
+        // For numeric fields, always use zero padding regardless of annotation
+        if (isNumeric) {
+            paddingChar = '0';
         }
 
         if (value.length() > targetLength) {
@@ -230,9 +231,32 @@ public class FieldSerializer {
 
 
     /**
-     * Creates an empty field string with the appropriate length and padding.
+     * Creates an empty field representation for null values.
+     * 
+     * @param metadata the field metadata containing length and padding information
+     * @return the empty field string with appropriate padding
      */
     public static String createEmptyField(FieldMetadata metadata) {
-        return String.valueOf(metadata.getPadding()).repeat(metadata.getLength());
+        char paddingChar = metadata.getPadding();
+        Field field = metadata.getField();
+
+        // For numeric fields, throw exception - they cannot be null
+        if (SerializationTypes.isNumericField(field)) {
+            throw new NullPointerException(String.format("Field '%s' cannot be null - numeric fields must contain valid values", metadata.getName()));
+        }
+        
+        // For date/time fields, throw exception - they cannot be null
+        if (SerializationTypes.isDateTimeField(field)) {
+            throw new NullPointerException(String.format("Field '%s' cannot be null - date/time fields must contain valid values", metadata.getName()));
+        }
+
+        // For null values, use the configured null value padding
+        // This ensures consistency between serializer and deserializer
+        if (paddingChar == FlatField.Defaults.PADDING) {
+            // Use configuration's null value padding for non-numeric, non-date/time fields
+            paddingChar = Flat2JavaConfig.getNullValuePadding();
+        }
+        
+        return String.valueOf(paddingChar).repeat(metadata.getLength());
     }
 } 

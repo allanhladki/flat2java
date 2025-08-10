@@ -64,6 +64,9 @@ public @interface FlatField {
 
     /**
      * Optional padding character used in the field.
+     * 
+     * <p><strong>Note:</strong> For numeric fields, this setting is ignored - 
+     * numeric fields are always padded with zeros ('0') for consistency and reliability.
      *
      * @return the padding character, default is space
      */

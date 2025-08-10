@@ -128,7 +128,7 @@ public class ObjectSerializer {
             logger.error("Null field value for '{}' but null handling is disabled", metadata.getName());
             throw new NullPointerException(
                     String.format(
-                            "Field '%s' cannot be null. Set %s=true to allow null field values.",
+                            "Field '%s' cannot be null. Set %s=true to allow null string field values.",
                             metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
         }
 
@@ -153,8 +153,10 @@ public class ObjectSerializer {
     public static String serialize(Object fieldValue, FieldMetadata metadata) {
         Objects.requireNonNull(metadata, "FieldMetadata cannot be null");
         
-        if (fieldValue == null) {
+        if (fieldValue == null && metadata.getType() == SerializationTypes.SupportedTypes.STRING) {
             return FieldSerializer.createEmptyField(metadata);
+        } else if (fieldValue == null) {
+            throw new NullPointerException(String.format("Field '%s' cannot be null. Set %s=true to allow null string field values.", metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
         }
 
         String serializedValue = serializeValue(fieldValue, metadata);

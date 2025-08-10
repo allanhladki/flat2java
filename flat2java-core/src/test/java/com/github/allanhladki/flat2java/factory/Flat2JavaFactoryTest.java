@@ -2,10 +2,10 @@ package com.github.allanhladki.flat2java.factory;
 
 import com.github.allanhladki.flat2java.exception.ExceptionTranslationInterceptor;
 import com.github.allanhladki.flat2java.exception.SerializationException;
+import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.interfaces.FieldMetadataInterface;
 import com.github.allanhladki.flat2java.interfaces.FieldSerializationInterface;
 import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
-import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +42,7 @@ class Flat2JavaFactoryTest {
         assertTrue(ExceptionTranslationInterceptor.isProxy(fieldMetadataInterface));
         
         // Test that it works correctly
-        List<FieldMetadata> metadata = fieldMetadataInterface.extractFieldMetadata(TestClass.class);
+        List<FieldMetadata> metadata = fieldMetadataInterface.extractFieldMetadata(TestFixtures.FactoryTestClass.class);
         assertEquals(1, metadata.size());
         assertEquals("testField", metadata.get(0).getName());
     }
@@ -73,7 +73,7 @@ class Flat2JavaFactoryTest {
         assertTrue(ExceptionTranslationInterceptor.isProxy(objectSerializationInterface));
         
         // Test that it works correctly
-        TestClass testObject = new TestClass();
+        TestFixtures.FactoryTestClass testObject = new TestFixtures.FactoryTestClass();
         testObject.testField = "test";
         String result = objectSerializationInterface.serialize(testObject);
         assertEquals("test      ", result); // 10 characters with padding
@@ -125,16 +125,12 @@ class Flat2JavaFactoryTest {
     void testFieldMetadataExtractionWithInheritance() {
         FieldMetadataInterface fieldMetadataInterface = factory.getFieldMetadataInterface();
         
-        List<FieldMetadata> metadata = fieldMetadataInterface.extractFieldMetadataIncludingInherited(TestClass.class);
+        List<FieldMetadata> metadata = fieldMetadataInterface.extractFieldMetadataIncludingInherited(TestFixtures.FactoryTestClass.class);
         
         assertNotNull(metadata);
         assertEquals(1, metadata.size());
         assertEquals("testField", metadata.get(0).getName());
     }
 
-    // Test class for metadata extraction
-    static class TestClass {
-        @FlatField(length = 10)
-        public String testField;
-    }
+
 } 

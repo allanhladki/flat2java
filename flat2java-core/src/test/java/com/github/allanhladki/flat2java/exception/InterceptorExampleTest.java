@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class InterceptorExampleTest {
     
     // Test interface for demonstrating the interceptor
-    interface TestService {
+    interface TestService extends com.github.allanhladki.flat2java.fixtures.TestFixtures.TestService {
         @TranslateExceptions(operationType = TranslateExceptions.OperationType.VALIDATION)
         boolean validateUserData(String data);
         

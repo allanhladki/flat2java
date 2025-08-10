@@ -29,7 +29,7 @@ public class FieldMetadata {
         
         this.field = field;
         this.name =
-                annotation.name().isBlank()
+                null == annotation.name() || annotation.name().isBlank()
                         ? field.getName()
                         : annotation.name();
         this.length = annotation.length();

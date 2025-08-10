@@ -66,6 +66,9 @@ public class TestFixtures {
         @FlatField(length = 8)
         public Integer intField;
 
+        @FlatField(length = 8)
+        public int intPrimitiveField;
+
         @FlatField(length = 9)
         public Long longField;
 
@@ -258,5 +261,125 @@ public class TestFixtures {
         public List<String> unsupportedListField;
 
         public UnsupportedListRecord() {}
+    }
+
+    public static class NumericRecord {
+        @FlatField(length = 5)
+        public Integer zeroInteger;
+
+        @FlatField(length = 5)
+        public Long zeroLong;
+
+        @FlatField(length = 5)
+        public BigInteger zeroBigInteger;
+
+        @FlatField(length = 5, precision = 0)
+        public BigDecimal zeroBigDecimalNoPrecision;
+
+        @FlatField(length = 7, precision = 2)
+        public BigDecimal zeroBigDecimalWithPrecision;
+
+        public NumericRecord() {
+            // No-arg constructor required for deserialization
+        }
+    }
+
+    /** Test fixture class without no-arg constructor for testing constructor validation. */
+    public static class NoNoArgConstructor {
+        @FlatField(length = 4)
+        public String field;
+
+        public NoNoArgConstructor(String param) {
+            this.field = param;
+        }
+    }
+
+    /** Test fixture class with primitive fields for testing primitive field handling. */
+    public static class PrimitiveRecord {
+        @FlatField(length = 5)
+        public int primitiveInt;
+        
+        @FlatField(length = 5)
+        public long primitiveLong;
+        
+        public PrimitiveRecord() {} // No-arg constructor
+    }
+
+    /** Test fixture class for field type checking in SerializationTypes tests. */
+    public static class TestClass {
+        public String stringField;
+        public Integer integerField;
+        public int intPrimitiveField;
+        public Long longField;
+        public long longPrimitiveField;
+        public BigInteger bigIntegerField;
+        public BigDecimal bigDecimalField;
+        public LocalDate localDateField;
+        public LocalDateTime localDateTimeField;
+        public Object unsupportedField;
+        public List<String> listField;
+    }
+
+    /** Test fixture class for metadata extraction in Flat2JavaFactory tests. */
+    public static class FactoryTestClass {
+        @FlatField(length = 10)
+        public String testField;
+    }
+
+    /** Test service interface for interceptor testing. */
+    public interface TestService {
+        boolean validateUserData(String data);
+        String serializeUserData(Object data);
+        String processUserData(String data);
+    }
+
+    /** Test service implementation for interceptor testing. */
+    public static class TestServiceImpl implements TestService {
+        @Override
+        public boolean validateUserData(String data) {
+            if (data == null) {
+                throw new NullPointerException("Data cannot be null");
+            }
+            
+            if (data.isEmpty()) {
+                throw new IllegalArgumentException("Data cannot be empty");
+            }
+            
+            if (data.length() > 100) {
+                throw new IllegalArgumentException("Data length cannot exceed 100 characters");
+            }
+            
+            return true;
+        }
+        
+        @Override
+        public String serializeUserData(Object data) {
+            if (data == null) {
+                throw new NullPointerException("Data cannot be null");
+            }
+            
+            try {
+                if (data instanceof String) {
+                    return (String) data;
+                } else {
+                    return data.toString();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize data: " + e.getMessage(), e);
+            }
+        }
+        
+        @Override
+        public String processUserData(String data) {
+            if (data == null) {
+                throw new NullPointerException("Data cannot be null");
+            }
+            
+            if (data.contains("error")) {
+                throw new RuntimeException("Processing failed due to error in data");
+            }
+            
+            return "Processed: " + data;
+        }
     }
 } 

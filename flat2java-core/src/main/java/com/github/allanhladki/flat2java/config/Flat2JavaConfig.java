@@ -12,8 +12,8 @@ public class Flat2JavaConfig {
     private static final Logger logger = LoggerFactory.getLogger(Flat2JavaConfig.class);
 
     /** Environment variable names */
-    private static final String NULL_HANDLING_ENV_VAR = "FLAT2JAVA_ALLOW_NULL_VALUES";
-    private static final String DEFAULT_NUMERIC_PADDING_ENV_VAR = "FLAT2JAVA_DEFAULT_NUMERIC_PADDING";
+    private static final String NULL_HANDLING_ENV_VAR = "FLAT2JAVA_ALLOW_NULL_STRINGS";
+    private static final String NULL_VALUE_PADDING_ENV_VAR = "FLAT2JAVA_NULL_VALUE_PADDING";
     private static final String BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR";
     private static final String BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR";
     private static final String BIGDECIMAL_ROUNDING_MODE_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE";
@@ -21,7 +21,7 @@ public class Flat2JavaConfig {
 
     /** Default configuration values */
     private static final boolean DEFAULT_NULL_HANDLING = true;
-    private static final char DEFAULT_NUMERIC_PADDING = '0';
+    private static final char DEFAULT_NULL_VALUE_PADDING = ' ';
     private static final boolean DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR = false;
     private static final char DEFAULT_BIGDECIMAL_DECIMAL_SEPARATOR = '.';
     private static final RoundingMode DEFAULT_BIGDECIMAL_ROUNDING_MODE = RoundingMode.UNNECESSARY;
@@ -29,7 +29,7 @@ public class Flat2JavaConfig {
 
     /** Cached configuration values */
     private static final boolean ALLOW_NULL_VALUES = getNullHandlingConfig();
-    private static final char NUMERIC_PADDING = getNumericPaddingConfig();
+    private static final char NULL_VALUE_PADDING = getNullValuePaddingConfig();
     private static final boolean BIGDECIMAL_USE_DECIMAL_SEPARATOR = getBigDecimalUseDecimalSeparatorConfig();
     private static final char BIGDECIMAL_DECIMAL_SEPARATOR = getBigDecimalDecimalSeparatorConfig();
     private static final RoundingMode BIGDECIMAL_ROUNDING_MODE = getBigDecimalRoundingModeConfig();
@@ -41,9 +41,9 @@ public class Flat2JavaConfig {
     }
 
     /**
-     * Gets the null handling configuration from environment variable.
+     * Gets the null string handling configuration from environment variable.
      *
-     * @return true if null values should be allowed, false if exceptions should be thrown
+     * @return true if null string values should be allowed, false if exceptions should be thrown
      */
     private static boolean getNullHandlingConfig() {
         String envValue = System.getenv(NULL_HANDLING_ENV_VAR);
@@ -69,31 +69,33 @@ public class Flat2JavaConfig {
         }
     }
 
+
+
     /**
-     * Gets the default numeric padding configuration from environment variable.
+     * Gets the null value padding configuration from environment variable.
      *
-     * @return the character to use for padding numeric fields
+     * @return the character to use for padding null values
      */
-    private static char getNumericPaddingConfig() {
-        String envValue = System.getenv(DEFAULT_NUMERIC_PADDING_ENV_VAR);
+    private static char getNullValuePaddingConfig() {
+        String envValue = System.getenv(NULL_VALUE_PADDING_ENV_VAR);
         if (envValue == null) {
             logger.trace(
                     "Environment variable {} not set, using default: {}",
-                    DEFAULT_NUMERIC_PADDING_ENV_VAR,
-                    DEFAULT_NUMERIC_PADDING);
-            return DEFAULT_NUMERIC_PADDING;
+                    NULL_VALUE_PADDING_ENV_VAR,
+                    DEFAULT_NULL_VALUE_PADDING);
+            return DEFAULT_NULL_VALUE_PADDING;
         }
 
         if (envValue.length() != 1) {
             logger.warn(
                     "Environment variable {} must be a single character, using default: {}",
-                    DEFAULT_NUMERIC_PADDING_ENV_VAR,
-                    DEFAULT_NUMERIC_PADDING);
-            return DEFAULT_NUMERIC_PADDING;
+                    NULL_VALUE_PADDING_ENV_VAR,
+                    DEFAULT_NULL_VALUE_PADDING);
+            return DEFAULT_NULL_VALUE_PADDING;
         }
 
         char config = envValue.charAt(0);
-        logger.trace("Environment variable {} set to: {}", DEFAULT_NUMERIC_PADDING_ENV_VAR, config);
+        logger.trace("Environment variable {} set to: {}", NULL_VALUE_PADDING_ENV_VAR, config);
         return config;
     }
 
@@ -241,7 +243,7 @@ public class Flat2JavaConfig {
     }
 
     /**
-     * Gets the environment variable name for null handling configuration.
+     * Gets the environment variable name for null string handling configuration.
      *
      * @return the environment variable name
      */
@@ -249,22 +251,24 @@ public class Flat2JavaConfig {
         return NULL_HANDLING_ENV_VAR;
     }
 
+
+
     /**
-     * Gets the default numeric padding character for numeric fields.
+     * Gets the character to use for padding null values.
      *
-     * @return the character to use for padding numeric fields
+     * @return the character to use for padding null values
      */
-    public static char getDefaultNumericPadding() {
-        return NUMERIC_PADDING;
+    public static char getNullValuePadding() {
+        return NULL_VALUE_PADDING;
     }
 
     /**
-     * Gets the environment variable name for default numeric padding configuration.
+     * Gets the environment variable name for null value padding configuration.
      *
      * @return the environment variable name
      */
-    public static String getDefaultNumericPaddingEnvVarName() {
-        return DEFAULT_NUMERIC_PADDING_ENV_VAR;
+    public static String getNullValuePaddingEnvVarName() {
+        return NULL_VALUE_PADDING_ENV_VAR;
     }
 
     /**

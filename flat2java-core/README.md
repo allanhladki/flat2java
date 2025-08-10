@@ -71,7 +71,7 @@ String flatFileString = ObjectSerializer.serialize(record);
 
 The library uses environment variables for configuration:
 
-- `FLAT2JAVA_ALLOW_NULL_VALUES`: Control null value handling
+- `FLAT2JAVA_ALLOW_NULL_STRINGS`: Control null string value handling
 - `FLAT2JAVA_DEFAULT_NUMERIC_PADDING`: Set default padding for numeric fields
 - `FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR`: Enable/disable decimal separators
 - `FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR`: Set custom decimal separator

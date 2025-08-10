@@ -70,13 +70,13 @@ class ObjectSerializerTest {
     }
 
     @Test
-    @DisplayName("Should serialize object with null field values when null handling enabled")
+    @DisplayName("Should serialize object with null string field values when null handling enabled")
     void shouldSerializeObjectWithNullFieldValuesWhenNullHandlingEnabled() {
         // given
         TestFixtures.TestRecord record = new TestFixtures.TestRecord();
-        record.setId("1234567890");
-        record.setDate(null); // null field
-        record.setQuantity(null); // null field
+        record.setId(null);
+        record.setDate(LocalDate.of(2024, 3, 15));
+        record.setQuantity(0);
         record.setPrice(new BigDecimal("99.99"));
         record.setExpiryDate(LocalDate.of(2025, 12, 31));
 
@@ -90,7 +90,7 @@ class ObjectSerializerTest {
     }
 
     @Test
-    @DisplayName("Should throw exception for null field values when null handling disabled")
+    @DisplayName("Should throw exception for null string field values when null handling disabled")
     void shouldThrowExceptionForNullFieldValuesWhenNullHandlingDisabled() {
         // given
         TestFixtures.TestRecord record = new TestFixtures.TestRecord();
@@ -103,7 +103,7 @@ class ObjectSerializerTest {
         // when/then - Mock the configuration to disable null handling
         try (MockedStatic<Flat2JavaConfig> mockedConfig = Mockito.mockStatic(Flat2JavaConfig.class)) {
             mockedConfig.when(Flat2JavaConfig::isNullHandlingEnabled).thenReturn(false);
-            mockedConfig.when(Flat2JavaConfig::getNullHandlingEnvVarName).thenReturn("FLAT2JAVA_ALLOW_NULL_VALUES");
+            mockedConfig.when(Flat2JavaConfig::getNullHandlingEnvVarName).thenReturn("FLAT2JAVA_ALLOW_NULL_STRINGS");
 
             assertThrows(NullPointerException.class, () -> ObjectSerializer.serialize(record));
         }
@@ -137,24 +137,6 @@ class ObjectSerializerTest {
         // Should only include fields from the current class (SubRecord)
     }
 
-    @Test
-    @DisplayName("Should handle mixed null and non-null values")
-    void shouldHandleMixedNullAndNonNullValues() {
-        // given
-        TestFixtures.TestRecord record = new TestFixtures.TestRecord();
-        record.setId("1234567890");
-        record.setDate(LocalDate.of(2024, 3, 15));
-        record.setQuantity(null); // null field
-        record.setPrice(null); // null field
-        record.setExpiryDate(LocalDate.of(2025, 12, 31));
-
-        // when
-        String result = ObjectSerializer.serialize(record);
-
-        // then
-        assertNotNull(result, "Serialization result should not be null");
-        // Should handle both null and non-null fields appropriately
-    }
 
     @Test
     @DisplayName("Should serialize different data types")

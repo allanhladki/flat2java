@@ -5,6 +5,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.github.allanhladki.flat2java.fixtures.TestFixtures;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -20,37 +23,12 @@ import java.util.stream.Stream;
 @DisplayName("SerializationTypes Tests")
 class SerializationTypesTest {
 
-    // Test classes for field type checking
-    private static class TestClass {
-        @SuppressWarnings("unused")
-        public String stringField;
-        @SuppressWarnings("unused")
-        public Integer integerField;
-        @SuppressWarnings("unused")
-        public int intPrimitiveField;
-        @SuppressWarnings("unused")
-        public Long longField;
-        @SuppressWarnings("unused")
-        public long longPrimitiveField;
-        @SuppressWarnings("unused")
-        public BigInteger bigIntegerField;
-        @SuppressWarnings("unused")
-        public BigDecimal bigDecimalField;
-        @SuppressWarnings("unused")
-        public LocalDate localDateField;
-        @SuppressWarnings("unused")
-        public LocalDateTime localDateTimeField;
-        @SuppressWarnings("unused")
-        public Object unsupportedField;
-        @SuppressWarnings("unused")
-        public List<String> listField;
-    }
 
     @ParameterizedTest
     @MethodSource("numericFieldTestCases")
     @DisplayName("Should identify numeric fields correctly")
     void testIsNumericField(String fieldName, boolean expected) throws Exception {
-        assertEquals(expected, SerializationTypes.isNumericField(TestClass.class.getField(fieldName)));
+        assertEquals(expected, SerializationTypes.isNumericField(TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> numericFieldTestCases() {
@@ -96,7 +74,7 @@ class SerializationTypesTest {
     @MethodSource("dateTimeFieldTestCases")
     @DisplayName("Should identify date/time fields correctly")
     void testIsDateTimeField(String fieldName, boolean expected) throws Exception {
-        assertEquals(expected, SerializationTypes.isDateTimeField(TestClass.class.getField(fieldName)));
+        assertEquals(expected, SerializationTypes.isDateTimeField(TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> dateTimeFieldTestCases() {
@@ -132,7 +110,7 @@ class SerializationTypesTest {
     @MethodSource("stringFieldTestCases")
     @DisplayName("Should identify string fields correctly")
     void testIsStringField(String fieldName, boolean expected) throws Exception {
-        assertEquals(expected, SerializationTypes.isStringField(TestClass.class.getField(fieldName)));
+        assertEquals(expected, SerializationTypes.isStringField(TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> stringFieldTestCases() {
@@ -164,7 +142,7 @@ class SerializationTypesTest {
     @MethodSource("supportedFieldTestCases")
     @DisplayName("Should identify supported fields correctly")
     void testIsSupportedField(String fieldName, boolean expected) throws Exception {
-        assertEquals(expected, SerializationTypes.isSupportedField(TestClass.class.getField(fieldName)));
+        assertEquals(expected, SerializationTypes.isSupportedField(TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> supportedFieldTestCases() {
