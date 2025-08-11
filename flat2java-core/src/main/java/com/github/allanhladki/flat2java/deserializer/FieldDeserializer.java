@@ -190,10 +190,10 @@ public final class FieldDeserializer {
                 char separator = Flat2JavaConfig.getBigDecimalDecimalSeparator();
                 String normalized = (separator == '.') ? s : s.replace(separator, '.');
                 BigDecimal value = new BigDecimal(normalized);
-                            if (precision > 0) {
-                return value.setScale(precision, Flat2JavaConfig.getBigDecimalRoundingMode());
-            }
-            return value.stripTrailingZeros();
+                if (precision > 0) {
+                    return value.setScale(precision, Flat2JavaConfig.getBigDecimalRoundingMode());
+                }
+                return value.stripTrailingZeros();
             }
             
             BigInteger intRep = new BigInteger(s);

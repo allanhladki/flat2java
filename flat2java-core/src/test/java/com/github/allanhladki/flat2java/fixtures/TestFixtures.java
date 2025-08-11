@@ -104,6 +104,53 @@ public class TestFixtures {
         }
     }
 
+    /** Test fixture class with all supported field types for comprehensive testing, with valid date format. */
+    public static class ValidComprehensiveTestRecord {
+        @FlatField(length = 8)
+        public String stringField;
+
+        @FlatField(length = 8)
+        public Integer intField;
+
+        @FlatField(length = 8)
+        public Integer intWrapperField;
+
+        @FlatField(length = 9)
+        public Long longField;
+
+        @FlatField(length = 9)
+        public BigInteger bigIntegerField;
+
+        @FlatField(length = 7, precision = 3)
+        public BigDecimal bigDecimalField;
+
+        @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
+        public LocalDate dateField;
+
+        @FlatField(length = 14, dateTimeFormat = "yyyyMMddHHmmss")
+        public LocalDateTime dateTimeField;
+
+        @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
+        public LocalDate dateFieldWithFormat;
+
+        // Constructors
+        public ValidComprehensiveTestRecord() {}
+
+        public ValidComprehensiveTestRecord(String stringField, Integer intField, Integer intWrapperField, Long longField, 
+                                          BigInteger bigIntegerField, BigDecimal bigDecimalField, 
+                                          LocalDate dateField, LocalDateTime dateTimeField, LocalDate dateFieldWithFormat) {
+            this.stringField = stringField;
+            this.intField = intField;
+            this.intWrapperField = intWrapperField;
+            this.longField = longField;
+            this.bigIntegerField = bigIntegerField;
+            this.bigDecimalField = bigDecimalField;
+            this.dateField = dateField;
+            this.dateTimeField = dateTimeField;
+            this.dateFieldWithFormat = dateFieldWithFormat;
+        }
+    }
+
     /** Test fixture class for inheritance testing - Superclass. */
     public static class SuperRecord {
         @FlatField(length = 5)
