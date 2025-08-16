@@ -1,6 +1,6 @@
 # Flat2Java
 
-[![Version](https://img.shields.io/badge/version-0.0.1--rc1-blue.svg)](https://github.com/allanhladki/flat2java/releases)
+[![Version](https://img.shields.io/badge/version-0.0.1--rc2-blue.svg)](https://github.com/allanhladki/flat2java/releases)
 [![Java](https://img.shields.io/badge/java-11+-green.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -286,19 +286,41 @@ config.setBigDecimalUseDecimalSeparator(false);
 
 ## 🔧 Installation
 
-> **Note**: This project is currently in Release Candidate phase (version `0.0.1-rc1`). The API is stable but may have minor changes before the final release.
+> **Note**: This project is currently in Release Candidate phase (version `0.0.1-rc2`). The API is stable but may have minor changes before the final release.
 
-### Maven
+### Core Library
 
 ```xml
 <dependency>
     <groupId>com.github.allanhladki</groupId>
     <artifactId>flat2java-core</artifactId>
-    <version>0.0.1-rc1</version>
+    <version>0.0.1-rc2</version>
 </dependency>
 ```
 
-### Optional: Annotation Processor
+### Framework Integrations
+
+#### Spring Boot Integration
+
+```xml
+<dependency>
+    <groupId>com.github.allanhladki</groupId>
+    <artifactId>flat2java-spring</artifactId>
+    <version>0.0.1-rc2</version>
+</dependency>
+```
+
+#### Quarkus Integration
+
+```xml
+<dependency>
+    <groupId>com.github.allanhladki</groupId>
+    <artifactId>flat2java-quarkus</artifactId>
+    <version>0.0.1-rc2</version>
+</dependency>
+```
+
+### Annotation Processor (Optional)
 
 For compile-time validation:
 
@@ -306,10 +328,12 @@ For compile-time validation:
 <dependency>
     <groupId>com.github.allanhladki</groupId>
     <artifactId>flat2java-processor</artifactId>
-    <version>0.0.1-rc1</version>
+    <version>0.0.1-rc2</version>
     <scope>provided</scope>
 </dependency>
 ```
+
+
 
 ## 🧪 Testing
 
@@ -330,6 +354,8 @@ mvn test -pl flat2java-core
 
 - **[Core Module](flat2java-core/README.md)**: Detailed information about the core library
 - **[Processor Module](flat2java-processor/README.md)**: Annotation processor documentation
+- **[Spring Integration](flat2java-spring/README.md)**: Spring Boot integration guide
+- **[Quarkus Integration](flat2java-quarkus/README.md)**: Quarkus integration guide
 
 
 ## 🤝 Contributing

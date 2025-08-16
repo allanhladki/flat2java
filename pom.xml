@@ -5,11 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.allanhladki.flat2java</groupId>
     <artifactId>flat2java</artifactId>
-    <version>0.0.1-rc1</version>
+    <version>0.0.1-rc2</version>
     <packaging>pom</packaging>
     <modules>
         <module>flat2java-core</module>
         <module>flat2java-processor</module>
+        <module>flat2java-spring</module>
+        <module>flat2java-quarkus</module>
     </modules>
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

@@ -1,0 +1,27 @@
+name: "Flat2Java Quarkus Integration"
+metadata:
+  keywords:
+    - "flat2java"
+    - "serialization"
+    - "deserialization"
+    - "flat-file"
+    - "fixed-length"
+  guide: "https://github.com/allanhladki/flat2java"
+  categories:
+    - "serialization"
+    - "data-processing"
+  status: "stable"
+  unlisted: false
+  built-with-quarkus-core: true
+  extension-dependencies:
+    - "io.quarkus:quarkus-arc"
+  extension-artifacts:
+    - "com.github.allanhladki.flat2java:flat2java-quarkus"
+  capabilities:
+    - "flat2java.serialization"
+    - "flat2java.deserialization"
+  provides-capabilities:
+    - "flat2java.serialization"
+    - "flat2java.deserialization"
+  requires-capabilities:
+    - "flat2java.core"
