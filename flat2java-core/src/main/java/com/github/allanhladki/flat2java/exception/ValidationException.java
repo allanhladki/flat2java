@@ -1,8 +1,8 @@
 package com.github.allanhladki.flat2java.exception;
 
 /**
- * Exception thrown when validation operations fail.
- * This includes field validation, configuration validation, and metadata validation errors.
+ * Exception thrown when validation operations fail. This includes field validation, configuration
+ * validation, and metadata validation errors.
  */
 public class ValidationException extends Flat2JavaException {
 
@@ -33,4 +33,4 @@ public class ValidationException extends Flat2JavaException {
     public ValidationException(Throwable cause) {
         super(cause);
     }
-} 
+}

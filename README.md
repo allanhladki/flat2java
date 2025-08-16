@@ -1,5 +1,9 @@
 # Flat2Java
 
+[![Version](https://img.shields.io/badge/version-0.0.1--rc1-blue.svg)](https://github.com/allanhladki/flat2java/releases)
+[![Java](https://img.shields.io/badge/java-11+-green.svg)](https://openjdk.java.net/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A comprehensive Java library for serializing and deserializing Java objects to/from fixed-length flat file formats, similar to COBOL's data structures.
 
 ## Description
@@ -41,18 +45,10 @@ public class MyRecord {
     // getters and setters...
 }
 
-// Serialize an object
-MyRecord record = new MyRecord();
-record.setId("1234567890");
-record.setDate(LocalDate.of(2024, 3, 15));
-record.setAmount(new BigDecimal("99.99"));
-
+// Serialize and deserialize
+MyRecord record = new MyRecord("1234567890", LocalDate.of(2024, 3, 15), new BigDecimal("99.99"));
 String flatFileString = ObjectSerializer.serialize(record);
-// Result: "1234567890 2024031500000009999"
-
-// Deserialize back to object
 MyRecord deserializedRecord = ObjectDeserializer.deserialize(flatFileString, MyRecord.class);
-// deserializedRecord now contains the same data as the original record
 ```
 
 ### Interface-Based Approach (Recommended)
@@ -60,16 +56,114 @@ MyRecord deserializedRecord = ObjectDeserializer.deserialize(flatFileString, MyR
 ```java
 import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
 import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+import com.github.allanhladki.flat2java.interfaces.ObjectDeserializationInterface;
 
-// Create factory and get intercepted services
 Flat2JavaFactory factory = new Flat2JavaFactory();
 ObjectSerializationInterface objectSerializer = factory.getObjectSerializationInterface();
+ObjectDeserializationInterface objectDeserializer = factory.getObjectDeserializationInterface();
 
-// Serialize with automatic exception translation
 String flatFileString = objectSerializer.serialize(record);
+MyRecord deserializedRecord = objectDeserializer.deserialize(flatFileString, MyRecord.class);
+```
 
-// Deserialize with automatic exception translation
-MyRecord deserializedRecord = objectSerializer.deserialize(flatFileString, MyRecord.class);
+### Dependency Injection with Spring
+
+```java
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.github.allanhladki.flat2java.interfaces.*;
+
+@Service
+public class FlatFileService {
+    
+    @Autowired
+    private ObjectSerializationInterface objectSerializer;
+    
+    @Autowired
+    private ObjectDeserializationInterface objectDeserializer;
+    
+    
+    public String serializeRecord(MyRecord record) {
+        return objectSerializer.serialize(record);
+    }
+    
+    public MyRecord deserializeRecord(String flatString) {
+        return objectDeserializer.deserialize(flatString, MyRecord.class);
+    }
+}
+```
+
+**Spring Configuration:**
+```java
+@Configuration
+public class Flat2JavaConfig {
+    
+    @Bean
+    public Flat2JavaFactory flat2JavaFactory() {
+        return new Flat2JavaFactory();
+    }
+    
+    @Bean
+    public ObjectSerializationInterface objectSerializer(Flat2JavaFactory factory) {
+        return factory.getObjectSerializationInterface();
+    }
+    
+    @Bean
+    public ObjectDeserializationInterface objectDeserializer(Flat2JavaFactory factory) {
+        return factory.getObjectDeserializationInterface();
+    }
+}
+```
+
+### Dependency Injection with Quarkus
+
+```java
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import com.github.allanhladki.flat2java.interfaces.*;
+
+@ApplicationScoped
+public class FlatFileService {
+    
+    @Inject
+    ObjectSerializationInterface objectSerializer;
+    
+    @Inject
+    ObjectDeserializationInterface objectDeserializer;
+    
+    public String serializeRecord(MyRecord record) {
+        return objectSerializer.serialize(record);
+    }
+    
+    public MyRecord deserializeRecord(String flatString) {
+        return objectDeserializer.deserialize(flatString, MyRecord.class);
+    }
+}
+```
+
+**Quarkus Configuration:**
+```java
+@ApplicationScoped
+public class Flat2JavaProducer {
+    
+    @Produces
+    @ApplicationScoped
+    public Flat2JavaFactory flat2JavaFactory() {
+        return new Flat2JavaFactory();
+    }
+    
+    @Produces
+    @ApplicationScoped
+    public ObjectSerializationInterface objectSerializer(Flat2JavaFactory factory) {
+        return factory.getObjectSerializationInterface();
+    }
+    
+    @Produces
+    @ApplicationScoped
+    public ObjectDeserializationInterface objectDeserializer(Flat2JavaFactory factory) {
+        return factory.getObjectDeserializationInterface();
+    }
+}
 ```
 
 ## 🔄 Round-Trip Operations
@@ -102,25 +196,10 @@ assertEquals(original.getAmount(), deserialized.getAmount());
 - **`ObjectSerializer`**: Main API for serializing objects to flat file strings
 - **`ObjectDeserializer`**: Main API for deserializing flat file strings to objects
 - **`FieldSerializer`**: Type-specific serialization logic for individual fields
+- **`FieldDeserializer`**: Type-specific deserialization logic for individual fields
 - **`FieldMetadata`**: Encapsulates field configuration and metadata
 - **`FieldMetadataExtractor`**: Extracts and validates field metadata from classes
 
-### Interface-Based Design
-
-The library provides clean interfaces that support dependency injection:
-
-```java
-// Core interfaces
-FieldSerializationInterface fieldSerializer;
-ObjectSerializationInterface objectSerializer;
-FieldMetadataInterface metadataExtractor;
-
-// Factory pattern for easy instantiation
-Flat2JavaFactory factory = new Flat2JavaFactory();
-fieldSerializer = factory.getFieldSerializationInterface();
-objectSerializer = factory.getObjectSerializationInterface();
-metadataExtractor = factory.getFieldMetadataInterface();
-```
 
 ### Exception Handling
 
@@ -170,18 +249,27 @@ public class ExampleRecord {
 
 The library supports extensive configuration through environment variables:
 
+| Variable | Description | Values | Default | Example |
+|----------|-------------|---------|---------|---------|
+| `FLAT2JAVA_ALLOW_NULL_STRINGS` | Allow null string field values | `true`, `false` | `false` | `export FLAT2JAVA_ALLOW_NULL_STRINGS="true"` |
+| `FLAT2JAVA_NULL_VALUE_PADDING` | Padding character for null string values | Any single character | ` ` (space) | `export FLAT2JAVA_NULL_VALUE_PADDING="*"` |
+| `FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR` | Use decimal separator in BigDecimal serialization | `true`, `false` | `false` | `export FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR="true"` |
+| `FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR` | Decimal separator character for BigDecimal | Any single character | `.` | `export FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR=","` |
+| `FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE` | Rounding mode for BigDecimal precision | `UNNECESSARY`, `UP`, `DOWN`, `CEILING`, `FLOOR`, `HALF_UP`, `HALF_DOWN`, `HALF_EVEN` | `UNNECESSARY` | `export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_UP"` |
+| `FLAT2JAVA_THROW_ON_STRING_TRUNCATION` | Throw exception when string values exceed field length | `true`, `false` | `false` | `export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="true"` |
+
+**Quick Setup:**
 ```bash
-# Null value handling
+# Enable null handling and set custom padding
 export FLAT2JAVA_ALLOW_NULL_STRINGS="true"
-export FLAT2JAVA_NULL_VALUE_PADDING=" "
+export FLAT2JAVA_NULL_VALUE_PADDING="*"
 
-# BigDecimal configuration
-export FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR="false"
-export FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR="."
-export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="UNNECESSARY"
+# Use decimal separators with comma
+export FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR="true"
+export FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR=","
 
-# String truncation behavior
-export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="false"
+# Strict string validation
+export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="true"
 ```
 
 ### Programmatic Configuration
@@ -198,13 +286,15 @@ config.setBigDecimalUseDecimalSeparator(false);
 
 ## 🔧 Installation
 
+> **Note**: This project is currently in Release Candidate phase (version `0.0.1-rc1`). The API is stable but may have minor changes before the final release.
+
 ### Maven
 
 ```xml
 <dependency>
     <groupId>com.github.allanhladki</groupId>
     <artifactId>flat2java-core</artifactId>
-    <version>0.0.1-2</version>
+    <version>0.0.1-rc1</version>
 </dependency>
 ```
 
@@ -216,7 +306,7 @@ For compile-time validation:
 <dependency>
     <groupId>com.github.allanhladki</groupId>
     <artifactId>flat2java-processor</artifactId>
-    <version>0.0.1-2</version>
+    <version>0.0.1-rc1</version>
     <scope>provided</scope>
 </dependency>
 ```

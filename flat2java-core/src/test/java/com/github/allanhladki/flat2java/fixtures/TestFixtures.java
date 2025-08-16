@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Unified test fixtures for flat2java library tests.
- * This class contains all test classes used across different test files.
+ * Unified test fixtures for flat2java library tests. This class contains all test classes used
+ * across different test files.
  */
 public class TestFixtures {
 
@@ -37,7 +37,8 @@ public class TestFixtures {
         // Constructors
         public TestRecord() {}
 
-        public TestRecord(String id, LocalDate date, Integer quantity, BigDecimal price, LocalDate expiryDate) {
+        public TestRecord(
+                String id, LocalDate date, Integer quantity, BigDecimal price, LocalDate expiryDate) {
             this.id = id;
             this.date = date;
             this.quantity = quantity;
@@ -46,16 +47,45 @@ public class TestFixtures {
         }
 
         // Getters and setters
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public LocalDate getDate() { return date; }
-        public void setDate(LocalDate date) { this.date = date; }
-        public Integer getQuantity() { return quantity; }
-        public void setQuantity(Integer quantity) { this.quantity = quantity; }
-        public BigDecimal getPrice() { return price; }
-        public void setPrice(BigDecimal price) { this.price = price; }
-        public LocalDate getExpiryDate() { return expiryDate; }
-        public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
+
+        public Integer getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(Integer quantity) {
+            this.quantity = quantity;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+
+        public void setPrice(BigDecimal price) {
+            this.price = price;
+        }
+
+        public LocalDate getExpiryDate() {
+            return expiryDate;
+        }
+
+        public void setExpiryDate(LocalDate expiryDate) {
+            this.expiryDate = expiryDate;
+        }
     }
 
     /** Test fixture class with all supported field types for comprehensive testing. */
@@ -90,9 +120,15 @@ public class TestFixtures {
         // Constructors
         public ComprehensiveTestRecord() {}
 
-        public ComprehensiveTestRecord(String stringField, Integer intField, Long longField, 
-                                     BigInteger bigIntegerField, BigDecimal bigDecimalField, 
-                                     LocalDate dateField, LocalDateTime dateTimeField, LocalDate dateFieldNoFormat) {
+        public ComprehensiveTestRecord(
+                String stringField,
+                Integer intField,
+                Long longField,
+                BigInteger bigIntegerField,
+                BigDecimal bigDecimalField,
+                LocalDate dateField,
+                LocalDateTime dateTimeField,
+                LocalDate dateFieldNoFormat) {
             this.stringField = stringField;
             this.intField = intField;
             this.longField = longField;
@@ -104,7 +140,10 @@ public class TestFixtures {
         }
     }
 
-    /** Test fixture class with all supported field types for comprehensive testing, with valid date format. */
+    /**
+     * Test fixture class with all supported field types for comprehensive testing, with valid date
+     * format.
+     */
     public static class ValidComprehensiveTestRecord {
         @FlatField(length = 8)
         public String stringField;
@@ -136,9 +175,16 @@ public class TestFixtures {
         // Constructors
         public ValidComprehensiveTestRecord() {}
 
-        public ValidComprehensiveTestRecord(String stringField, Integer intField, Integer intWrapperField, Long longField, 
-                                          BigInteger bigIntegerField, BigDecimal bigDecimalField, 
-                                          LocalDate dateField, LocalDateTime dateTimeField, LocalDate dateFieldWithFormat) {
+        public ValidComprehensiveTestRecord(
+                String stringField,
+                Integer intField,
+                Integer intWrapperField,
+                Long longField,
+                BigInteger bigIntegerField,
+                BigDecimal bigDecimalField,
+                LocalDate dateField,
+                LocalDateTime dateTimeField,
+                LocalDate dateFieldWithFormat) {
             this.stringField = stringField;
             this.intField = intField;
             this.intWrapperField = intWrapperField;
@@ -166,10 +212,21 @@ public class TestFixtures {
             this.superField2 = superField2;
         }
 
-        public String getSuperField1() { return superField1; }
-        public void setSuperField1(String superField1) { this.superField1 = superField1; }
-        public String getSuperField2() { return superField2; }
-        public void setSuperField2(String superField2) { this.superField2 = superField2; }
+        public String getSuperField1() {
+            return superField1;
+        }
+
+        public void setSuperField1(String superField1) {
+            this.superField1 = superField1;
+        }
+
+        public String getSuperField2() {
+            return superField2;
+        }
+
+        public void setSuperField2(String superField2) {
+            this.superField2 = superField2;
+        }
     }
 
     /** Test fixture class for inheritance testing - Subclass. */
@@ -188,10 +245,21 @@ public class TestFixtures {
             this.subField2 = subField2;
         }
 
-        public String getSubField1() { return subField1; }
-        public void setSubField1(String subField1) { this.subField1 = subField1; }
-        public String getSubField2() { return subField2; }
-        public void setSubField2(String subField2) { this.subField2 = subField2; }
+        public String getSubField1() {
+            return subField1;
+        }
+
+        public void setSubField1(String subField1) {
+            this.subField1 = subField1;
+        }
+
+        public String getSubField2() {
+            return subField2;
+        }
+
+        public void setSubField2(String subField2) {
+            this.subField2 = subField2;
+        }
     }
 
     /** Test fixture class with no annotated fields. */
@@ -201,10 +269,21 @@ public class TestFixtures {
 
         public EmptyRecord() {}
 
-        public String getField1() { return field1; }
-        public void setField1(String field1) { this.field1 = field1; }
-        public Integer getField2() { return field2; }
-        public void setField2(Integer field2) { this.field2 = field2; }
+        public String getField1() {
+            return field1;
+        }
+
+        public void setField1(String field1) {
+            this.field1 = field1;
+        }
+
+        public Integer getField2() {
+            return field2;
+        }
+
+        public void setField2(Integer field2) {
+            this.field2 = field2;
+        }
     }
 
     /** Test fixture class with no fields at all. */
@@ -226,13 +305,17 @@ public class TestFixtures {
         @FlatField(length = 8, dateTimeFormat = "yyyyMMdd") // Valid format
         public LocalDate validDateField;
 
-        @FlatField(length = 6, dateTimeFormat = "yyyyMMdd") // Invalid: format produces 8 chars, length is 6
+        @FlatField(
+                length = 6,
+                dateTimeFormat = "yyyyMMdd") // Invalid: format produces 8 chars, length is 6
         public LocalDate invalidDateField;
 
         @FlatField(length = 14, dateTimeFormat = "yyyyMMddHHmmss") // Valid format
         public LocalDateTime validDateTimeField;
 
-        @FlatField(length = 10, dateTimeFormat = "yyyyMMddHHmmss") // Invalid: format produces 14 chars, length is 10
+        @FlatField(
+                length = 10,
+                dateTimeFormat = "yyyyMMddHHmmss") // Invalid: format produces 14 chars, length is 10
         public LocalDateTime invalidDateTimeField;
 
         @FlatField(length = 5, dateTimeFormat = "invalid") // Invalid: invalid format
@@ -260,8 +343,12 @@ public class TestFixtures {
 
         public ZeroValueRecord() {}
 
-        public ZeroValueRecord(Integer zeroInteger, Long zeroLong, BigInteger zeroBigInteger, 
-                             BigDecimal zeroBigDecimalNoPrecision, BigDecimal zeroBigDecimalWithPrecision) {
+        public ZeroValueRecord(
+                Integer zeroInteger,
+                Long zeroLong,
+                BigInteger zeroBigInteger,
+                BigDecimal zeroBigDecimalNoPrecision,
+                BigDecimal zeroBigDecimalWithPrecision) {
             this.zeroInteger = zeroInteger;
             this.zeroLong = zeroLong;
             this.zeroBigInteger = zeroBigInteger;
@@ -345,10 +432,10 @@ public class TestFixtures {
     public static class PrimitiveRecord {
         @FlatField(length = 5)
         public int primitiveInt;
-        
+
         @FlatField(length = 5)
         public long primitiveLong;
-        
+
         public PrimitiveRecord() {} // No-arg constructor
     }
 
@@ -376,7 +463,9 @@ public class TestFixtures {
     /** Test service interface for interceptor testing. */
     public interface TestService {
         boolean validateUserData(String data);
+
         String serializeUserData(Object data);
+
         String processUserData(String data);
     }
 
@@ -387,24 +476,24 @@ public class TestFixtures {
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
             }
-            
+
             if (data.isEmpty()) {
                 throw new IllegalArgumentException("Data cannot be empty");
             }
-            
+
             if (data.length() > 100) {
                 throw new IllegalArgumentException("Data length cannot exceed 100 characters");
             }
-            
+
             return true;
         }
-        
+
         @Override
         public String serializeUserData(Object data) {
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
             }
-            
+
             try {
                 if (data instanceof String) {
                     return (String) data;
@@ -415,18 +504,18 @@ public class TestFixtures {
                 throw new RuntimeException("Failed to serialize data: " + e.getMessage(), e);
             }
         }
-        
+
         @Override
         public String processUserData(String data) {
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
             }
-            
+
             if (data.contains("error")) {
                 throw new RuntimeException("Processing failed due to error in data");
             }
-            
+
             return "Processed: " + data;
         }
     }
-} 
+}

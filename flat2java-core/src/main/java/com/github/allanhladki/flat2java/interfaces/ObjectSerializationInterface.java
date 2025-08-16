@@ -3,21 +3,21 @@ package com.github.allanhladki.flat2java.interfaces;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 
 /**
- * Interface for serializing objects to flat file format strings.
- * This interface uses field metadata extracted from {@link com.github.allanhladki.flat2java.markers.FlatField} 
- * annotations to convert object fields to properly formatted strings.
+ * Interface for serializing objects to flat file format strings. This interface uses field metadata
+ * extracted from {@link com.github.allanhladki.flat2java.markers.FlatField} annotations to convert
+ * object fields to properly formatted strings.
  */
 public interface ObjectSerializationInterface {
-    
+
     /**
-     * Serializes an object to a flat file format string using inheritance (includes superclass fields).
-     * This is the default behavior.
+     * Serializes an object to a flat file format string using inheritance (includes superclass
+     * fields). This is the default behavior.
      *
      * @param object the object to serialize
      * @return the serialized string representation
      */
     String serialize(Object object);
-    
+
     /**
      * Serializes an object to a flat file format string with configurable inheritance behavior.
      *
@@ -26,7 +26,7 @@ public interface ObjectSerializationInterface {
      * @return the serialized string representation
      */
     String serialize(Object object, boolean includeInherited);
-    
+
     /**
      * Serializes a single field value using its metadata.
      *
@@ -35,4 +35,4 @@ public interface ObjectSerializationInterface {
      * @return the serialized field value
      */
     String serializeField(Object fieldValue, FieldMetadata metadata);
-} 
+}

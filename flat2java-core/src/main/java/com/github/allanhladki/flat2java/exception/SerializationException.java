@@ -1,8 +1,8 @@
 package com.github.allanhladki.flat2java.exception;
 
 /**
- * Exception thrown when serialization operations fail.
- * This includes errors during object-to-string conversion and formatting.
+ * Exception thrown when serialization operations fail. This includes errors during object-to-string
+ * conversion and formatting.
  */
 public class SerializationException extends Flat2JavaException {
 
@@ -33,4 +33,4 @@ public class SerializationException extends Flat2JavaException {
     public SerializationException(Throwable cause) {
         super(cause);
     }
-} 
+}

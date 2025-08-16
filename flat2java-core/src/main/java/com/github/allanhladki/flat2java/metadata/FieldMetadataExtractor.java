@@ -2,7 +2,6 @@ package com.github.allanhladki.flat2java.metadata;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.serializer.SerializationTypes;
-
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -97,8 +96,8 @@ public class FieldMetadataExtractor {
     }
 
     /**
-     * Core validation method for field type.
-     * This is the single source of truth for field type validation.
+     * Core validation method for field type. This is the single source of truth for field type
+     * validation.
      *
      * @param fieldType the field type (Class<?> for reflection)
      * @param fieldName the field name for error messages
@@ -107,8 +106,11 @@ public class FieldMetadataExtractor {
     public static void validateFieldType(Class<?> fieldType, String fieldName) {
         if (!SerializationTypes.isSupportedType(fieldType)) {
             throw new IllegalArgumentException(
-                    String.format("Field '%s': unsupported field type '%s'. %s", 
-                                 fieldName, fieldType.getSimpleName(), SerializationTypes.getSupportedTypesDescription()));
+                    String.format(
+                            "Field '%s': unsupported field type '%s'. %s",
+                            fieldName,
+                            fieldType.getSimpleName(),
+                            SerializationTypes.getSupportedTypesDescription()));
         }
     }
 
@@ -123,8 +125,8 @@ public class FieldMetadataExtractor {
     }
 
     /**
-     * Core validation method for length and precision.
-     * This is the single source of truth for length and precision validation.
+     * Core validation method for length and precision. This is the single source of truth for length
+     * and precision validation.
      *
      * @param length the field length
      * @param precision the field precision
@@ -135,22 +137,24 @@ public class FieldMetadataExtractor {
         // Validate length is positive
         if (length <= 0) {
             throw new IllegalArgumentException(
-                    String.format("Field '%s': length must be a positive integer, got %d", 
-                                 fieldName, length));
+                    String.format(
+                            "Field '%s': length must be a positive integer, got %d", fieldName, length));
         }
 
         // Validate precision is positive if specified
         if (precision < 0) {
             throw new IllegalArgumentException(
-                    String.format("Field '%s': precision must be a non-negative integer, got %d", 
-                                 fieldName, precision));
+                    String.format(
+                            "Field '%s': precision must be a non-negative integer, got %d",
+                            fieldName, precision));
         }
 
         // Validate precision is smaller than length
         if (precision >= length) {
             throw new IllegalArgumentException(
-                    String.format("Field '%s': precision (%d) must be smaller than length (%d)", 
-                                 fieldName, precision, length));
+                    String.format(
+                            "Field '%s': precision (%d) must be smaller than length (%d)",
+                            fieldName, precision, length));
         }
     }
 
@@ -162,16 +166,15 @@ public class FieldMetadataExtractor {
      */
     private static void validateDateTimeFormatLength(FieldMetadata metadata) {
         validateDateTimeFormatLength(
-            metadata.getDateTimeFormat(),
-            metadata.getField().getType(),
-            metadata.getLength(),
-            metadata.getName()
-        );
+                metadata.getDateTimeFormat(),
+                metadata.getField().getType(),
+                metadata.getLength(),
+                metadata.getName());
     }
 
     /**
-     * Core validation method for date/time format patterns.
-     * This is the single source of truth for date/time format validation.
+     * Core validation method for date/time format patterns. This is the single source of truth for
+     * date/time format validation.
      *
      * @param dateTimeFormat the date/time format pattern
      * @param fieldType the field type (Class<?> for reflection)
@@ -179,7 +182,8 @@ public class FieldMetadataExtractor {
      * @param fieldName the field name for error messages
      * @throws IllegalArgumentException if validation fails
      */
-    public static void validateDateTimeFormatLength(String dateTimeFormat, Class<?> fieldType, int length, String fieldName) {
+    public static void validateDateTimeFormatLength(
+            String dateTimeFormat, Class<?> fieldType, int length, String fieldName) {
         if (dateTimeFormat == null || dateTimeFormat.isEmpty()) {
             return; // No format specified, skip validation
         }
@@ -191,21 +195,24 @@ public class FieldMetadataExtractor {
                 if (fieldType == LocalDate.class) {
                     sampleDate = LocalDate.of(2024, 1, 1).format(DateTimeFormatter.ofPattern(dateTimeFormat));
                 } else {
-                    sampleDate = LocalDateTime.of(2024, 1, 1, 12, 0, 0).format(DateTimeFormatter.ofPattern(dateTimeFormat));
+                    sampleDate =
+                            LocalDateTime.of(2024, 1, 1, 12, 0, 0)
+                                    .format(DateTimeFormatter.ofPattern(dateTimeFormat));
                 }
 
                 if (sampleDate.length() != length) {
                     throw new IllegalArgumentException(
-                            String.format("Field '%s': dateTimeFormat '%s' produces %d characters, but length is %d", 
-                                         fieldName, dateTimeFormat, sampleDate.length(), length));
+                            String.format(
+                                    "Field '%s': dateTimeFormat '%s' produces %d characters, but length is %d",
+                                    fieldName, dateTimeFormat, sampleDate.length(), length));
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException(
-                        String.format("Field '%s': invalid dateTimeFormat '%s': %s", 
-                                     fieldName, dateTimeFormat, e.getMessage()), e);
+                        String.format(
+                                "Field '%s': invalid dateTimeFormat '%s': %s",
+                                fieldName, dateTimeFormat, e.getMessage()),
+                        e);
             }
         }
     }
-
-
 }

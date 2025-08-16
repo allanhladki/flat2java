@@ -1,10 +1,8 @@
 package com.github.allanhladki.flat2java.serializer;
 
 import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
-
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
-
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -93,8 +91,7 @@ public class ObjectSerializer {
         Field field = metadata.getField();
         if (field == null) {
             logger.error("Field is null for metadata: {}", metadata);
-            throw new RuntimeException(
-                    String.format("Field is null for metadata: %s", metadata));
+            throw new RuntimeException(String.format("Field is null for metadata: %s", metadata));
         }
 
         try {
@@ -104,8 +101,10 @@ public class ObjectSerializer {
         } catch (IllegalAccessException e) {
             logger.error("Failed to access field: {}", field.getName(), e);
             throw new RuntimeException(
-                    String.format("Failed to access field '%s' in class '%s'", 
-                                 field.getName(), object.getClass().getName()), e);
+                    String.format(
+                            "Failed to access field '%s' in class '%s'",
+                            field.getName(), object.getClass().getName()),
+                    e);
         }
     }
 
@@ -118,7 +117,8 @@ public class ObjectSerializer {
      * @param field the field being serialized
      * @return the serialized field value
      */
-    private static String serializeFieldValue(Object fieldValue, FieldMetadata metadata, Field field) {
+    private static String serializeFieldValue(
+            Object fieldValue, FieldMetadata metadata, Field field) {
         if (fieldValue == null) {
             if (Flat2JavaConfig.isNullHandlingEnabled()) {
                 logger.debug("Null field value for '{}', creating empty field", metadata.getName());
@@ -152,53 +152,57 @@ public class ObjectSerializer {
      */
     public static String serialize(Object fieldValue, FieldMetadata metadata) {
         Objects.requireNonNull(metadata, "FieldMetadata cannot be null");
-        
+
         if (fieldValue == null && metadata.getType() == SerializationTypes.SupportedTypes.STRING) {
             return FieldSerializer.createEmptyField(metadata);
         } else if (fieldValue == null) {
-            throw new NullPointerException(String.format("Field '%s' cannot be null. Set %s=true to allow null string field values.", metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
+            throw new NullPointerException(
+                    String.format(
+                            "Field '%s' cannot be null. Set %s=true to allow null string field values.",
+                            metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
         }
 
         String serializedValue = serializeValue(fieldValue, metadata);
         return FieldSerializer.formatToLength(serializedValue, metadata);
     }
 
-    private static String serializeValue(Object fieldValue, FieldMetadata metadata){
-        
+    private static String serializeValue(Object fieldValue, FieldMetadata metadata) {
+
         Class<?> fieldType = fieldValue.getClass();
 
         if (fieldValue instanceof String) {
             return FieldSerializer.serialize((String) fieldValue);
-        } 
-        
+        }
+
         if (fieldValue instanceof Integer) {
             return FieldSerializer.serialize((Integer) fieldValue);
-        } 
-        
+        }
+
         if (fieldValue instanceof Long) {
             return FieldSerializer.serialize((Long) fieldValue);
-        } 
-        
+        }
+
         if (fieldValue instanceof BigInteger) {
             return FieldSerializer.serialize((BigInteger) fieldValue);
-        } 
-        
+        }
+
         if (fieldValue instanceof BigDecimal) {
             return FieldSerializer.serialize((BigDecimal) fieldValue, metadata.getPrecision());
-        } 
-        
+        }
+
         if (fieldValue instanceof LocalDate) {
             return FieldSerializer.serialize((LocalDate) fieldValue, metadata.getDateTimeFormat());
-        } 
-        
+        }
+
         if (fieldValue instanceof LocalDateTime) {
             return FieldSerializer.serialize((LocalDateTime) fieldValue, metadata.getDateTimeFormat());
         }
 
         throw new IllegalArgumentException(
-                String.format("Unsupported field type: %s for field '%s'. %s",  
-                             fieldType.getSimpleName(), metadata.getName(), 
-                             SerializationTypes.getSupportedTypesDescription()));
+                String.format(
+                        "Unsupported field type: %s for field '%s'. %s",
+                        fieldType.getSimpleName(),
+                        metadata.getName(),
+                        SerializationTypes.getSupportedTypesDescription()));
     }
-
 }

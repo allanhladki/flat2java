@@ -6,7 +6,6 @@ import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
-
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -65,7 +64,8 @@ class ObjectSerializerTest {
 
         // then
         assertNotNull(result, "Serialization result should not be null");
-        // Note: Since the actual serialization logic is commented out, we expect the raw toString() values
+        // Note: Since the actual serialization logic is commented out, we expect the raw toString()
+        // values
         // This test will need to be updated when the serialization logic is implemented
     }
 
@@ -85,7 +85,8 @@ class ObjectSerializerTest {
 
         // then
         assertNotNull(result, "Serialization result should not be null");
-        // Note: Since the actual serialization logic is commented out, we expect the raw toString() values
+        // Note: Since the actual serialization logic is commented out, we expect the raw toString()
+        // values
         // This test will need to be updated when the serialization logic is implemented
     }
 
@@ -103,7 +104,9 @@ class ObjectSerializerTest {
         // when/then - Mock the configuration to disable null handling
         try (MockedStatic<Flat2JavaConfig> mockedConfig = Mockito.mockStatic(Flat2JavaConfig.class)) {
             mockedConfig.when(Flat2JavaConfig::isNullHandlingEnabled).thenReturn(false);
-            mockedConfig.when(Flat2JavaConfig::getNullHandlingEnvVarName).thenReturn("FLAT2JAVA_ALLOW_NULL_STRINGS");
+            mockedConfig
+                    .when(Flat2JavaConfig::getNullHandlingEnvVarName)
+                    .thenReturn("FLAT2JAVA_ALLOW_NULL_STRINGS");
 
             assertThrows(NullPointerException.class, () -> ObjectSerializer.serialize(record));
         }
@@ -136,7 +139,6 @@ class ObjectSerializerTest {
         assertNotNull(result, "Serialization result should not be null");
         // Should only include fields from the current class (SubRecord)
     }
-
 
     @Test
     @DisplayName("Should serialize different data types")
@@ -197,13 +199,13 @@ class ObjectSerializerTest {
 
     @Test
     @DisplayName("Should handle null values correctly")
-    void testSerializeNull() throws Exception {        
+    void testSerializeNull() throws Exception {
         // Test that null values are handled by the metadata method
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
-        
+
         String result = ObjectSerializer.serialize(null, metadata);
         assertEquals("        ", result); // 8 spaces for null value
     }
-} 
+}

@@ -1,8 +1,8 @@
 package com.github.allanhladki.flat2java.exception;
 
 /**
- * Base exception class for all flat2java library exceptions.
- * This provides a common exception hierarchy for the library.
+ * Base exception class for all flat2java library exceptions. This provides a common exception
+ * hierarchy for the library.
  */
 public class Flat2JavaException extends RuntimeException {
 
@@ -33,4 +33,4 @@ public class Flat2JavaException extends RuntimeException {
     public Flat2JavaException(Throwable cause) {
         super(cause);
     }
-} 
+}

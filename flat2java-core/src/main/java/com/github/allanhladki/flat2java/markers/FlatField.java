@@ -13,22 +13,20 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FlatField {
 
-    /**
-     * Default values for annotation attributes.
-     */
+    /** Default values for annotation attributes. */
     final class Defaults {
         /** Default name value (empty string) */
         public static final String NAME = "";
-        
+
         /** Default precision value */
         public static final int PRECISION = 0;
-        
+
         /** Default date/time format value (empty string) */
         public static final String DATE_TIME_FORMAT = "";
-        
+
         /** Default padding character (space) */
         public static final char PADDING = ' ';
-        
+
         /** Private constructor to prevent instantiation */
         private Defaults() {}
     }
@@ -64,9 +62,9 @@ public @interface FlatField {
 
     /**
      * Optional padding character used in the field.
-     * 
-     * <p><strong>Note:</strong> For numeric fields, this setting is ignored - 
-     * numeric fields are always padded with zeros ('0') for consistency and reliability.
+     *
+     * <p><strong>Note:</strong> For numeric fields, this setting is ignored - numeric fields are
+     * always padded with zeros ('0') for consistency and reliability.
      *
      * @return the padding character, default is space
      */

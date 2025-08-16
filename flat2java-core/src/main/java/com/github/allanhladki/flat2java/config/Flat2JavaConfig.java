@@ -1,8 +1,8 @@
 package com.github.allanhladki.flat2java.config;
 
+import java.math.RoundingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.math.RoundingMode;
 
 /**
  * Configuration class for flat2java library settings. This class manages all environment variables
@@ -13,14 +13,20 @@ public class Flat2JavaConfig {
 
     /** Environment variable names */
     private static final String NULL_HANDLING_ENV_VAR = "FLAT2JAVA_ALLOW_NULL_STRINGS";
+
     private static final String NULL_VALUE_PADDING_ENV_VAR = "FLAT2JAVA_NULL_VALUE_PADDING";
-    private static final String BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR";
-    private static final String BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR";
-    private static final String BIGDECIMAL_ROUNDING_MODE_ENV_VAR = "FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE";
-    private static final String THROW_ON_STRING_TRUNCATION_ENV_VAR = "FLAT2JAVA_THROW_ON_STRING_TRUNCATION";
+    private static final String BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR =
+            "FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR";
+    private static final String BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR =
+            "FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR";
+    private static final String BIGDECIMAL_ROUNDING_MODE_ENV_VAR =
+            "FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE";
+    private static final String THROW_ON_STRING_TRUNCATION_ENV_VAR =
+            "FLAT2JAVA_THROW_ON_STRING_TRUNCATION";
 
     /** Default configuration values */
     private static final boolean DEFAULT_NULL_HANDLING = true;
+
     private static final char DEFAULT_NULL_VALUE_PADDING = ' ';
     private static final boolean DEFAULT_BIGDECIMAL_USE_DECIMAL_SEPARATOR = false;
     private static final char DEFAULT_BIGDECIMAL_DECIMAL_SEPARATOR = '.';
@@ -29,8 +35,10 @@ public class Flat2JavaConfig {
 
     /** Cached configuration values */
     private static final boolean ALLOW_NULL_VALUES = getNullHandlingConfig();
+
     private static final char NULL_VALUE_PADDING = getNullValuePaddingConfig();
-    private static final boolean BIGDECIMAL_USE_DECIMAL_SEPARATOR = getBigDecimalUseDecimalSeparatorConfig();
+    private static final boolean BIGDECIMAL_USE_DECIMAL_SEPARATOR =
+            getBigDecimalUseDecimalSeparatorConfig();
     private static final char BIGDECIMAL_DECIMAL_SEPARATOR = getBigDecimalDecimalSeparatorConfig();
     private static final RoundingMode BIGDECIMAL_ROUNDING_MODE = getBigDecimalRoundingModeConfig();
     private static final boolean THROW_ON_STRING_TRUNCATION = getThrowOnStringTruncationConfig();
@@ -68,8 +76,6 @@ public class Flat2JavaConfig {
             return DEFAULT_NULL_HANDLING;
         }
     }
-
-
 
     /**
      * Gets the null value padding configuration from environment variable.
@@ -116,7 +122,8 @@ public class Flat2JavaConfig {
 
         try {
             boolean config = Boolean.parseBoolean(envValue);
-            logger.trace("Environment variable {} set to: {}", BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR, config);
+            logger.trace(
+                    "Environment variable {} set to: {}", BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR, config);
             return config;
         } catch (Exception e) {
             logger.warn(
@@ -152,7 +159,8 @@ public class Flat2JavaConfig {
         }
 
         char config = envValue.charAt(0);
-        logger.trace("Environment variable {} set to: {}", BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR, config);
+        logger.trace(
+                "Environment variable {} set to: {}", BIGDECIMAL_DECIMAL_SEPARATOR_ENV_VAR, config);
         return config;
     }
 
@@ -206,7 +214,8 @@ public class Flat2JavaConfig {
     /**
      * Gets the string truncation configuration from environment variable.
      *
-     * @return true if exceptions should be thrown when strings are truncated, false if truncation should be allowed
+     * @return true if exceptions should be thrown when strings are truncated, false if truncation
+     *     should be allowed
      */
     private static boolean getThrowOnStringTruncationConfig() {
         String envValue = System.getenv(THROW_ON_STRING_TRUNCATION_ENV_VAR);
@@ -220,7 +229,8 @@ public class Flat2JavaConfig {
 
         try {
             boolean config = Boolean.parseBoolean(envValue);
-            logger.trace("Environment variable {} set to: {}", THROW_ON_STRING_TRUNCATION_ENV_VAR, config);
+            logger.trace(
+                    "Environment variable {} set to: {}", THROW_ON_STRING_TRUNCATION_ENV_VAR, config);
             return config;
         } catch (Exception e) {
             logger.warn(
@@ -250,8 +260,6 @@ public class Flat2JavaConfig {
     public static String getNullHandlingEnvVarName() {
         return NULL_HANDLING_ENV_VAR;
     }
-
-
 
     /**
      * Gets the character to use for padding null values.
@@ -328,7 +336,8 @@ public class Flat2JavaConfig {
     /**
      * Checks if exceptions should be thrown when strings are truncated during formatting.
      *
-     * @return true if exceptions should be thrown when strings are truncated, false if truncation should be allowed
+     * @return true if exceptions should be thrown when strings are truncated, false if truncation
+     *     should be allowed
      */
     public static boolean isThrowOnStringTruncationEnabled() {
         return THROW_ON_STRING_TRUNCATION;

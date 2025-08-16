@@ -10,10 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Utility class for deserializing flat file strings into Java objects.
- * This reverses the logic used in {@code ObjectSerializer} by slicing the input
- * string using {@link FieldMetadata} and converting each slice to the appropriate
- * field type.
+ * Utility class for deserializing flat file strings into Java objects. This reverses the logic used
+ * in {@code ObjectSerializer} by slicing the input string using {@link FieldMetadata} and
+ * converting each slice to the appropriate field type.
  */
 public final class ObjectDeserializer {
     private static final Logger logger = LoggerFactory.getLogger(ObjectDeserializer.class);
@@ -45,20 +44,27 @@ public final class ObjectDeserializer {
         Objects.requireNonNull(flat, "Flat string cannot be null");
         Objects.requireNonNull(clazz, "Class cannot be null");
 
-        logger.debug("Deserializing to type: {} (inherited: {}), input length: {}", clazz.getName(), includeInherited, flat.length());
+        logger.debug(
+                "Deserializing to type: {} (inherited: {}), input length: {}",
+                clazz.getName(),
+                includeInherited,
+                flat.length());
 
-        List<FieldMetadata> fieldMetadataList = includeInherited
-                ? FieldMetadataExtractor.extractIncludingInherited(clazz)
-                : FieldMetadataExtractor.extract(clazz);
+        List<FieldMetadata> fieldMetadataList =
+                includeInherited
+                        ? FieldMetadataExtractor.extractIncludingInherited(clazz)
+                        : FieldMetadataExtractor.extract(clazz);
 
         if (fieldMetadataList.isEmpty()) {
-            throw new IllegalArgumentException("No fields annotated with @FlatField found in class: " + clazz.getName());
+            throw new IllegalArgumentException(
+                    "No fields annotated with @FlatField found in class: " + clazz.getName());
         }
 
         int expectedLength = fieldMetadataList.stream().mapToInt(FieldMetadata::getLength).sum();
         if (flat.length() != expectedLength) {
             throw new IllegalArgumentException(
-                    String.format("Input length (%d) does not match expected total length (%d) for class %s",
+                    String.format(
+                            "Input length (%d) does not match expected total length (%d) for class %s",
                             flat.length(), expectedLength, clazz.getName()));
         }
 
@@ -84,30 +90,44 @@ public final class ObjectDeserializer {
             ctor.setAccessible(true);
             return ctor.newInstance();
         } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException(String.format("Class '%s' must have a no-arg constructor", clazz.getName()), e);
+            throw new IllegalArgumentException(
+                    String.format("Class '%s' must have a no-arg constructor", clazz.getName()), e);
         } catch (InstantiationException e) {
-            throw new IllegalArgumentException(String.format("Class '%s' cannot be instantiated (abstract, interface, or missing no-arg constructor)", clazz.getName()), e);
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Class '%s' cannot be instantiated (abstract, interface, or missing no-arg"
+                                    + " constructor)",
+                            clazz.getName()),
+                    e);
         } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException(String.format("No-arg constructor in class '%s' is not accessible", clazz.getName()), e);
+            throw new IllegalArgumentException(
+                    String.format("No-arg constructor in class '%s' is not accessible", clazz.getName()), e);
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Failed to instantiate class '%s' with a no-arg constructor", clazz.getName()), e);
+            throw new RuntimeException(
+                    String.format(
+                            "Failed to instantiate class '%s' with a no-arg constructor", clazz.getName()),
+                    e);
         }
     }
 
     private static void assignField(Object instance, Field field, Object value, String fieldName) {
         try {
             field.setAccessible(true);
-            
+
             // Type validation - ensure the parsed value matches the field type
             if (value != null && !field.getType().isAssignableFrom(value.getClass())) {
-                throw new IllegalArgumentException(String.format("Field '%s': type mismatch - expected %s but got %s", 
-                        fieldName, field.getType().getSimpleName(), value.getClass().getSimpleName()));
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Field '%s': type mismatch - expected %s but got %s",
+                                fieldName, field.getType().getSimpleName(), value.getClass().getSimpleName()));
             }
-            
+
             field.set(instance, value);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(String.format("Failed to set field '%s' on class '%s'", fieldName, instance.getClass().getName()), e);
+            throw new RuntimeException(
+                    String.format(
+                            "Failed to set field '%s' on class '%s'", fieldName, instance.getClass().getName()),
+                    e);
         }
     }
 }
-

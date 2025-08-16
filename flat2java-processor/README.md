@@ -47,7 +47,7 @@ Add the following dependency to your project:
 <dependency>
     <groupId>com.github.allanhladki</groupId>
     <artifactId>flat2java-processor</artifactId>
-    <version>0.0.1-2</version>
+    <version>0.0.1-rc1</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -96,20 +96,13 @@ The processor works automatically with Maven when added as a dependency. For exp
             <path>
                 <groupId>com.github.allanhladki</groupId>
                 <artifactId>flat2java-processor</artifactId>
-                <version>0.0.1-2</version>
+                <version>0.0.1-rc1</version>
             </path>
         </annotationProcessorPaths>
     </configuration>
 </plugin>
 ```
 
-### Gradle
-
-```gradle
-dependencies {
-    annotationProcessor 'com.github.allanhladki:flat2java-processor:0.0.1-2'
-}
-```
 
 ### IntelliJ IDEA
 

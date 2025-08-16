@@ -26,7 +26,7 @@ public class FieldMetadata {
     public FieldMetadata(Field field, FlatField annotation) {
         Objects.requireNonNull(annotation, "FlatField annotation cannot be null");
         Objects.requireNonNull(field, "Field cannot be null");
-        
+
         this.field = field;
         this.name =
                 null == annotation.name() || annotation.name().isBlank()
@@ -37,8 +37,6 @@ public class FieldMetadata {
         this.dateTimeFormat = annotation.dateTimeFormat();
         this.padding = annotation.padding();
     }
-
-
 
     /**
      * Gets the Java field.
