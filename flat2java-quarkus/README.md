@@ -1,6 +1,6 @@
 # Flat2Java Quarkus Integration
 
-Quarkus integration module for Flat2Java, providing CDI producers and native Quarkus support for Flat2Java services.
+A CDI integration module for Flat2Java in Quarkus applications, providing automatic bean registration for all Flat2Java interfaces.
 
 ## 📦 Version Information
 
@@ -21,15 +21,15 @@ Quarkus integration module for Flat2Java, providing CDI producers and native Qua
 </dependency>
 ```
 
-
 ## ✨ Features
 
-- **CDI Integration**: Full CDI support with `@ApplicationScoped` beans
-- **Quarkus Native**: Optimized for Quarkus native compilation
-- **Dependency Injection**: Ready-to-use beans for all Flat2Java interfaces
-- **Extension Support**: Native Quarkus extension with build-time optimization
+- **CDI Integration**: Automatic bean registration for all Flat2Java interfaces
+- **Dependency Injection**: Seamless integration with Quarkus CDI system
+- **Exception Translation**: Built-in exception handling and translation
 - **Zero Configuration**: Works out of the box with Quarkus applications
+- **Performance Optimized**: Lazy bean creation and efficient resource usage
 
+> **Note**: This module provides CDI beans for Flat2Java services. It's not a full Quarkus extension, but rather a CDI integration module that works seamlessly with Quarkus applications.
 
 ## 📝 Usage Examples
 
@@ -139,21 +139,6 @@ public class FlatFileResource {
 }
 ```
 
-## 🏗️ Quarkus Extension
-
-The module includes a native Quarkus extension that:
-
-- Registers the `flat2java-quarkus` feature
-- Ensures CDI beans are available during build time
-- Provides build-time validation
-- Optimizes for native compilation
-
-### Extension Features
-
-- **Feature Registration**: `flat2java-quarkus`
-- **Build-Time Beans**: Automatic bean discovery and registration
-- **Native Support**: Full compatibility with Quarkus native compilation
-
 ## 🧪 Testing
 
 ### Test Configuration
@@ -259,13 +244,6 @@ quarkus.native.additional-build-args=\
     --report-unsupported-elements-at-runtime
 ```
 
-## 🔧 Troubleshooting
-
-### Common Issues
-
-1. **Bean Not Found**: Ensure the dependency is included and CDI is enabled
-2. **Injection Failure**: Check that the class is properly annotated with CDI scopes
-3. **Native Compilation Issues**: Verify GraalVM compatibility
 
 ### Debug Mode
 

@@ -4,6 +4,7 @@ import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
 import com.github.allanhladki.flat2java.interfaces.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Singleton;
 
 /**
@@ -46,6 +47,7 @@ public class Flat2JavaProducers {
      */
     @Produces
     @Singleton
+    @Typed(Flat2JavaFactory.class)
     public Flat2JavaFactory flat2JavaFactory() {
         return new Flat2JavaFactory();
     }
@@ -53,60 +55,65 @@ public class Flat2JavaProducers {
     /**
      * Produces the field metadata interface bean.
      * 
-     * @param factory the Flat2Java factory
      * @return configured field metadata interface
      */
     @Produces
     @ApplicationScoped
-    public FieldMetadataInterface fieldMetadataInterface(Flat2JavaFactory factory) {
+    @Typed(FieldMetadataInterface.class)
+    public FieldMetadataInterface fieldMetadataInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
         return factory.getFieldMetadataInterface();
     }
 
     /**
      * Produces the field serialization interface bean.
      * 
-     * @param factory the Flat2Java factory
      * @return configured field serialization interface
      */
     @Produces
     @ApplicationScoped
-    public FieldSerializationInterface fieldSerializationInterface(Flat2JavaFactory factory) {
+    @Typed(FieldSerializationInterface.class)
+    public FieldSerializationInterface fieldSerializationInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
         return factory.getFieldSerializationInterface();
     }
 
     /**
      * Produces the object serialization interface bean.
      * 
-     * @param factory the Flat2Java factory
      * @return configured object serialization interface
      */
     @Produces
     @ApplicationScoped
-    public ObjectSerializationInterface objectSerializationInterface(Flat2JavaFactory factory) {
+    @Typed(ObjectSerializationInterface.class)
+    public ObjectSerializationInterface objectSerializationInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
         return factory.getObjectSerializationInterface();
     }
 
     /**
      * Produces the field deserialization interface bean.
      * 
-     * @param factory the Flat2Java factory
      * @return configured field deserialization interface
      */
     @Produces
     @ApplicationScoped
-    public FieldDeserializationInterface fieldDeserializationInterface(Flat2JavaFactory factory) {
+    @Typed(FieldDeserializationInterface.class)
+    public FieldDeserializationInterface fieldDeserializationInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
         return factory.getFieldDeserializationInterface();
     }
 
     /**
      * Produces the object deserialization interface bean.
      * 
-     * @param factory the Flat2Java factory
      * @return configured object deserialization interface
      */
     @Produces
     @ApplicationScoped
-    public ObjectDeserializationInterface objectDeserializationInterface(Flat2JavaFactory factory) {
+    @Typed(ObjectDeserializationInterface.class)
+    public ObjectDeserializationInterface objectDeserializationInterface() {
+        Flat2JavaFactory factory = new Flat2JavaFactory();
         return factory.getObjectDeserializationInterface();
     }
 }

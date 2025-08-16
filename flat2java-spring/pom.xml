@@ -9,6 +9,10 @@
     </parent>
     <artifactId>flat2java-spring</artifactId>
     
+    <properties>
+        <spring-boot.version>3.0.0</spring-boot.version>
+    </properties>
+    
     <dependencies>
         <!-- Core flat2java dependency -->
         <dependency>
@@ -21,7 +25,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>3.2.0</version>
+            <version>${spring-boot.version}</version>
             <optional>true</optional>
         </dependency>
         
@@ -29,7 +33,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
-            <version>3.2.0</version>
+            <version>${spring-boot.version}</version>
             <optional>true</optional>
         </dependency>
         
@@ -37,7 +41,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
-            <version>3.2.0</version>
+            <version>${spring-boot.version}</version>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Spring Boot Validation Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <version>${spring-boot.version}</version>
             <optional>true</optional>
         </dependency>
         
@@ -45,7 +57,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>3.2.0</version>
+            <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>
         

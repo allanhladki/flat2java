@@ -1,6 +1,8 @@
 package com.github.allanhladki.flat2java.spring;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for Flat2Java Spring Boot integration.
@@ -24,6 +26,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 0.0.1-rc2
  */
 @ConfigurationProperties(prefix = "flat2java")
+@EnableConfigurationProperties
+@Validated
 public class Flat2JavaProperties {
 
     /**
