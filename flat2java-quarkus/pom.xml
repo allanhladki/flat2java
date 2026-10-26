@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>flat2java-quarkus</artifactId>
+    <name>flat2java-quarkus</name>
+    <description>CDI producers for using flat2java in Quarkus applications.</description>
 
     <properties>
         <quarkus-arc.version>3.15.1</quarkus-arc.version>

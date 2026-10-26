@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>flat2java-spring</artifactId>
+    <name>flat2java-spring</name>
+    <description>Spring Boot auto-configuration for flat2java.</description>
 
     <properties>
         <spring-boot.version>3.3.5</spring-boot.version>

@@ -38,6 +38,9 @@ import javax.tools.Diagnostic;
 @SupportedAnnotationTypes("io.github.allanhladki.flat2java.annotation.FlatField")
 public class FlatFieldProcessor extends AbstractProcessor {
 
+    /** Creates the processor. Called by the compiler through the service loader. */
+    public FlatFieldProcessor() {}
+
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();

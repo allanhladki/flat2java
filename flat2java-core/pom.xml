@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>flat2java-core</artifactId>
+    <name>flat2java-core</name>
+    <description>Core library: the Flat2Java facade, @FlatField and the record codecs.</description>
 
     <dependencies>
         <dependency>

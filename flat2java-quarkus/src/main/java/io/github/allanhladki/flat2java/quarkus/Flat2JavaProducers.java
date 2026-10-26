@@ -23,6 +23,9 @@ import java.util.Locale;
 @ApplicationScoped
 public class Flat2JavaProducers {
 
+    /** Created by the CDI container. */
+    public Flat2JavaProducers() {}
+
     static final String PREFIX = "flat2java.";
 
     /**

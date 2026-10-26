@@ -24,6 +24,9 @@ import java.math.RoundingMode;
 @ConfigurationProperties(prefix = "flat2java")
 public class Flat2JavaProperties {
 
+    /** Creates properties with the default values. */
+    public Flat2JavaProperties() {}
+
     /** Whether a null String field is written as an empty column. */
     private boolean allowNullStrings = true;
 
@@ -52,36 +55,74 @@ public class Flat2JavaProperties {
                 .build();
     }
 
+    /**
+     * Returns whether a null String field is written as an empty column.
+     *
+     * @return whether a null String field is written as an empty column
+     */
     public boolean isAllowNullStrings() {
         return allowNullStrings;
     }
 
+    /**
+     * Sets whether a null String field is written as an empty column.
+     *
+     * @param allowNullStrings whether a null String field is written as an empty column
+     */
     public void setAllowNullStrings(boolean allowNullStrings) {
         this.allowNullStrings = allowNullStrings;
     }
 
+    /**
+     * Returns the fill character of null String fields.
+     *
+     * @return the fill character of null String fields
+     */
     public char getNullValuePadding() {
         return nullValuePadding;
     }
 
+    /**
+     * Sets the fill character of null String fields.
+     *
+     * @param nullValuePadding the fill character of null String fields
+     */
     public void setNullValuePadding(char nullValuePadding) {
         this.nullValuePadding = nullValuePadding;
     }
 
+    /**
+     * Returns whether a String longer than its column fails.
+     *
+     * @return whether a String longer than its column fails
+     */
     public boolean isFailOnStringTruncation() {
         return failOnStringTruncation;
     }
 
+    /**
+     * Sets whether a String longer than its column fails.
+     *
+     * @param failOnStringTruncation whether a String longer than its column fails
+     */
     public void setFailOnStringTruncation(boolean failOnStringTruncation) {
         this.failOnStringTruncation = failOnStringTruncation;
     }
 
+    /**
+     * Returns the {@code flat2java.decimal.*} properties.
+     *
+     * @return the {@code flat2java.decimal.*} properties
+     */
     public Decimal getDecimal() {
         return decimal;
     }
 
     /** {@code flat2java.decimal.*} properties. */
     public static class Decimal {
+
+        /** Creates decimal properties with the default values. */
+        public Decimal() {}
 
         /** Whether BigDecimal fields with a precision are written with an explicit separator. */
         private boolean useSeparator = false;
@@ -92,26 +133,56 @@ public class Flat2JavaProperties {
         /** Rounding applied when a value has more decimal places than its precision. */
         private RoundingMode roundingMode = RoundingMode.UNNECESSARY;
 
+        /**
+         * Returns whether BigDecimal fields are written with an explicit separator.
+         *
+         * @return whether BigDecimal fields are written with an explicit separator
+         */
         public boolean isUseSeparator() {
             return useSeparator;
         }
 
+        /**
+         * Sets whether BigDecimal fields are written with an explicit separator.
+         *
+         * @param useSeparator whether BigDecimal fields are written with an explicit separator
+         */
         public void setUseSeparator(boolean useSeparator) {
             this.useSeparator = useSeparator;
         }
 
+        /**
+         * Returns the decimal separator.
+         *
+         * @return the decimal separator
+         */
         public char getSeparator() {
             return separator;
         }
 
+        /**
+         * Sets the decimal separator.
+         *
+         * @param separator the decimal separator
+         */
         public void setSeparator(char separator) {
             this.separator = separator;
         }
 
+        /**
+         * Returns the rounding mode.
+         *
+         * @return the rounding mode
+         */
         public RoundingMode getRoundingMode() {
             return roundingMode;
         }
 
+        /**
+         * Sets the rounding mode.
+         *
+         * @param roundingMode the rounding mode
+         */
         public void setRoundingMode(RoundingMode roundingMode) {
             this.roundingMode = roundingMode;
         }

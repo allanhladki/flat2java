@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>flat2java-processor</artifactId>
+    <name>flat2java-processor</name>
+    <description>Annotation processor that validates @FlatField mappings at compile time.</description>
 
     <dependencies>
         <dependency>

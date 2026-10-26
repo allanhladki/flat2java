@@ -20,6 +20,9 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(Flat2JavaProperties.class)
 public class Flat2JavaAutoConfiguration {
 
+    /** Created by Spring Boot. */
+    public Flat2JavaAutoConfiguration() {}
+
     /**
      * Options built from {@link Flat2JavaProperties}.
      *
