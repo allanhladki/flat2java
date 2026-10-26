@@ -58,6 +58,9 @@ public class PaymentFileService {
 }
 ```
 
+A complete Spring Boot application that uses this module is in
+[flat2java-spring-demo](https://github.com/allanhladki/flat2java-spring-demo).
+
 ## Properties
 
 The values shown are the defaults.
