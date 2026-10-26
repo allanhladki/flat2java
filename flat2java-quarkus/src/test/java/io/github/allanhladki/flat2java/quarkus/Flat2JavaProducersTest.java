@@ -57,6 +57,8 @@ class Flat2JavaProducersTest {
 
         assertThatThrownBy(() -> Flat2JavaProducers.toOptions(config))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("flat2java.decimal.separator must be a single character, got ',,'");
+                .hasMessage(
+                        "Invalid value ',,' for flat2java.decimal.separator: expected a single"
+                                + " character");
     }
 }

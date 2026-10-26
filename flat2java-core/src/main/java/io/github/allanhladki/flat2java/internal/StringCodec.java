@@ -63,11 +63,18 @@ final class StringCodec implements FieldCodec {
 
     @Override
     public Object decode(String line, int start) {
-        String slice = line.substring(start, start + length);
-        if (Text.isAll(slice, nullFill)) {
+        int end = start + length;
+        boolean onlyNullFill = true;
+        for (int i = start; i < end && onlyNullFill; i++) {
+            onlyNullFill = line.charAt(i) == nullFill;
+        }
+        if (onlyNullFill) {
             return "";
         }
-        return Text.trimRight(slice, padding);
+        while (end > start && line.charAt(end - 1) == padding) {
+            end--;
+        }
+        return line.substring(start, end);
     }
 
     @Override

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Builds and caches the {@link RecordLayout} of each mapped class for one set of options.
@@ -54,7 +53,8 @@ public final class Layouts {
      * @throws MappingException if the class cannot be mapped
      */
     public RecordLayout of(Class<?> type) {
-        return of(type, new ArrayDeque<>());
+        RecordLayout layout = cache.get(type);
+        return layout != null ? layout : of(type, new ArrayDeque<>());
     }
 
     private RecordLayout of(Class<?> type, Deque<Class<?>> path) {
@@ -82,7 +82,7 @@ public final class Layouts {
                 typeName,
                 fields.stream()
                         .map(f -> new MappingRules.Positioned(label(f), position(f)))
-                        .collect(Collectors.toList()));
+                        .toList());
         if (position(fields.get(0)) != 0) {
             fields.sort(Comparator.comparingInt(Layouts::position));
         }
@@ -95,7 +95,7 @@ public final class Layouts {
         }
         path.removeLast();
 
-        RecordLayout layout = new RecordLayout(type, instantiator(type, fields), columns);
+        RecordLayout layout = new RecordLayout(type, instantiator(type, columns), columns);
         LOG.debug(
                 "Mapped {} to a record of {} characters ({} fields)",
                 type.getName(),
@@ -109,32 +109,37 @@ public final class Layouts {
         String label = label(field);
         Class<?> type = field.getType();
         Type genericType = field.getGenericType();
-        boolean repeated = type.isArray() || type == List.class;
+        boolean repeated = isRepeated(type);
         MappingRules.checkOccurs(label, repeated, a.length(), a.occurs());
         if (!repeated) {
             return elementCodec(label, type, genericType, a, path);
         }
 
-        Class<?> elementType;
         Type genericElementType;
         if (type.isArray()) {
-            elementType = type.getComponentType();
             genericElementType =
-                    genericType instanceof GenericArrayType
-                            ? ((GenericArrayType) genericType).getGenericComponentType()
-                            : elementType;
+                    genericType instanceof GenericArrayType array
+                            ? array.getGenericComponentType()
+                            : type.getComponentType();
         } else {
-            genericElementType = listElementType(label, genericType);
-            elementType = rawType(genericElementType);
+            genericElementType =
+                    genericType instanceof ParameterizedType list
+                            ? list.getActualTypeArguments()[0]
+                            : null;
         }
-        if (elementType != null && (elementType.isArray() || elementType == List.class)) {
-            throw MappingRules.unsupportedType(
-                    label,
-                    genericType.getTypeName(),
-                    "the elements of a List or array cannot be Lists or arrays");
-        }
+        Class<?> elementType = rawType(genericElementType);
+        MappingRules.checkElementType(
+                label,
+                genericType.getTypeName(),
+                genericElementType == null,
+                genericElementType instanceof WildcardType,
+                elementType != null && isRepeated(elementType));
         FieldCodec element = elementCodec(label, elementType, genericElementType, a, path);
         return new RepeatedCodec(label, element, a.occurs(), type.isArray() ? elementType : null);
+    }
+
+    private static boolean isRepeated(Class<?> type) {
+        return type.isArray() || type == List.class;
     }
 
     /** The codec of a single value: a scalar or a nested record. */
@@ -148,9 +153,9 @@ public final class Layouts {
             return scalarCodec(label, kind.get(), a);
         }
 
-        checkNestable(label, genericType, type);
+        MappingRules.checkNestable(label, genericType.getTypeName(), shape(genericType, type));
         MappingRules.checkNoCycle(
-                path.stream().map(Class::getSimpleName).collect(Collectors.toList()),
+                path.stream().map(Class::getSimpleName).toList(),
                 type.getSimpleName(),
                 path.contains(type));
         RecordLayout nested = of(type, path);
@@ -165,26 +170,13 @@ public final class Layouts {
         return new NestedCodec(label, nested);
     }
 
-    private static Type listElementType(String label, Type listType) {
-        if (!(listType instanceof ParameterizedType)) {
-            throw MappingRules.unsupportedType(
-                    label, listType.getTypeName(), "declare the element type, as in List<String>");
-        }
-        Type element = ((ParameterizedType) listType).getActualTypeArguments()[0];
-        if (element instanceof WildcardType) {
-            throw MappingRules.unsupportedType(
-                    label, listType.getTypeName(), "declare the element type without a wildcard");
-        }
-        return element;
-    }
-
-    /** The class of a type, or {@code null} for a type variable. */
+    /** The class of a type, or {@code null} for a type variable, a wildcard or no type. */
     private static Class<?> rawType(Type type) {
-        if (type instanceof Class) {
-            return (Class<?>) type;
+        if (type instanceof Class<?> c) {
+            return c;
         }
-        if (type instanceof ParameterizedType) {
-            return (Class<?>) ((ParameterizedType) type).getRawType();
+        if (type instanceof ParameterizedType p) {
+            return (Class<?>) p.getRawType();
         }
         if (type instanceof GenericArrayType) {
             return Object[].class;
@@ -193,55 +185,47 @@ public final class Layouts {
     }
 
     private FieldCodec scalarCodec(String label, FieldKind kind, FlatField a) {
-        switch (kind) {
-            case STRING:
-                char nullFill =
-                        a.padding() == MappingRules.DEFAULT_PADDING
-                                ? options.nullValuePadding()
-                                : a.padding();
-                return new StringCodec(
-                        label,
-                        a.length(),
-                        a.padding(),
-                        nullFill,
-                        options.allowNullStrings(),
-                        options.failOnStringTruncation());
-            case BIG_DECIMAL:
-                return new DecimalCodec(
-                        label,
-                        a.length(),
-                        a.precision(),
-                        options.roundingMode(),
-                        options.useDecimalSeparator(),
-                        options.decimalSeparator());
-            case LOCAL_DATE:
-            case LOCAL_DATE_TIME:
-                return new TemporalCodec(label, a.length(), kind, a.dateTimeFormat());
-            default:
-                return new WholeNumberCodec(label, a.length(), kind);
-        }
+        return switch (kind) {
+            case STRING ->
+                    new StringCodec(
+                            label,
+                            a.length(),
+                            a.padding(),
+                            a.padding() == MappingRules.DEFAULT_PADDING
+                                    ? options.nullValuePadding()
+                                    : a.padding(),
+                            options.allowNullStrings(),
+                            options.failOnStringTruncation());
+            case BIG_DECIMAL ->
+                    new DecimalCodec(
+                            label,
+                            a.length(),
+                            a.precision(),
+                            options.roundingMode(),
+                            options.useDecimalSeparator(),
+                            options.decimalSeparator());
+            case LOCAL_DATE, LOCAL_DATE_TIME ->
+                    new TemporalCodec(label, a.length(), kind, a.dateTimeFormat());
+            case INT, LONG, BIG_INTEGER -> new WholeNumberCodec(label, a.length(), kind);
+        };
     }
 
-    private static void checkNestable(String label, Type genericType, Class<?> type) {
-        String typeName = genericType.getTypeName();
+    private static MappingRules.TypeShape shape(Type genericType, Class<?> type) {
         if (genericType instanceof TypeVariable || type == null) {
-            throw MappingRules.unsupportedType(
-                    label, typeName, "type variables cannot be instantiated when reading");
+            return MappingRules.TypeShape.TYPE_VARIABLE;
         }
         if (type == Object.class) {
-            throw MappingRules.unsupportedType(
-                    label, typeName, "declare the concrete class of the nested record");
+            return MappingRules.TypeShape.OBJECT;
         }
         if (type.isPrimitive() || type.isArray() || type.isEnum()) {
-            throw MappingRules.unsupportedType(label, typeName, null);
+            return MappingRules.TypeShape.NOT_A_CLASS;
         }
         if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
-            throw MappingRules.unsupportedType(
-                    label, typeName, "abstract types cannot be instantiated when reading");
+            return MappingRules.TypeShape.ABSTRACT;
         }
-        if (annotatedFields(type).isEmpty()) {
-            throw MappingRules.unsupportedType(label, typeName, null);
-        }
+        return annotatedFields(type).isEmpty()
+                ? MappingRules.TypeShape.NO_ANNOTATED_FIELDS
+                : MappingRules.TypeShape.NESTABLE;
     }
 
     /**
@@ -267,15 +251,16 @@ public final class Layouts {
             List<String> components =
                     Arrays.stream(type.getRecordComponents())
                             .map(RecordComponent::getName)
-                            .collect(Collectors.toList());
+                            .toList();
             fields.sort(Comparator.comparingInt(f -> components.indexOf(f.getName())));
         }
         return fields;
     }
 
-    private static RecordLayout.Instantiator instantiator(Class<?> type, List<Field> columns) {
+    private static RecordLayout.Instantiator instantiator(
+            Class<?> type, List<RecordLayout.Column> columns) {
         if (!type.isRecord()) {
-            return new RecordLayout.NoArgInstantiator(constructor(type));
+            return new RecordLayout.NoArgInstantiator(type, constructor(type), columns);
         }
         RecordComponent[] components = type.getRecordComponents();
         Class<?>[] parameterTypes = new Class<?>[components.length];
@@ -290,11 +275,12 @@ public final class Layouts {
             names.add(components[i].getName());
         }
         int[] argumentOfColumn =
-                columns.stream().mapToInt(f -> names.indexOf(f.getName())).toArray();
+                columns.stream().mapToInt(c -> names.indexOf(c.field().getName())).toArray();
         try {
             Constructor<?> canonical = type.getDeclaredConstructor(parameterTypes);
             canonical.setAccessible(true);
-            return new RecordLayout.CanonicalInstantiator(canonical, argumentOfColumn, defaults);
+            return new RecordLayout.CanonicalInstantiator(
+                    type, canonical, argumentOfColumn, defaults);
         } catch (NoSuchMethodException | RuntimeException e) {
             // NoSuchMethodException cannot happen for a record; RuntimeException covers
             // InaccessibleObjectException when the class is in a module that is not open.
@@ -312,12 +298,9 @@ public final class Layouts {
             constructor.setAccessible(true);
             return constructor;
         } catch (NoSuchMethodException e) {
-            String hint =
-                    type.isMemberClass() && !Modifier.isStatic(type.getModifiers())
-                            ? " (inner classes must be declared static)"
-                            : "";
-            throw new MappingException(
-                    type.getSimpleName() + ": a no-arg constructor is required" + hint, e);
+            throw MappingRules.noArgConstructorRequired(
+                    type.getSimpleName(),
+                    type.isMemberClass() && !Modifier.isStatic(type.getModifiers()));
         } catch (RuntimeException e) {
             // InaccessibleObjectException when the class is in a module that is not open.
             throw new MappingException(

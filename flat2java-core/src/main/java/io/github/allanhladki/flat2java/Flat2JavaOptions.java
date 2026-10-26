@@ -1,7 +1,8 @@
 package io.github.allanhladki.flat2java;
 
+import io.github.allanhladki.flat2java.internal.OptionValues;
+
 import java.math.RoundingMode;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -90,54 +91,25 @@ public final class Flat2JavaOptions {
 
     static Flat2JavaOptions fromEnvironment(Map<String, String> env) {
         Builder builder = builder();
-        read(env, ENV_ALLOW_NULL_STRINGS, Flat2JavaOptions::parseBoolean)
+        read(env, ENV_ALLOW_NULL_STRINGS, OptionValues::parseBoolean)
                 .ifPresent(builder::allowNullStrings);
-        read(env, ENV_NULL_VALUE_PADDING, Flat2JavaOptions::parseChar)
+        read(env, ENV_NULL_VALUE_PADDING, OptionValues::parseChar)
                 .ifPresent(builder::nullValuePadding);
-        read(env, ENV_FAIL_ON_STRING_TRUNCATION, Flat2JavaOptions::parseBoolean)
+        read(env, ENV_FAIL_ON_STRING_TRUNCATION, OptionValues::parseBoolean)
                 .ifPresent(builder::failOnStringTruncation);
-        read(env, ENV_DECIMAL_USE_SEPARATOR, Flat2JavaOptions::parseBoolean)
+        read(env, ENV_DECIMAL_USE_SEPARATOR, OptionValues::parseBoolean)
                 .ifPresent(builder::useDecimalSeparator);
-        read(env, ENV_DECIMAL_SEPARATOR, Flat2JavaOptions::parseChar)
+        read(env, ENV_DECIMAL_SEPARATOR, OptionValues::parseChar)
                 .ifPresent(builder::decimalSeparator);
-        read(
-                        env,
-                        ENV_DECIMAL_ROUNDING_MODE,
-                        value -> RoundingMode.valueOf(value.trim().toUpperCase(Locale.ROOT)))
+        read(env, ENV_DECIMAL_ROUNDING_MODE, OptionValues::parseRoundingMode)
                 .ifPresent(builder::roundingMode);
         return builder.build();
     }
 
     private static <T> Optional<T> read(
             Map<String, String> env, String name, Function<String, T> parser) {
-        String value = env.get(name);
-        if (value == null) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(parser.apply(value));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(
-                    "Invalid value '" + value + "' for environment variable " + name, e);
-        }
-    }
-
-    private static boolean parseBoolean(String value) {
-        String normalized = value.trim().toLowerCase(Locale.ROOT);
-        if (normalized.equals("true")) {
-            return true;
-        }
-        if (normalized.equals("false")) {
-            return false;
-        }
-        throw new IllegalArgumentException("expected 'true' or 'false'");
-    }
-
-    private static char parseChar(String value) {
-        if (value.length() != 1) {
-            throw new IllegalArgumentException("expected a single character");
-        }
-        return value.charAt(0);
+        return Optional.ofNullable(env.get(name))
+                .map(value -> OptionValues.parse("environment variable " + name, value, parser));
     }
 
     /**

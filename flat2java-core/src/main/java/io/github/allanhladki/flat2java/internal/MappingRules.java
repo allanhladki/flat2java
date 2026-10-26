@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,33 +38,28 @@ public final class MappingRules {
 
     private MappingRules() {}
 
-    /** A field with its {@code position} attribute, for {@link #checkPositions}. */
-    public static final class Positioned {
-        private final String label;
-        private final int position;
+    /**
+     * A field with its {@code position} attribute, for {@link #checkPositions}.
+     *
+     * @param label the field label
+     * @param position the declared position, {@code 0} when not set
+     */
+    public record Positioned(String label, int position) {}
 
-        /**
-         * @param label the field label
-         * @param position the declared position, {@code 0} when not set
-         */
-        public Positioned(String label, int position) {
-            this.label = label;
-            this.position = position;
-        }
-
-        /**
-         * @return the field label
-         */
-        public String label() {
-            return label;
-        }
-
-        /**
-         * @return the declared position, {@code 0} when not set
-         */
-        public int position() {
-            return position;
-        }
+    /** What a declared type is, as far as nesting is concerned; see {@link #checkNestable}. */
+    public enum TypeShape {
+        /** A type variable such as {@code T}. */
+        TYPE_VARIABLE,
+        /** {@code java.lang.Object}. */
+        OBJECT,
+        /** A primitive, array or enum that is not a supported scalar. */
+        NOT_A_CLASS,
+        /** An interface or abstract class. */
+        ABSTRACT,
+        /** A concrete class or record without {@code @FlatField} fields. */
+        NO_ANNOTATED_FIELDS,
+        /** A concrete class or record with {@code @FlatField} fields. */
+        NESTABLE
     }
 
     /**
@@ -111,6 +107,81 @@ public final class MappingRules {
     }
 
     /**
+     * Rejects a field type that is neither a supported scalar nor a nested record.
+     *
+     * @param label the field label
+     * @param typeName the declared type
+     * @param shape what the type is
+     */
+    public static void checkNestable(String label, String typeName, TypeShape shape) {
+        switch (shape) {
+            case TYPE_VARIABLE ->
+                    throw unsupportedType(
+                            label, typeName, "type variables cannot be instantiated when reading");
+            case OBJECT ->
+                    throw unsupportedType(
+                            label, typeName, "declare the concrete class of the nested record");
+            case ABSTRACT ->
+                    throw unsupportedType(
+                            label, typeName, "abstract types cannot be instantiated when reading");
+            case NOT_A_CLASS, NO_ANNOTATED_FIELDS -> throw unsupportedType(label, typeName, null);
+            case NESTABLE -> {}
+        }
+    }
+
+    /**
+     * Validates the element type of a {@code List} or array field.
+     *
+     * @param label the field label
+     * @param typeName the declared type of the field
+     * @param rawList whether the field is a {@code List} without a type argument
+     * @param wildcard whether the type argument is a wildcard
+     * @param elementRepeated whether the element type is itself a {@code List} or an array
+     */
+    public static void checkElementType(
+            String label,
+            String typeName,
+            boolean rawList,
+            boolean wildcard,
+            boolean elementRepeated) {
+        if (rawList) {
+            throw unsupportedType(label, typeName, "declare the element type, as in List<String>");
+        }
+        if (wildcard) {
+            throw unsupportedType(label, typeName, "declare the element type without a wildcard");
+        }
+        if (elementRepeated) {
+            throw unsupportedType(
+                    label, typeName, "the elements of a List or array cannot be Lists or arrays");
+        }
+    }
+
+    /**
+     * Returns the error for a class without a no-arg constructor.
+     *
+     * @param typeName simple name of the class
+     * @param innerClass whether the class is a non-static member class
+     * @return the exception to throw
+     */
+    public static MappingException noArgConstructorRequired(String typeName, boolean innerClass) {
+        return new MappingException(
+                typeName
+                        + ": a no-arg constructor is required"
+                        + (innerClass ? " (inner classes must be declared static)" : ""));
+    }
+
+    /**
+     * Returns the number of characters a field takes.
+     *
+     * @param length the declared length
+     * @param occurs the declared number of elements, {@code 0} for a field that is not repeated
+     * @return {@code length}, times {@code occurs} for a repeated field
+     */
+    public static int width(int length, int occurs) {
+        return occurs > 0 ? length * occurs : length;
+    }
+
+    /**
      * Validates the attributes of a scalar field.
      *
      * @param label the field label
@@ -150,7 +221,7 @@ public final class MappingRules {
                             + ": padding is only allowed on String fields; numeric fields are"
                             + " always zero-filled");
         }
-        boolean hasFormat = dateTimeFormat != null && !dateTimeFormat.isEmpty();
+        boolean hasFormat = hasText(dateTimeFormat);
         if (kind.isTemporal()) {
             if (!hasFormat) {
                 throw new MappingException(
@@ -193,9 +264,7 @@ public final class MappingRules {
             String dateTimeFormat,
             char padding) {
         checkLength(label, length);
-        if (precision != 0
-                || (dateTimeFormat != null && !dateTimeFormat.isEmpty())
-                || padding != DEFAULT_PADDING) {
+        if (precision != 0 || hasText(dateTimeFormat) || padding != DEFAULT_PADDING) {
             throw new MappingException(
                     label
                             + ": precision, dateTimeFormat and padding are not allowed on a nested"
@@ -334,27 +403,22 @@ public final class MappingRules {
             throw new MappingException(
                     label + ": invalid dateTimeFormat '" + pattern + "': " + e.getMessage(), e);
         }
+        boolean dateOnly = kind == FieldKind.LOCAL_DATE;
+        TemporalQuery<?> query = dateOnly ? LocalDate::from : LocalDateTime::from;
         String a;
         String b;
         try {
-            if (kind == FieldKind.LOCAL_DATE) {
-                a = formatter.format(SAMPLE_A.toLocalDate());
-                b = formatter.format(SAMPLE_B.toLocalDate());
-                LocalDate.parse(a, formatter);
-                LocalDate.parse(b, formatter);
-            } else {
-                a = formatter.format(SAMPLE_A);
-                b = formatter.format(SAMPLE_B);
-                LocalDateTime.parse(a, formatter);
-                LocalDateTime.parse(b, formatter);
-            }
+            a = formatter.format(dateOnly ? SAMPLE_A.toLocalDate() : SAMPLE_A);
+            b = formatter.format(dateOnly ? SAMPLE_B.toLocalDate() : SAMPLE_B);
+            formatter.parse(a, query);
+            formatter.parse(b, query);
         } catch (DateTimeException e) {
             throw new MappingException(
                     label
                             + ": dateTimeFormat '"
                             + pattern
                             + "' cannot represent a "
-                            + (kind == FieldKind.LOCAL_DATE ? "LocalDate" : "LocalDateTime")
+                            + (dateOnly ? "LocalDate" : "LocalDateTime")
                             + ": "
                             + e.getMessage(),
                     e);
@@ -371,6 +435,10 @@ public final class MappingRules {
                             + "'); use fixed-width pattern letters such as dd, MM, HH");
         }
         return a.length();
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isEmpty();
     }
 
     private static void checkLength(String label, int length) {

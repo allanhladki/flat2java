@@ -5,20 +5,16 @@ final class Text {
 
     private Text() {}
 
-    static boolean isAll(String s, char c) {
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) != c) {
-                return false;
-            }
-        }
-        return true;
+    static boolean isDigits(String s) {
+        return isDigits(s, 0, s.length());
     }
 
-    static boolean isDigits(String s) {
-        if (s.isEmpty()) {
+    /** Whether {@code s[start, end)} is a non-empty run of ASCII digits. */
+    static boolean isDigits(String s, int start, int end) {
+        if (start >= end) {
             return false;
         }
-        for (int i = 0; i < s.length(); i++) {
+        for (int i = start; i < end; i++) {
             char c = s.charAt(i);
             if (c < '0' || c > '9') {
                 return false;
@@ -31,14 +27,6 @@ final class Text {
         for (int i = 0; i < count; i++) {
             out.append(c);
         }
-    }
-
-    static String trimRight(String s, char c) {
-        int end = s.length();
-        while (end > 0 && s.charAt(end - 1) == c) {
-            end--;
-        }
-        return s.substring(0, end);
     }
 
     /** Label plus the one-based column range, for read errors. */

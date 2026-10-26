@@ -8,11 +8,14 @@ import io.github.allanhladki.flat2java.internal.MappingRules;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -39,6 +42,10 @@ import javax.tools.Diagnostic;
 @SupportedAnnotationTypes("io.github.allanhladki.flat2java.annotation.FlatField")
 public class FlatFieldProcessor extends AbstractProcessor {
 
+    // Per round: the annotated fields of each type, and the types known to have no cycle.
+    private final Map<TypeElement, List<VariableElement>> fieldsByType = new HashMap<>();
+    private final Set<TypeElement> acyclicTypes = new HashSet<>();
+
     /** Creates the processor. Called by the compiler through the service loader. */
     public FlatFieldProcessor() {}
 
@@ -49,6 +56,8 @@ public class FlatFieldProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        fieldsByType.clear();
+        acyclicTypes.clear();
         Set<TypeElement> mappedTypes = new LinkedHashSet<>();
         for (VariableElement field :
                 ElementFilter.fieldsIn(roundEnv.getElementsAnnotatedWith(FlatField.class))) {
@@ -69,7 +78,15 @@ public class FlatFieldProcessor extends AbstractProcessor {
         TypeMirror declared = field.asType();
         boolean repeated = isRepeated(declared);
         MappingRules.checkOccurs(label, repeated, a.length(), a.occurs());
-        TypeMirror type = repeated ? elementType(label, declared) : declared;
+        TypeMirror type = valueType(declared);
+        if (repeated) {
+            MappingRules.checkElementType(
+                    label,
+                    declared.toString(),
+                    type == null,
+                    type != null && type.getKind() == TypeKind.WILDCARD,
+                    type != null && isRepeated(type));
+        }
         Optional<FieldKind> kind = FieldKind.ofTypeName(typeName(type));
         if (kind.isPresent()) {
             MappingRules.checkScalar(
@@ -96,95 +113,85 @@ public class FlatFieldProcessor extends AbstractProcessor {
         return type.getKind() == TypeKind.ARRAY || typeName(type).equals("java.util.List");
     }
 
-    /** The element type of an array or list field, rejecting nested repetition and wildcards. */
-    private static TypeMirror elementType(String label, TypeMirror type) {
-        TypeMirror element;
-        if (type.getKind() == TypeKind.ARRAY) {
-            element = ((ArrayType) type).getComponentType();
-        } else {
+    /**
+     * The type of one value of a field: the element type of an array or list, which is {@code null}
+     * for a raw list, or the declared type otherwise.
+     */
+    private static TypeMirror valueType(TypeMirror type) {
+        if (type instanceof ArrayType array) {
+            return array.getComponentType();
+        }
+        if (isRepeated(type)) {
             List<? extends TypeMirror> arguments = ((DeclaredType) type).getTypeArguments();
-            if (arguments.isEmpty()) {
-                throw MappingRules.unsupportedType(
-                        label, type.toString(), "declare the element type, as in List<String>");
-            }
-            element = arguments.get(0);
-            if (element.getKind() == TypeKind.WILDCARD) {
-                throw MappingRules.unsupportedType(
-                        label, type.toString(), "declare the element type without a wildcard");
-            }
+            return arguments.isEmpty() ? null : arguments.get(0);
         }
-        if (isRepeated(element)) {
-            throw MappingRules.unsupportedType(
-                    label,
-                    type.toString(),
-                    "the elements of a List or array cannot be Lists or arrays");
-        }
-        return element;
+        return type;
     }
 
-    /** Characters taken by a field: its length, times occurs for a list or array. */
     private static int width(VariableElement field) {
         FlatField a = field.getAnnotation(FlatField.class);
-        return a.occurs() > 0 ? a.length() * a.occurs() : a.length();
+        return MappingRules.width(a.length(), a.occurs());
     }
 
     private TypeElement nestableType(String label, TypeMirror type) {
-        String name = type.toString();
-        if (type.getKind() == TypeKind.TYPEVAR) {
-            throw MappingRules.unsupportedType(
-                    label, name, "type variables cannot be instantiated when reading");
-        }
-        if (type.getKind() != TypeKind.DECLARED) {
-            throw MappingRules.unsupportedType(label, name, null);
-        }
-        TypeElement element = (TypeElement) ((DeclaredType) type).asElement();
-        name = element.getQualifiedName().toString();
-        if (name.equals("java.lang.Object")) {
-            throw MappingRules.unsupportedType(
-                    label, name, "declare the concrete class of the nested record");
-        }
-        if (element.getKind() == ElementKind.ENUM) {
-            throw MappingRules.unsupportedType(label, name, null);
-        }
-        if (element.getKind() == ElementKind.INTERFACE
-                || element.getModifiers().contains(Modifier.ABSTRACT)) {
-            throw MappingRules.unsupportedType(
-                    label, name, "abstract types cannot be instantiated when reading");
-        }
-        if (annotatedFields(element).isEmpty()) {
-            throw MappingRules.unsupportedType(label, name, null);
-        }
+        TypeElement element =
+                type.getKind() == TypeKind.DECLARED
+                        ? (TypeElement) ((DeclaredType) type).asElement()
+                        : null;
+        String name = element != null ? element.getQualifiedName().toString() : type.toString();
+        MappingRules.checkNestable(label, name, shape(type, element));
         if (element.getKind() != ElementKind.RECORD && !hasNoArgConstructor(element)) {
-            String hint =
+            throw MappingRules.noArgConstructorRequired(
+                    element.getSimpleName().toString(),
                     element.getNestingKind().isNested()
-                                    && !element.getModifiers().contains(Modifier.STATIC)
-                            ? " (inner classes must be declared static)"
-                            : "";
-            throw new MappingException(
-                    element.getSimpleName() + ": a no-arg constructor is required" + hint);
+                            && !element.getModifiers().contains(Modifier.STATIC));
         }
         return element;
     }
 
+    private MappingRules.TypeShape shape(TypeMirror type, TypeElement element) {
+        if (type.getKind() == TypeKind.TYPEVAR) {
+            return MappingRules.TypeShape.TYPE_VARIABLE;
+        }
+        if (element == null || element.getKind() == ElementKind.ENUM) {
+            return MappingRules.TypeShape.NOT_A_CLASS;
+        }
+        if (element.getQualifiedName().contentEquals("java.lang.Object")) {
+            return MappingRules.TypeShape.OBJECT;
+        }
+        if (element.getKind() == ElementKind.INTERFACE
+                || element.getModifiers().contains(Modifier.ABSTRACT)) {
+            return MappingRules.TypeShape.ABSTRACT;
+        }
+        return annotatedFields(element).isEmpty()
+                ? MappingRules.TypeShape.NO_ANNOTATED_FIELDS
+                : MappingRules.TypeShape.NESTABLE;
+    }
+
+    /**
+     * Walks the nested types reachable from {@code nested}. Types already walked without finding a
+     * cycle are skipped, so shared nested types are visited once.
+     */
     private void checkNoCycle(TypeElement nested, Deque<TypeElement> path) {
+        boolean onPath = path.contains(nested);
+        if (!onPath && acyclicTypes.contains(nested)) {
+            return;
+        }
         MappingRules.checkNoCycle(
-                path.stream().map(t -> t.getSimpleName().toString()).collect(Collectors.toList()),
+                path.stream().map(t -> t.getSimpleName().toString()).toList(),
                 nested.getSimpleName().toString(),
-                path.contains(nested));
+                onPath);
         path.addLast(nested);
         for (VariableElement field : annotatedFields(nested)) {
-            TypeMirror type = field.asType();
-            if (type.getKind() == TypeKind.ARRAY) {
-                type = ((ArrayType) type).getComponentType();
-            } else if (isRepeated(type) && !((DeclaredType) type).getTypeArguments().isEmpty()) {
-                type = ((DeclaredType) type).getTypeArguments().get(0);
-            }
-            if (type.getKind() == TypeKind.DECLARED
+            TypeMirror type = valueType(field.asType());
+            if (type != null
+                    && type.getKind() == TypeKind.DECLARED
                     && FieldKind.ofTypeName(typeName(type)).isEmpty()) {
                 checkNoCycle((TypeElement) ((DeclaredType) type).asElement(), path);
             }
         }
         path.removeLast();
+        acyclicTypes.add(nested);
     }
 
     private void validatePositions(TypeElement type) {
@@ -196,11 +203,15 @@ public class FlatFieldProcessor extends AbstractProcessor {
                                         new MappingRules.Positioned(
                                                 label(f),
                                                 f.getAnnotation(FlatField.class).position()))
-                        .collect(Collectors.toList()));
+                        .toList());
     }
 
     /** Annotated, non-static fields of the hierarchy, superclass first. */
     private List<VariableElement> annotatedFields(TypeElement type) {
+        return fieldsByType.computeIfAbsent(type, this::collectAnnotatedFields);
+    }
+
+    private List<VariableElement> collectAnnotatedFields(TypeElement type) {
         Deque<TypeElement> hierarchy = new ArrayDeque<>();
         for (TypeElement t = type; t != null; t = superclass(t)) {
             hierarchy.addFirst(t);
@@ -235,8 +246,11 @@ public class FlatFieldProcessor extends AbstractProcessor {
 
     /** Binary-compatible name used by {@link FieldKind}: {@code int}, {@code java.lang.String}. */
     private static String typeName(TypeMirror type) {
+        if (type == null) {
+            return "";
+        }
         if (type.getKind().isPrimitive()) {
-            return type.getKind().name().toLowerCase(java.util.Locale.ROOT);
+            return type.getKind().name().toLowerCase(Locale.ROOT);
         }
         if (type.getKind() == TypeKind.DECLARED) {
             return ((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName().toString();

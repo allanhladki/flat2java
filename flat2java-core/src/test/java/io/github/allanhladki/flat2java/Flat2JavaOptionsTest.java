@@ -84,7 +84,16 @@ class Flat2JavaOptionsTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(
                         "Invalid value 'yes' for environment variable"
-                                + " FLAT2JAVA_ALLOW_NULL_STRINGS");
+                                + " FLAT2JAVA_ALLOW_NULL_STRINGS: expected 'true' or 'false'");
+    }
+
+    @Test
+    void roundingModeAcceptsHyphens() {
+        assertThat(
+                        Flat2JavaOptions.fromEnvironment(
+                                        Map.of("FLAT2JAVA_DECIMAL_ROUNDING_MODE", "half-up"))
+                                .roundingMode())
+                .isEqualTo(RoundingMode.HALF_UP);
     }
 
     @Test

@@ -11,12 +11,16 @@ final class Numbers {
 
     /** Appends {@code number} zero-filled to {@code length}; fails if negative or too wide. */
     static void appendUnsigned(String label, BigInteger number, int length, StringBuilder out) {
-        if (number.signum() < 0) {
+        checkNotNegative(label, number.signum() < 0);
+        appendDigits(label, number.toString(), length, out);
+    }
+
+    /** Rejects negative values, which the unsigned flat format cannot represent. */
+    static void checkNotNegative(String label, boolean negative) {
+        if (negative) {
             throw new SerializationException(
                     label + ": negative values are not supported by the flat format");
         }
-        String digits = number.toString();
-        appendDigits(label, digits, length, out);
     }
 
     /** Appends {@code digits} zero-filled on the left; numbers are never truncated. */

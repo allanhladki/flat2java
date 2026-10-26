@@ -23,7 +23,7 @@ public final class RecordLayout {
         this.type = type;
         this.instantiator = instantiator;
         this.columns = List.copyOf(columns);
-        this.length = columns.stream().mapToInt(c -> c.codec.length()).sum();
+        this.length = columns.stream().mapToInt(c -> c.codec().length()).sum();
     }
 
     /**
@@ -74,11 +74,11 @@ public final class RecordLayout {
         for (Column column : columns) {
             Object value;
             try {
-                value = column.field.get(record);
+                value = column.field().get(record);
             } catch (IllegalAccessException e) {
-                throw new SerializationException(column.label + ": field is not accessible", e);
+                throw new SerializationException(column.label() + ": field is not accessible", e);
             }
-            column.codec.encode(value, out);
+            column.codec().encode(value, out);
         }
     }
 
@@ -86,36 +86,43 @@ public final class RecordLayout {
         Object[] values = new Object[columns.size()];
         int offset = start;
         for (int i = 0; i < values.length; i++) {
-            FieldCodec codec = columns.get(i).codec;
+            FieldCodec codec = columns.get(i).codec();
             values[i] = codec.decode(line, offset);
             offset += codec.length();
         }
-        return instantiator.create(type, columns, values);
+        return instantiator.create(values);
     }
 
-    /** Creates an instance of the mapped type from the decoded column values. */
+    /** One mapped field. */
+    record Column(Field field, String label, FieldCodec codec) {}
+
+    /** Creates an instance of the mapped type from the decoded column values, in column order. */
     interface Instantiator {
-        Object create(Class<?> type, List<Column> columns, Object[] values);
+        Object create(Object[] values);
     }
 
     /** A class with a no-arg constructor; the fields are assigned after construction. */
     static final class NoArgInstantiator implements Instantiator {
+        private final Class<?> type;
         private final Constructor<?> constructor;
+        private final List<Column> columns;
 
-        NoArgInstantiator(Constructor<?> constructor) {
+        NoArgInstantiator(Class<?> type, Constructor<?> constructor, List<Column> columns) {
+            this.type = type;
             this.constructor = constructor;
+            this.columns = List.copyOf(columns);
         }
 
         @Override
-        public Object create(Class<?> type, List<Column> columns, Object[] values) {
+        public Object create(Object[] values) {
             Object instance = invoke(type, constructor, "no-arg constructor");
             for (int i = 0; i < values.length; i++) {
                 Column column = columns.get(i);
                 try {
-                    column.field.set(instance, values[i]);
+                    column.field().set(instance, values[i]);
                 } catch (IllegalAccessException e) {
                     throw new DeserializationException(
-                            column.label + ": field cannot be assigned", e);
+                            column.label() + ": field cannot be assigned", e);
                 }
             }
             return instance;
@@ -127,6 +134,7 @@ public final class RecordLayout {
      * {@code @FlatField} receive {@code null}, {@code 0} or {@code false}.
      */
     static final class CanonicalInstantiator implements Instantiator {
+        private final Class<?> type;
         private final Constructor<?> constructor;
         private final int[] argumentOfColumn;
         private final Object[] defaults;
@@ -136,14 +144,18 @@ public final class RecordLayout {
          * @param defaults the argument values of the components that are not mapped
          */
         CanonicalInstantiator(
-                Constructor<?> constructor, int[] argumentOfColumn, Object[] defaults) {
+                Class<?> type,
+                Constructor<?> constructor,
+                int[] argumentOfColumn,
+                Object[] defaults) {
+            this.type = type;
             this.constructor = constructor;
             this.argumentOfColumn = argumentOfColumn;
             this.defaults = defaults;
         }
 
         @Override
-        public Object create(Class<?> type, List<Column> columns, Object[] values) {
+        public Object create(Object[] values) {
             Object[] arguments = defaults.clone();
             for (int i = 0; i < values.length; i++) {
                 arguments[argumentOfColumn[i]] = values[i];
@@ -163,19 +175,6 @@ public final class RecordLayout {
         } catch (ReflectiveOperationException | IllegalArgumentException e) {
             throw new DeserializationException(
                     type.getSimpleName() + ": cannot create an instance", e);
-        }
-    }
-
-    /** One mapped field. */
-    static final class Column {
-        final Field field;
-        final String label;
-        final FieldCodec codec;
-
-        Column(Field field, String label, FieldCodec codec) {
-            this.field = field;
-            this.label = label;
-            this.codec = codec;
         }
     }
 }

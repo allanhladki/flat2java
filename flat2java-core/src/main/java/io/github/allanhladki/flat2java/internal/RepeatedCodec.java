@@ -33,7 +33,12 @@ final class RepeatedCodec implements FieldCodec {
             throw new SerializationException(
                     label + ": null is not allowed on List and array fields");
         }
-        if (arrayComponent != null) {
+        if (value instanceof Object[] array) {
+            checkSize(array.length);
+            for (Object item : array) {
+                element.encode(item, out);
+            }
+        } else if (arrayComponent != null) {
             checkSize(Array.getLength(value));
             for (int i = 0; i < occurs; i++) {
                 element.encode(Array.get(value, i), out);

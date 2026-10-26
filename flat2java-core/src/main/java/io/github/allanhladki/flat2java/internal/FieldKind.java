@@ -48,15 +48,6 @@ public enum FieldKind {
     }
 
     /**
-     * Whether values of this kind are written as zero-filled digits.
-     *
-     * @return {@code true} for numeric kinds
-     */
-    public boolean isNumeric() {
-        return this == INT || this == LONG || this == BIG_INTEGER || this == BIG_DECIMAL;
-    }
-
-    /**
      * Whether values of this kind are written with a date/time pattern.
      *
      * @return {@code true} for {@code LocalDate} and {@code LocalDateTime}

@@ -2,6 +2,7 @@ package io.github.allanhladki.flat2java.quarkus;
 
 import io.github.allanhladki.flat2java.Flat2Java;
 import io.github.allanhladki.flat2java.Flat2JavaOptions;
+import io.github.allanhladki.flat2java.internal.OptionValues;
 import io.quarkus.arc.DefaultBean;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,8 +11,8 @@ import jakarta.inject.Singleton;
 
 import org.eclipse.microprofile.config.Config;
 
-import java.math.RoundingMode;
-import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * CDI producers of {@link Flat2Java} and {@link Flat2JavaOptions}, configured from the {@code
@@ -56,32 +57,23 @@ public class Flat2JavaProducers {
 
     static Flat2JavaOptions toOptions(Config config) {
         Flat2JavaOptions.Builder builder = Flat2JavaOptions.builder();
-        config.getOptionalValue(PREFIX + "allow-null-strings", Boolean.class)
+        read(config, "allow-null-strings", OptionValues::parseBoolean)
                 .ifPresent(builder::allowNullStrings);
-        config.getOptionalValue(PREFIX + "null-value-padding", String.class)
-                .map(value -> character("null-value-padding", value))
+        read(config, "null-value-padding", OptionValues::parseChar)
                 .ifPresent(builder::nullValuePadding);
-        config.getOptionalValue(PREFIX + "fail-on-string-truncation", Boolean.class)
+        read(config, "fail-on-string-truncation", OptionValues::parseBoolean)
                 .ifPresent(builder::failOnStringTruncation);
-        config.getOptionalValue(PREFIX + "decimal.use-separator", Boolean.class)
+        read(config, "decimal.use-separator", OptionValues::parseBoolean)
                 .ifPresent(builder::useDecimalSeparator);
-        config.getOptionalValue(PREFIX + "decimal.separator", String.class)
-                .map(value -> character("decimal.separator", value))
+        read(config, "decimal.separator", OptionValues::parseChar)
                 .ifPresent(builder::decimalSeparator);
-        config.getOptionalValue(PREFIX + "decimal.rounding-mode", String.class)
-                .map(
-                        value ->
-                                RoundingMode.valueOf(
-                                        value.trim().replace('-', '_').toUpperCase(Locale.ROOT)))
+        read(config, "decimal.rounding-mode", OptionValues::parseRoundingMode)
                 .ifPresent(builder::roundingMode);
         return builder.build();
     }
 
-    private static char character(String key, String value) {
-        if (value.length() != 1) {
-            throw new IllegalArgumentException(
-                    PREFIX + key + " must be a single character, got '" + value + "'");
-        }
-        return value.charAt(0);
+    private static <T> Optional<T> read(Config config, String key, Function<String, T> parser) {
+        return config.getOptionalValue(PREFIX + key, String.class)
+                .map(value -> OptionValues.parse(PREFIX + key, value, parser));
     }
 }
