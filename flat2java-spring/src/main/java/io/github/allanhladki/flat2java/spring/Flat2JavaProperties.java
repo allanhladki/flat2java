@@ -1,49 +1,57 @@
 package io.github.allanhladki.flat2java.spring;
 
+import io.github.allanhladki.flat2java.Flat2JavaOptions;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
+
+import java.math.RoundingMode;
 
 /**
- * Configuration properties for Flat2Java Spring Boot integration.
- *
- * <p>These properties allow users to configure Flat2Java behavior through
- * application.properties/application.yml files or environment variables.
- *
- * <p>Example configuration:
+ * {@code flat2java.*} configuration properties. Each property maps to the {@link Flat2JavaOptions}
+ * setting of the same name and has the same default.
  *
  * <pre>
  * flat2java:
  *   allow-null-strings: true
  *   null-value-padding: "*"
- *   bigdecimal:
- *     use-decimal-separator: true
- *     decimal-separator: ","
- *     rounding-mode: HALF_UP
- *   validation:
- *     throw-on-string-truncation: true
+ *   fail-on-string-truncation: true
+ *   decimal:
+ *     use-separator: true
+ *     separator: ","
+ *     rounding-mode: half-up
  * </pre>
- *
- * @since 0.0.1-rc2
  */
 @ConfigurationProperties(prefix = "flat2java")
-@EnableConfigurationProperties
-@Validated
 public class Flat2JavaProperties {
 
-    /** Whether to allow null string field values. */
-    private boolean allowNullStrings = false;
+    /** Whether a null String field is written as an empty column. */
+    private boolean allowNullStrings = true;
 
-    /** Padding character for null string values. */
+    /** Character that fills the column of a null String field with the default padding. */
     private char nullValuePadding = ' ';
 
-    /** BigDecimal-specific configuration. */
-    private BigDecimalConfig bigdecimal = new BigDecimalConfig();
+    /** Whether a String longer than its column fails instead of being truncated. */
+    private boolean failOnStringTruncation = false;
 
-    /** Validation-specific configuration. */
-    private ValidationConfig validation = new ValidationConfig();
+    /** BigDecimal settings. */
+    private final Decimal decimal = new Decimal();
 
-    // Getters and setters
+    /**
+     * Converts these properties to options.
+     *
+     * @return the options
+     */
+    public Flat2JavaOptions toOptions() {
+        return Flat2JavaOptions.builder()
+                .allowNullStrings(allowNullStrings)
+                .nullValuePadding(nullValuePadding)
+                .failOnStringTruncation(failOnStringTruncation)
+                .useDecimalSeparator(decimal.useSeparator)
+                .decimalSeparator(decimal.separator)
+                .roundingMode(decimal.roundingMode)
+                .build();
+    }
+
     public boolean isAllowNullStrings() {
         return allowNullStrings;
     }
@@ -60,71 +68,52 @@ public class Flat2JavaProperties {
         this.nullValuePadding = nullValuePadding;
     }
 
-    public BigDecimalConfig getBigdecimal() {
-        return bigdecimal;
+    public boolean isFailOnStringTruncation() {
+        return failOnStringTruncation;
     }
 
-    public void setBigdecimal(BigDecimalConfig bigdecimal) {
-        this.bigdecimal = bigdecimal;
+    public void setFailOnStringTruncation(boolean failOnStringTruncation) {
+        this.failOnStringTruncation = failOnStringTruncation;
     }
 
-    public ValidationConfig getValidation() {
-        return validation;
+    public Decimal getDecimal() {
+        return decimal;
     }
 
-    public void setValidation(ValidationConfig validation) {
-        this.validation = validation;
-    }
+    /** {@code flat2java.decimal.*} properties. */
+    public static class Decimal {
 
-    /** BigDecimal-specific configuration properties. */
-    public static class BigDecimalConfig {
-        /** Whether to use decimal separator in BigDecimal serialization. */
-        private boolean useDecimalSeparator = false;
+        /** Whether BigDecimal fields with a precision are written with an explicit separator. */
+        private boolean useSeparator = false;
 
-        /** Decimal separator character for BigDecimal. */
-        private char decimalSeparator = '.';
+        /** Decimal separator used when use-separator is true. */
+        private char separator = '.';
 
-        /** Rounding mode for BigDecimal precision. */
-        private String roundingMode = "UNNECESSARY";
+        /** Rounding applied when a value has more decimal places than its precision. */
+        private RoundingMode roundingMode = RoundingMode.UNNECESSARY;
 
-        // Getters and setters
-        public boolean isUseDecimalSeparator() {
-            return useDecimalSeparator;
+        public boolean isUseSeparator() {
+            return useSeparator;
         }
 
-        public void setUseDecimalSeparator(boolean useDecimalSeparator) {
-            this.useDecimalSeparator = useDecimalSeparator;
+        public void setUseSeparator(boolean useSeparator) {
+            this.useSeparator = useSeparator;
         }
 
-        public char getDecimalSeparator() {
-            return decimalSeparator;
+        public char getSeparator() {
+            return separator;
         }
 
-        public void setDecimalSeparator(char decimalSeparator) {
-            this.decimalSeparator = decimalSeparator;
+        public void setSeparator(char separator) {
+            this.separator = separator;
         }
 
-        public String getRoundingMode() {
+        public RoundingMode getRoundingMode() {
             return roundingMode;
         }
 
-        public void setRoundingMode(String roundingMode) {
+        public void setRoundingMode(RoundingMode roundingMode) {
             this.roundingMode = roundingMode;
-        }
-    }
-
-    /** Validation-specific configuration properties. */
-    public static class ValidationConfig {
-        /** Whether to throw exception when string values exceed field length. */
-        private boolean throwOnStringTruncation = false;
-
-        // Getters and setters
-        public boolean isThrowOnStringTruncation() {
-            return throwOnStringTruncation;
-        }
-
-        public void setThrowOnStringTruncation(boolean throwOnStringTruncation) {
-            this.throwOnStringTruncation = throwOnStringTruncation;
         }
     }
 }

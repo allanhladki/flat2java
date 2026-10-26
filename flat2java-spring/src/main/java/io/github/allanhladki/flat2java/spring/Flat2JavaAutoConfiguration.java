@@ -1,104 +1,46 @@
 package io.github.allanhladki.flat2java.spring;
 
-import io.github.allanhladki.flat2java.factory.Flat2JavaFactory;
-import io.github.allanhladki.flat2java.interfaces.*;
+import io.github.allanhladki.flat2java.Flat2Java;
+import io.github.allanhladki.flat2java.Flat2JavaOptions;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
- * Spring Boot auto-configuration for Flat2Java services.
+ * Registers a {@link Flat2Java} bean configured from the {@code flat2java.*} properties.
  *
- * <p>This configuration automatically creates and configures Flat2Java services when Spring Boot is
- * detected on the classpath. Users can override any bean by defining their own beans with the same
- * names.
- *
- * <p>The following beans are automatically configured:
- *
- * <ul>
- *   <li>{@link FieldMetadataInterface} - Field metadata extraction service
- *   <li>{@link FieldSerializationInterface} - Field serialization service
- *   <li>{@link ObjectSerializationInterface} - Object serialization service
- *   <li>{@link FieldDeserializationInterface} - Field deserialization service
- *   <li>{@link ObjectDeserializationInterface} - Object deserialization service
- * </ul>
- *
- * @since 0.0.1-rc2
+ * <p>Define a {@link Flat2JavaOptions} bean to replace the options, or a {@link Flat2Java} bean to
+ * replace the instance.
  */
-@Configuration
+@AutoConfiguration
+@ConditionalOnClass(Flat2Java.class)
 @EnableConfigurationProperties(Flat2JavaProperties.class)
 public class Flat2JavaAutoConfiguration {
 
     /**
-     * Creates the Flat2Java factory bean.
+     * Options built from {@link Flat2JavaProperties}.
      *
-     * @return configured Flat2Java factory
+     * @param properties the bound properties
+     * @return the options
      */
     @Bean
     @ConditionalOnMissingBean
-    public Flat2JavaFactory flat2JavaFactory() {
-        return new Flat2JavaFactory();
+    public Flat2JavaOptions flat2JavaOptions(Flat2JavaProperties properties) {
+        return properties.toOptions();
     }
 
     /**
-     * Creates the field metadata interface bean.
+     * The shared, thread-safe {@link Flat2Java} instance.
      *
-     * @param factory the Flat2Java factory
-     * @return configured field metadata interface
+     * @param options the options
+     * @return the instance
      */
     @Bean
     @ConditionalOnMissingBean
-    public FieldMetadataInterface fieldMetadataInterface(Flat2JavaFactory factory) {
-        return factory.getFieldMetadataInterface();
-    }
-
-    /**
-     * Creates the field serialization interface bean.
-     *
-     * @param factory the Flat2Java factory
-     * @return configured field serialization interface
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public FieldSerializationInterface fieldSerializationInterface(Flat2JavaFactory factory) {
-        return factory.getFieldSerializationInterface();
-    }
-
-    /**
-     * Creates the object serialization interface bean.
-     *
-     * @param factory the Flat2Java factory
-     * @return configured object serialization interface
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ObjectSerializationInterface objectSerializationInterface(Flat2JavaFactory factory) {
-        return factory.getObjectSerializationInterface();
-    }
-
-    /**
-     * Creates the field deserialization interface bean.
-     *
-     * @param factory the Flat2Java factory
-     * @return configured field deserialization interface
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public FieldDeserializationInterface fieldDeserializationInterface(Flat2JavaFactory factory) {
-        return factory.getFieldDeserializationInterface();
-    }
-
-    /**
-     * Creates the object deserialization interface bean.
-     *
-     * @param factory the Flat2Java factory
-     * @return configured object deserialization interface
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ObjectDeserializationInterface objectDeserializationInterface(Flat2JavaFactory factory) {
-        return factory.getObjectDeserializationInterface();
+    public Flat2Java flat2Java(Flat2JavaOptions options) {
+        return Flat2Java.create(options);
     }
 }
