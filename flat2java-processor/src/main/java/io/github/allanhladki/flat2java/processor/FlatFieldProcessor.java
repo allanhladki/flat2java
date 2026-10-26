@@ -1,218 +1,215 @@
 package io.github.allanhladki.flat2java.processor;
 
 import io.github.allanhladki.flat2java.annotation.FlatField;
-import io.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
-import io.github.allanhladki.flat2java.serializer.SerializationTypes;
+import io.github.allanhladki.flat2java.exception.MappingException;
+import io.github.allanhladki.flat2java.internal.FieldKind;
+import io.github.allanhladki.flat2java.internal.MappingRules;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
 /**
- * Annotation processor for validating @FlatField annotations at compile time.
- *
- * <p>This processor validates that fields annotated with @FlatField have:
- *
- * <ul>
- *   <li>Supported field types
- *   <li>Valid length and precision values
- *   <li>Valid date/time format patterns that match the specified length
- * </ul>
- *
- * <p>The processor uses the core validation logic from FieldMetadataExtractor and
- * SerializationTypes to ensure consistency between compile-time and runtime validation.
+ * Reports invalid {@code @FlatField} declarations as compilation errors. It applies the same rules,
+ * with the same messages, as the runtime validation in {@code
+ * io.github.allanhladki.flat2java.internal.MappingRules}.
  */
 @SupportedAnnotationTypes("io.github.allanhladki.flat2java.annotation.FlatField")
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class FlatFieldProcessor extends AbstractProcessor {
 
-    private Messager messager;
-
     @Override
-    public synchronized void init(ProcessingEnvironment processingEnv) {
-        super.init(processingEnv);
-        this.messager = processingEnv.getMessager();
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        if (roundEnv.processingOver()) {
-            return false; // No further processing needed
+        Set<TypeElement> mappedTypes = new LinkedHashSet<>();
+        for (VariableElement field :
+                ElementFilter.fieldsIn(roundEnv.getElementsAnnotatedWith(FlatField.class))) {
+            report(field, () -> validateField(field));
+            mappedTypes.add((TypeElement) field.getEnclosingElement());
         }
-
-        for (Element element : roundEnv.getElementsAnnotatedWith(FlatField.class)) {
-            if (element.getKind() == ElementKind.FIELD) {
-                validateFlatField(element);
-            } else {
-                // Report error for non-field elements annotated with @FlatField
-                printErrorMessage(
-                        "@FlatField annotation can only be applied to fields, got: "
-                                + element.getKind(),
-                        element);
-            }
+        for (TypeElement type : mappedTypes) {
+            report(type, () -> validatePositions(type));
         }
-        return false; // Don't claim the annotation
+        return false;
     }
 
-    /**
-     * Validates a field annotated with @FlatField.
-     *
-     * @param element the field element to validate
-     */
-    private void validateFlatField(Element element) {
-        FlatField annotation = element.getAnnotation(FlatField.class);
-        String fieldName = element.getSimpleName().toString();
+    private void validateField(VariableElement field) {
+        FlatField a = field.getAnnotation(FlatField.class);
+        String label = label(field);
+        MappingRules.checkNotStatic(label, field.getModifiers().contains(Modifier.STATIC));
 
+        TypeMirror type = field.asType();
+        Optional<FieldKind> kind = FieldKind.ofTypeName(typeName(type));
+        if (kind.isPresent()) {
+            MappingRules.checkScalar(
+                    label, kind.get(), a.length(), a.precision(), a.dateTimeFormat(), a.padding());
+            return;
+        }
+
+        TypeElement nested = nestableType(label, type);
+        Deque<TypeElement> path = new ArrayDeque<>();
+        path.add((TypeElement) field.getEnclosingElement());
+        checkNoCycle(nested, path);
+        MappingRules.checkNested(
+                label,
+                nested.getSimpleName().toString(),
+                a.length(),
+                annotatedFields(nested).stream()
+                        .mapToInt(f -> f.getAnnotation(FlatField.class).length())
+                        .sum(),
+                a.precision(),
+                a.dateTimeFormat(),
+                a.padding());
+    }
+
+    private TypeElement nestableType(String label, TypeMirror type) {
+        String name = type.toString();
+        if (type.getKind() == TypeKind.TYPEVAR) {
+            throw MappingRules.unsupportedType(
+                    label, name, "type variables cannot be instantiated when reading");
+        }
+        if (type.getKind() != TypeKind.DECLARED) {
+            throw MappingRules.unsupportedType(label, name, null);
+        }
+        TypeElement element = (TypeElement) ((DeclaredType) type).asElement();
+        name = element.getQualifiedName().toString();
+        if (name.equals("java.lang.Object")) {
+            throw MappingRules.unsupportedType(
+                    label, name, "declare the concrete class of the nested record");
+        }
+        if (element.getKind() == ElementKind.ENUM) {
+            throw MappingRules.unsupportedType(label, name, null);
+        }
+        if (element.getKind() == ElementKind.INTERFACE
+                || element.getModifiers().contains(Modifier.ABSTRACT)) {
+            throw MappingRules.unsupportedType(
+                    label, name, "abstract types cannot be instantiated when reading");
+        }
+        if (annotatedFields(element).isEmpty()) {
+            throw MappingRules.unsupportedType(label, name, null);
+        }
+        if (!hasNoArgConstructor(element)) {
+            String hint =
+                    element.getNestingKind().isNested()
+                                    && !element.getModifiers().contains(Modifier.STATIC)
+                            ? " (inner classes must be declared static)"
+                            : "";
+            throw new MappingException(
+                    element.getSimpleName() + ": a no-arg constructor is required" + hint);
+        }
+        return element;
+    }
+
+    private void checkNoCycle(TypeElement nested, Deque<TypeElement> path) {
+        MappingRules.checkNoCycle(
+                path.stream().map(t -> t.getSimpleName().toString()).collect(Collectors.toList()),
+                nested.getSimpleName().toString(),
+                path.contains(nested));
+        path.addLast(nested);
+        for (VariableElement field : annotatedFields(nested)) {
+            TypeMirror type = field.asType();
+            if (type.getKind() == TypeKind.DECLARED
+                    && FieldKind.ofTypeName(typeName(type)).isEmpty()) {
+                checkNoCycle((TypeElement) ((DeclaredType) type).asElement(), path);
+            }
+        }
+        path.removeLast();
+    }
+
+    private void validatePositions(TypeElement type) {
+        MappingRules.checkPositions(
+                type.getSimpleName().toString(),
+                annotatedFields(type).stream()
+                        .map(
+                                f ->
+                                        new MappingRules.Positioned(
+                                                label(f),
+                                                f.getAnnotation(FlatField.class).position()))
+                        .collect(Collectors.toList()));
+    }
+
+    /** Annotated, non-static fields of the hierarchy, superclass first. */
+    private List<VariableElement> annotatedFields(TypeElement type) {
+        Deque<TypeElement> hierarchy = new ArrayDeque<>();
+        for (TypeElement t = type; t != null; t = superclass(t)) {
+            hierarchy.addFirst(t);
+        }
+        List<VariableElement> fields = new ArrayList<>();
+        for (TypeElement t : hierarchy) {
+            for (VariableElement field : ElementFilter.fieldsIn(t.getEnclosedElements())) {
+                if (field.getAnnotation(FlatField.class) != null
+                        && !field.getModifiers().contains(Modifier.STATIC)) {
+                    fields.add(field);
+                }
+            }
+        }
+        return fields;
+    }
+
+    private TypeElement superclass(TypeElement type) {
+        TypeMirror superclass = type.getSuperclass();
+        if (superclass.getKind() != TypeKind.DECLARED) {
+            return null;
+        }
+        TypeElement element = (TypeElement) ((DeclaredType) superclass).asElement();
+        return element.getQualifiedName().contentEquals("java.lang.Object") ? null : element;
+    }
+
+    private static boolean hasNoArgConstructor(TypeElement type) {
+        List<ExecutableElement> constructors =
+                ElementFilter.constructorsIn(type.getEnclosedElements());
+        return constructors.isEmpty()
+                || constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
+    }
+
+    /** Binary-compatible name used by {@link FieldKind}: {@code int}, {@code java.lang.String}. */
+    private static String typeName(TypeMirror type) {
+        if (type.getKind().isPrimitive()) {
+            return type.getKind().name().toLowerCase(java.util.Locale.ROOT);
+        }
+        if (type.getKind() == TypeKind.DECLARED) {
+            return ((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName().toString();
+        }
+        return type.toString();
+    }
+
+    private static String label(VariableElement field) {
+        return MappingRules.label(
+                field.getEnclosingElement().getSimpleName().toString(),
+                field.getSimpleName().toString());
+    }
+
+    private void report(Element element, Runnable validation) {
         try {
-            // Validate in order: type, length/precision, date/time format
-            validateFieldType(element, fieldName);
-            FieldMetadataExtractor.validateLengthAndPrecision(
-                    annotation.length(), annotation.precision(), fieldName);
-            validateDateTimeFormat(annotation, element, fieldName);
-
-        } catch (IllegalArgumentException e) {
-            printErrorMessage(e.getMessage(), element);
-        } catch (Exception e) {
-            // Catch any unexpected errors and report them
-            printErrorMessage(
-                    "Unexpected error validating field '" + fieldName + "': " + e.getMessage(),
-                    element);
+            validation.run();
+        } catch (MappingException e) {
+            processingEnv
+                    .getMessager()
+                    .printMessage(Diagnostic.Kind.ERROR, e.getMessage(), element);
         }
-    }
-
-    /**
-     * Validates the field type using annotation processing API.
-     *
-     * @param element the field element to validate
-     * @param fieldName the name of the field for error messages
-     * @throws IllegalArgumentException if the field type is not supported
-     */
-    private void validateFieldType(Element element, String fieldName) {
-        if (element.getKind() != ElementKind.FIELD) {
-            throw new IllegalArgumentException(
-                    "Element must be a field, got: " + element.getKind());
-        }
-
-        VariableElement variableElement = (VariableElement) element;
-        TypeMirror typeMirror = variableElement.asType();
-        String typeName = typeMirror.toString();
-
-        // Try to get the Class<?> from the TypeMirror using SerializationTypes
-        Class<?> fieldType = SerializationTypes.getClassFromTypeName(typeName);
-        if (fieldType != null) {
-            // Use the core validation method with Class<?>
-            FieldMetadataExtractor.validateFieldType(fieldType, fieldName);
-        } else {
-            // Fallback: validate using type name from SerializationTypes
-            if (!SerializationTypes.isSupportedTypeName(typeName)) {
-                throw new IllegalArgumentException(
-                        String.format(
-                                "Field '%s': unsupported field type '%s'. %s",
-                                fieldName,
-                                typeName,
-                                SerializationTypes.getSupportedTypesDescription()));
-            }
-        }
-    }
-
-    /**
-     * Validates date/time format using annotation processing API. Prioritizes using the FlatField
-     * annotation information.
-     *
-     * @param annotation the FlatField annotation
-     * @param element the field element to validate
-     * @param fieldName the name of the field for error messages
-     */
-    private void validateDateTimeFormat(FlatField annotation, Element element, String fieldName) {
-        String dateTimeFormat = annotation.dateTimeFormat();
-        if (dateTimeFormat == null || dateTimeFormat.isEmpty()) {
-            return; // No format specified, skip validation
-        }
-
-        VariableElement variableElement = (VariableElement) element;
-        TypeMirror typeMirror = variableElement.asType();
-        String typeName = typeMirror.toString();
-
-        // Try to get the Class<?> from the TypeMirror using SerializationTypes
-        Class<?> fieldType = SerializationTypes.getClassFromTypeName(typeName);
-        if (fieldType != null) {
-            // Use the core validation method with Class<?>
-            FieldMetadataExtractor.validateDateTimeFormatLength(
-                    dateTimeFormat, fieldType, annotation.length(), fieldName);
-        } else {
-            // Fallback: validate using type name (only for date/time types)
-            validateDateTimeFormatByName(dateTimeFormat, typeName, annotation.length(), fieldName);
-        }
-    }
-
-    /**
-     * Fallback validation for date/time format using type name. This method is only used when
-     * Class<?> cannot be determined from TypeMirror.
-     *
-     * @param dateTimeFormat the date/time format pattern
-     * @param typeName the fully qualified type name
-     * @param length the field length
-     * @param fieldName the field name for error messages
-     * @throws IllegalArgumentException if validation fails
-     */
-    private void validateDateTimeFormatByName(
-            String dateTimeFormat, String typeName, int length, String fieldName) {
-        // Only validate if the type name indicates a date/time type
-        if (typeName.equals(SerializationTypes.SupportedTypes.LOCAL_DATE.getName())
-                || typeName.equals(SerializationTypes.SupportedTypes.LOCAL_DATE_TIME.getName())) {
-            try {
-                // Create a sample date to test the format
-                String sampleDate;
-                if (typeName.equals(SerializationTypes.SupportedTypes.LOCAL_DATE.getName())) {
-                    sampleDate =
-                            java.time.LocalDate.of(2024, 1, 1)
-                                    .format(
-                                            java.time.format.DateTimeFormatter.ofPattern(
-                                                    dateTimeFormat));
-                } else {
-                    sampleDate =
-                            java.time.LocalDateTime.of(2024, 1, 1, 12, 0, 0)
-                                    .format(
-                                            java.time.format.DateTimeFormatter.ofPattern(
-                                                    dateTimeFormat));
-                }
-
-                if (sampleDate.length() != length) {
-                    throw new IllegalArgumentException(
-                            String.format(
-                                    "Field '%s': dateTimeFormat '%s' produces %d characters, but"
-                                            + " length is %d",
-                                    fieldName, dateTimeFormat, sampleDate.length(), length));
-                }
-            } catch (Exception e) {
-                throw new IllegalArgumentException(
-                        String.format(
-                                "Field '%s': invalid dateTimeFormat '%s': %s",
-                                fieldName, dateTimeFormat, e.getMessage()),
-                        e);
-            }
-        }
-    }
-
-    /**
-     * Prints an error message to the messager.
-     *
-     * @param message the error message
-     * @param element the element where the error occurred
-     */
-    private void printErrorMessage(String message, Element element) {
-        messager.printMessage(Diagnostic.Kind.ERROR, message, element);
     }
 }

@@ -6,147 +6,276 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.JavaFileObject;
-
-/**
- * Comprehensive tests for the FlatFieldProcessor annotation processor using compile-testing. These
- * tests verify that compile-time validation works as expected for @FlatField annotations.
- */
-@DisplayName("FlatFieldProcessor Tests")
 class FlatFieldProcessorTest {
 
-    @Test
-    @DisplayName("Should compile successfully for valid @FlatField annotation")
-    void shouldCompileSuccessfullyForValidAnnotation() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/ValidFlatField.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    private static final String HEADER =
+            "package test;\n"
+                    + "import io.github.allanhladki.flat2java.annotation.FlatField;\n"
+                    + "import java.math.*;\n"
+                    + "import java.time.*;\n"
+                    + "import java.util.*;\n";
+
+    /** Compiles {@code test.Sample} (and any package-private classes in the same source). */
+    private static Compilation compile(String body) {
+        return Compiler.javac()
+                .withProcessors(new FlatFieldProcessor())
+                .compile(JavaFileObjects.forSourceString("test.Sample", HEADER + body));
     }
 
     @Test
-    @DisplayName("Should fail compilation for non-positive length")
-    void shouldFailCompilationForNonPositiveLength() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/InvalidFlatField.java");
+    void validMappingCompiles() {
         Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).hadErrorContaining("must be a positive integer");
+                compile(
+                        "public class Sample {\n"
+                            + "  @FlatField(length = 10) String text;\n"
+                            + "  @FlatField(length = 5) Integer boxedInt;\n"
+                            + "  @FlatField(length = 5) int primitiveInt;\n"
+                            + "  @FlatField(length = 10) Long boxedLong;\n"
+                            + "  @FlatField(length = 10) long primitiveLong;\n"
+                            + "  @FlatField(length = 20) BigInteger big;\n"
+                            + "  @FlatField(length = 15, precision = 2) BigDecimal amount;\n"
+                            + "  @FlatField(length = 8, dateTimeFormat = \"yyyyMMdd\") LocalDate"
+                            + " d;\n"
+                            + "  @FlatField(length = 14, dateTimeFormat = \"yyyyMMddHHmmss\")"
+                            + " LocalDateTime t;\n"
+                            + "  @FlatField(length = 3, padding = '_') String code;\n"
+                            + "}\n");
+
+        assertThat(compilation).succeededWithoutWarnings();
     }
 
     @Test
-    @DisplayName("Should fail compilation for negative precision")
-    void shouldFailCompilationForNegativePrecision() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/NegativePrecision.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).hadErrorContaining("precision must be a non-negative integer");
+    void nonPositiveLength() {
+        assertThat(compile("public class Sample { @FlatField(length = 0) String s; }"))
+                .hadErrorContaining("Sample.s: length must be greater than 0, got 0");
     }
 
     @Test
-    @DisplayName("Should fail compilation when precision >= length")
-    void shouldFailCompilationWhenPrecisionGreaterThanOrEqualToLength() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/PrecisionTooLarge.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).hadErrorContaining("precision (5) must be smaller than length (5)");
+    void negativePrecision() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 10, precision = -1)"
+                                        + " BigDecimal v; }"))
+                .hadErrorContaining("Sample.v: precision must not be negative, got -1");
     }
 
     @Test
-    @DisplayName("Should fail compilation for unsupported field type")
-    void shouldFailCompilationForUnsupportedFieldType() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/UnsupportedType.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).hadErrorContaining("unsupported field type");
+    void precisionNotSmallerThanLength() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 5, precision = 5)"
+                                        + " BigDecimal v; }"))
+                .hadErrorContaining("Sample.v: precision (5) must be smaller than length (5)");
     }
 
     @Test
-    @DisplayName("Should compile successfully for all supported field types")
-    void shouldCompileSuccessfullyForAllSupportedFieldTypes() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/SupportedTypes.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    void precisionOutsideBigDecimal() {
+        assertThat(compile("public class Sample { @FlatField(length = 5, precision = 2) int v; }"))
+                .hadErrorContaining("Sample.v: precision is only allowed on BigDecimal fields");
     }
 
     @Test
-    @DisplayName("Should fail compilation for invalid date/time format")
-    void shouldFailCompilationForInvalidDateTimeFormat() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/InvalidDateTimeFormat.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).hadErrorContaining("invalid dateTimeFormat");
+    void paddingOnNumber() {
+        assertThat(compile("public class Sample { @FlatField(length = 5, padding = '*') long v; }"))
+                .hadErrorContaining("Sample.v: padding is only allowed on String fields");
     }
 
     @Test
-    @DisplayName("Should fail compilation when date/time format length doesn't match field length")
-    void shouldFailCompilationWhenDateTimeFormatLengthDoesNotMatchFieldLength() {
-        JavaFileObject source =
-                JavaFileObjects.forResource(
-                        "processor-test-sources/DateTimeFormatLengthMismatch.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).hadErrorContaining("produces 8 characters, but length is 10");
+    void staticField() {
+        assertThat(compile("public class Sample { @FlatField(length = 5) static String s; }"))
+                .hadErrorContaining("Sample.s: @FlatField is not allowed on static fields");
     }
 
     @Test
-    @DisplayName("Should compile successfully for date/time format with matching length")
-    void shouldCompileSuccessfullyForDateTimeFormatWithMatchingLength() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/ValidDateTimeFormat.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    void unsupportedPrimitive() {
+        assertThat(compile("public class Sample { @FlatField(length = 1) boolean b; }"))
+                .hadErrorContaining("Sample.b: unsupported type boolean");
     }
 
     @Test
-    @DisplayName("Should ignore date/time format validation for non-date/time fields")
-    void shouldIgnoreDateTimeFormatValidationForNonDateTimeFields() {
-        JavaFileObject source =
-                JavaFileObjects.forResource(
-                        "processor-test-sources/NonDateTimeFieldWithFormat.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    void interfaceType() {
+        assertThat(compile("public class Sample { @FlatField(length = 10) List<String> l; }"))
+                .hadErrorContaining(
+                        "Sample.l: unsupported type java.util.List (abstract types cannot be"
+                                + " instantiated when reading)");
     }
 
     @Test
-    @DisplayName("Should compile successfully when dateTimeFormat is empty")
-    void shouldCompileSuccessfullyWhenDateTimeFormatIsEmpty() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/EmptyDateTimeFormat.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    void dateWithoutFormat() {
+        assertThat(compile("public class Sample { @FlatField(length = 8) LocalDate d; }"))
+                .hadErrorContaining(
+                        "Sample.d: dateTimeFormat is required for LocalDate/LocalDateTime fields");
     }
 
     @Test
-    @DisplayName("Should compile successfully for valid precision with BigDecimal")
-    void shouldCompileSuccessfullyForValidPrecisionWithBigDecimal() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/ValidBigDecimalPrecision.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    void formatOnNonDate() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 8, dateTimeFormat ="
+                                        + " \"yyyyMMdd\") String s; }"))
+                .hadErrorContaining(
+                        "Sample.s: dateTimeFormat is only allowed on LocalDate/LocalDateTime"
+                                + " fields");
     }
 
     @Test
-    @DisplayName("Should handle multiple fields in same class")
-    void shouldHandleMultipleFieldsInSameClass() {
-        JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/MultipleFields.java");
-        Compilation compilation =
-                Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
-        assertThat(compilation).succeeded();
+    void invalidFormat() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 8, dateTimeFormat ="
+                                        + " \"invalid-pattern\") LocalDate d; }"))
+                .hadErrorContaining("Sample.d: invalid dateTimeFormat 'invalid-pattern'");
+    }
+
+    @Test
+    void formatLengthMismatch() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 10, dateTimeFormat ="
+                                        + " \"yyyyMMdd\") LocalDate d; }"))
+                .hadErrorContaining(
+                        "Sample.d: dateTimeFormat 'yyyyMMdd' produces 8 characters, but length is"
+                                + " 10");
+    }
+
+    @Test
+    void variableWidthFormat() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 8, dateTimeFormat ="
+                                        + " \"d/M/yyyy\") LocalDate d; }"))
+                .hadErrorContaining("Sample.d: dateTimeFormat 'd/M/yyyy' has a variable width");
+    }
+
+    @Test
+    void validPositions() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(position = 2, length = 1) String b;\n"
+                                        + "  @FlatField(position = 1, length = 1) String a;\n"
+                                        + "}"))
+                .succeededWithoutWarnings();
+    }
+
+    @Test
+    void duplicatePosition() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(position = 1, length = 1) String a;\n"
+                                        + "  @FlatField(position = 1, length = 1) String b;\n"
+                                        + "}"))
+                .hadErrorContaining("Sample: position 1 is used by both Sample.a and Sample.b");
+    }
+
+    @Test
+    void mixedPositionsAcrossHierarchy() {
+        assertThat(
+                        compile(
+                                "public class Sample extends Base {\n"
+                                        + "  @FlatField(length = 1) String derived;\n"
+                                        + "}\n"
+                                        + "class Base { @FlatField(position = 1, length = 1)"
+                                        + " String base; }"))
+                .hadErrorContaining(
+                        "Sample: either every @FlatField sets position or none does; missing on"
+                                + " Sample.derived");
+    }
+
+    @Test
+    void positionGap() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(position = 1, length = 1) String a;\n"
+                                        + "  @FlatField(position = 3, length = 1) String b;\n"
+                                        + "}"))
+                .hadErrorContaining("Sample: positions must be contiguous starting at 1");
+    }
+
+    @Test
+    void validNestedRecord() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(length = 4) int id;\n"
+                                        + "  @FlatField(length = 12) Address address;\n"
+                                        + "}\n"
+                                        + "class Place { @FlatField(length = 2) String state; }\n"
+                                        + "class Address extends Place {\n"
+                                        + "  @FlatField(length = 10) String city;\n"
+                                        + "}"))
+                .succeededWithoutWarnings();
+    }
+
+    @Test
+    void nestedLengthMismatch() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 9) Address address; }\n"
+                                        + "class Address { @FlatField(length = 10) String city; }"))
+                .hadErrorContaining(
+                        "Sample.address: length is 9, but the fields of Address add up to 10");
+    }
+
+    @Test
+    void nestedWithScalarAttributes() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 10, precision = 1)"
+                                        + " Address address; }\n"
+                                        + "class Address { @FlatField(length = 10) String city; }"))
+                .hadErrorContaining(
+                        "Sample.address: precision, dateTimeFormat and padding are not allowed on"
+                                + " a nested record field");
+    }
+
+    @Test
+    void nestedCycle() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(length = 1) String value;\n"
+                                        + "  @FlatField(length = 2) Link next;\n"
+                                        + "}\n"
+                                        + "class Link { @FlatField(length = 1) Sample sample; }"))
+                .hadErrorContaining("Cyclic nested records: Sample -> Link -> Sample");
+    }
+
+    @Test
+    void nestedWithoutNoArgConstructor() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 1) Code code; }\n"
+                                        + "class Code {\n"
+                                        + "  @FlatField(length = 1) String value;\n"
+                                        + "  Code(String value) { this.value = value; }\n"
+                                        + "}"))
+                .hadErrorContaining("Code: a no-arg constructor is required");
+    }
+
+    @Test
+    void objectField() {
+        assertThat(compile("public class Sample { @FlatField(length = 5) Object value; }"))
+                .hadErrorContaining(
+                        "Sample.value: unsupported type java.lang.Object (declare the concrete"
+                                + " class of the nested record)");
+    }
+
+    @Test
+    void typeVariableField() {
+        assertThat(compile("public class Sample<T> { @FlatField(length = 5) T value; }"))
+                .hadErrorContaining(
+                        "Sample.value: unsupported type T (type variables cannot be instantiated"
+                                + " when reading)");
+    }
+
+    @Test
+    void classWithoutAnnotatedFields() {
+        assertThat(compile("public class Sample { @FlatField(length = 5) StringBuilder sb; }"))
+                .hadErrorContaining("Sample.sb: unsupported type java.lang.StringBuilder.");
     }
 }
