@@ -190,7 +190,8 @@ class MappingValidationTest {
                 Unsupported.class,
                 "Unsupported.flag: unsupported type boolean. Supported types: String,"
                         + " int/Integer, long/Long, BigInteger, BigDecimal, LocalDate,"
-                        + " LocalDateTime, or a concrete class with @FlatField fields.");
+                        + " LocalDateTime, a concrete class or record with @FlatField fields, or"
+                        + " a List or array of those types.");
     }
 
     static class NoFields {
@@ -228,15 +229,6 @@ class MappingValidationTest {
         assertMappingError(
                 NoDefaultConstructor.class,
                 "NoDefaultConstructor: a no-arg constructor is required");
-    }
-
-    record Point(@FlatField(length = 3) Integer x) {}
-
-    @Test
-    void javaRecordsAreNotSupported() {
-        assertMappingError(
-                Point.class,
-                "Point: Java records are not supported; use a class with a no-arg constructor");
     }
 
     abstract static class Shape {

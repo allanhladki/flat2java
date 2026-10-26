@@ -131,4 +131,51 @@ class ReadmeExamplesTest {
 
         assertThat(flat.write(payment)).isEqualTo("P-0001    20240315000099,90");
     }
+
+    public static class Item {
+        @FlatField(length = 3)
+        private String sku;
+
+        @FlatField(length = 2)
+        private int quantity;
+
+        Item(String sku, int quantity) {
+            this.sku = sku;
+            this.quantity = quantity;
+        }
+
+        private Item() {}
+    }
+
+    public static class Invoice {
+        @FlatField(length = 4)
+        private int id;
+
+        @FlatField(length = 3, occurs = 3)
+        private int[] counts;
+
+        @FlatField(length = 5, occurs = 2)
+        private List<Item> items; // Item fields: 3 + 2
+    }
+
+    @Test
+    void listsAndArrays() {
+        Invoice invoice = new Invoice();
+        invoice.id = 12;
+        invoice.counts = new int[] {1, 20, 300};
+        invoice.items = List.of(new Item("X1", 5), new Item("Y22", 10));
+
+        assertThat(Flat2Java.create().write(invoice))
+                .isEqualTo("0012" + "001020300" + "X1 05Y2210");
+    }
+
+    public record Point(@FlatField(length = 4) int x, @FlatField(length = 4) int y) {}
+
+    @Test
+    void javaRecords() {
+        Flat2Java flat = Flat2Java.create();
+
+        assertThat(flat.write(new Point(12, 7))).isEqualTo("00120007");
+        assertThat(flat.read("00120007", Point.class)).isEqualTo(new Point(12, 7));
+    }
 }

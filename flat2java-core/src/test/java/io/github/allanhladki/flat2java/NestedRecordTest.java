@@ -221,4 +221,36 @@ class NestedRecordTest {
                         "UnmappedType.value: unsupported type java.lang.StringBuilder. Supported"
                                 + " types:");
     }
+
+    // Package-private classes with default constructors, and an unannotated field that is ignored.
+    static class Brand {
+        @FlatField(length = 10)
+        String name;
+
+        @FlatField(length = 4)
+        int id;
+    }
+
+    static class Car {
+        int price;
+
+        @FlatField(length = 14)
+        Brand brand;
+    }
+
+    @Test
+    void unannotatedFieldsAreLeftOut() {
+        Car car = new Car();
+        car.price = 50_000;
+        car.brand = new Brand();
+        car.brand.name = "Fiat";
+        car.brand.id = 12;
+
+        String line = flat.write(car);
+        Car copy = flat.read(line, Car.class);
+
+        assertThat(line).isEqualTo("Fiat      0012");
+        assertThat(copy.price).isZero();
+        assertThat(copy.brand).usingRecursiveComparison().isEqualTo(car.brand);
+    }
 }

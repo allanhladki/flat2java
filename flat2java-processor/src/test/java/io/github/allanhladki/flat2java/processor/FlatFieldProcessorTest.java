@@ -96,9 +96,9 @@ class FlatFieldProcessorTest {
 
     @Test
     void interfaceType() {
-        assertThat(compile("public class Sample { @FlatField(length = 10) List<String> l; }"))
+        assertThat(compile("public class Sample { @FlatField(length = 10) Collection<String> l; }"))
                 .hadErrorContaining(
-                        "Sample.l: unsupported type java.util.List (abstract types cannot be"
+                        "Sample.l: unsupported type java.util.Collection (abstract types cannot be"
                                 + " instantiated when reading)");
     }
 
@@ -277,5 +277,109 @@ class FlatFieldProcessorTest {
     void classWithoutAnnotatedFields() {
         assertThat(compile("public class Sample { @FlatField(length = 5) StringBuilder sb; }"))
                 .hadErrorContaining("Sample.sb: unsupported type java.lang.StringBuilder.");
+    }
+
+    @Test
+    void validListsArraysAndRecordsCompile() {
+        Compilation compilation =
+                compile(
+                        "public class Sample {\n"
+                                + "  @FlatField(length = 3, occurs = 2) List<String> codes;\n"
+                                + "  @FlatField(length = 3, occurs = 3) int[] counts;\n"
+                                + "  @FlatField(length = 5, occurs = 2) List<Item> items;\n"
+                                + "  @FlatField(length = 8) Point point;\n"
+                                + "}\n"
+                                + "class Item {\n"
+                                + "  @FlatField(length = 3) String sku;\n"
+                                + "  @FlatField(length = 2) int quantity;\n"
+                                + "}\n"
+                                + "record Point(@FlatField(length = 4) int x,"
+                                + " @FlatField(length = 2, occurs = 2) List<String> tags) {}\n");
+
+        assertThat(compilation).succeededWithoutWarnings();
+    }
+
+    @Test
+    void occursRequiredOnLists() {
+        assertThat(compile("public class Sample { @FlatField(length = 3) List<String> codes; }"))
+                .hadErrorContaining(
+                        "Sample.codes: occurs is required on List and array fields and must be"
+                                + " greater than 0, got 0");
+    }
+
+    @Test
+    void occursOnlyOnListsAndArrays() {
+        assertThat(compile("public class Sample { @FlatField(length = 3, occurs = 2) String s; }"))
+                .hadErrorContaining("Sample.s: occurs is only allowed on List and array fields");
+    }
+
+    @Test
+    void listOfLists() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 3, occurs = 2)"
+                                        + " List<List<String>> codes; }"))
+                .hadErrorContaining(
+                        "Sample.codes: unsupported type"
+                            + " java.util.List<java.util.List<java.lang.String>> (the elements of a"
+                            + " List or array cannot be Lists or arrays)");
+    }
+
+    @Test
+    void wildcardList() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 3, occurs = 2)"
+                                        + " List<? extends CharSequence> codes; }"))
+                .hadErrorContaining("(declare the element type without a wildcard)");
+    }
+
+    @Test
+    void rawList() {
+        assertThat(
+                        compile(
+                                "public class Sample { @SuppressWarnings(\"rawtypes\")"
+                                        + " @FlatField(length = 3, occurs = 2) List codes; }"))
+                .hadErrorContaining("(declare the element type, as in List<String>)");
+    }
+
+    @Test
+    void nestedListElementLengthIsPerElement() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 10, occurs = 2)"
+                                        + " List<Item> items; }\n"
+                                        + "class Item { @FlatField(length = 5) String sku; }"))
+                .hadErrorContaining(
+                        "Sample.items: length is 10, but the fields of Item add up to 5");
+    }
+
+    @Test
+    void nestedSumCountsRepeatedFields() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 3) Item item; }\n"
+                                        + "class Item { @FlatField(length = 2, occurs = 3)"
+                                        + " int[] counts; }"))
+                .hadErrorContaining("Sample.item: length is 3, but the fields of Item add up to 6");
+    }
+
+    @Test
+    void recordComponentsAreValidated() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 3) Point p; }\n"
+                                        + "record Point(@FlatField(length = 0) int x) {}"))
+                .hadErrorContaining("Point.x: length must be greater than 0, got 0");
+    }
+
+    @Test
+    void cycleThroughAList() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 1) Node node; }\n"
+                                        + "class Node { @FlatField(length = 1, occurs = 1)"
+                                        + " List<Node> children; }"))
+                .hadErrorContaining("Cyclic nested records");
     }
 }

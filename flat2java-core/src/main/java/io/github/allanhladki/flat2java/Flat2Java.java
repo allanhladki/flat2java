@@ -71,7 +71,7 @@ public final class Flat2Java {
      * Reads a flat record into a new instance of {@code type}.
      *
      * @param line the record; its length must be {@link #recordLength(Class)}
-     * @param type the class to create, which needs a no-arg constructor
+     * @param type the class to create, which needs a no-arg constructor unless it is a record
      * @param <T> the type to create
      * @return the new instance
      * @throws io.github.allanhladki.flat2java.exception.MappingException if the class cannot be

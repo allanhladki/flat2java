@@ -105,7 +105,8 @@ public final class MappingRules {
                         + (reason == null ? "" : " (" + reason + ")")
                         + ". Supported types: "
                         + FieldKind.SUPPORTED_TYPES
-                        + ", or a concrete class with @FlatField fields.";
+                        + ", a concrete class or record with @FlatField fields, or a List or"
+                        + " array of those types.";
         return new MappingException(message);
     }
 
@@ -209,6 +210,35 @@ public final class MappingRules {
                             + nestedType
                             + " add up to "
                             + nestedLength);
+        }
+    }
+
+    /**
+     * Validates the {@code occurs} attribute.
+     *
+     * @param label the field label
+     * @param repeated whether the field is a {@code List} or an array
+     * @param length the declared length of one element
+     * @param occurs the declared number of elements, {@code 0} when not set
+     */
+    public static void checkOccurs(String label, boolean repeated, int length, int occurs) {
+        if (!repeated) {
+            if (occurs != 0) {
+                throw new MappingException(
+                        label + ": occurs is only allowed on List and array fields");
+            }
+            return;
+        }
+        if (occurs <= 0) {
+            throw new MappingException(
+                    label
+                            + ": occurs is required on List and array fields and must be greater"
+                            + " than 0, got "
+                            + occurs);
+        }
+        if ((long) length * occurs > Integer.MAX_VALUE) {
+            throw new MappingException(
+                    label + ": length * occurs exceeds " + Integer.MAX_VALUE + " characters");
         }
     }
 

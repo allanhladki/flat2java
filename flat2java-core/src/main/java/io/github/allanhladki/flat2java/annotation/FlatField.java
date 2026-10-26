@@ -10,12 +10,14 @@ import java.lang.annotation.Target;
  * Maps a field to a fixed-width column of a flat record.
  *
  * <p>Supported field types are {@code String}, {@code int}/{@code Integer}, {@code long}/{@code
- * Long}, {@code BigInteger}, {@code BigDecimal}, {@code LocalDate}, {@code LocalDateTime}, and any
- * concrete class whose own fields are annotated with {@code @FlatField} (a nested record). See the
+ * Long}, {@code BigInteger}, {@code BigDecimal}, {@code LocalDate}, {@code LocalDateTime}, any
+ * concrete class or record whose own fields are annotated with {@code @FlatField} (a nested
+ * record), and a {@code List} or array of one of those types with {@link #occurs()} set. See the
  * project README for the encoding of each type.
  *
  * <p>Fields are laid out superclass first. Within that order they follow {@link #position()} when
- * it is set, or declaration order otherwise.
+ * it is set, or declaration order otherwise. On a Java record, annotate the record components;
+ * their declaration order is the component order.
  */
 @Documented
 @Target(ElementType.FIELD)
@@ -37,11 +39,23 @@ public @interface FlatField {
 
     /**
      * Width of the field in characters. For a nested record it must equal the sum of the lengths of
-     * the nested type's fields.
+     * the nested type's fields. For a {@code List} or array field it is the width of one element.
      *
      * @return the field width, greater than zero
      */
     int length();
+
+    /**
+     * Number of elements of a {@code List} or array field. Required on those types and not allowed
+     * on others. The field occupies {@code length * occurs} characters, and the list or array must
+     * have exactly {@code occurs} elements when written.
+     *
+     * <p>The other attributes ({@code precision}, {@code dateTimeFormat}, {@code padding}) apply to
+     * each element.
+     *
+     * @return the number of elements, or {@code 0} for a field that is not repeated
+     */
+    int occurs() default 0;
 
     /**
      * Number of decimal places of a {@code BigDecimal} field. Not allowed on other types.

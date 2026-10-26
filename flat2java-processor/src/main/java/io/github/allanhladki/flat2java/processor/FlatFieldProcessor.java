@@ -24,6 +24,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -65,7 +66,10 @@ public class FlatFieldProcessor extends AbstractProcessor {
         String label = label(field);
         MappingRules.checkNotStatic(label, field.getModifiers().contains(Modifier.STATIC));
 
-        TypeMirror type = field.asType();
+        TypeMirror declared = field.asType();
+        boolean repeated = isRepeated(declared);
+        MappingRules.checkOccurs(label, repeated, a.length(), a.occurs());
+        TypeMirror type = repeated ? elementType(label, declared) : declared;
         Optional<FieldKind> kind = FieldKind.ofTypeName(typeName(type));
         if (kind.isPresent()) {
             MappingRules.checkScalar(
@@ -81,12 +85,47 @@ public class FlatFieldProcessor extends AbstractProcessor {
                 label,
                 nested.getSimpleName().toString(),
                 a.length(),
-                annotatedFields(nested).stream()
-                        .mapToInt(f -> f.getAnnotation(FlatField.class).length())
-                        .sum(),
+                annotatedFields(nested).stream().mapToInt(FlatFieldProcessor::width).sum(),
                 a.precision(),
                 a.dateTimeFormat(),
                 a.padding());
+    }
+
+    /** Whether the type is an array or a {@code java.util.List}. */
+    private static boolean isRepeated(TypeMirror type) {
+        return type.getKind() == TypeKind.ARRAY || typeName(type).equals("java.util.List");
+    }
+
+    /** The element type of an array or list field, rejecting nested repetition and wildcards. */
+    private static TypeMirror elementType(String label, TypeMirror type) {
+        TypeMirror element;
+        if (type.getKind() == TypeKind.ARRAY) {
+            element = ((ArrayType) type).getComponentType();
+        } else {
+            List<? extends TypeMirror> arguments = ((DeclaredType) type).getTypeArguments();
+            if (arguments.isEmpty()) {
+                throw MappingRules.unsupportedType(
+                        label, type.toString(), "declare the element type, as in List<String>");
+            }
+            element = arguments.get(0);
+            if (element.getKind() == TypeKind.WILDCARD) {
+                throw MappingRules.unsupportedType(
+                        label, type.toString(), "declare the element type without a wildcard");
+            }
+        }
+        if (isRepeated(element)) {
+            throw MappingRules.unsupportedType(
+                    label,
+                    type.toString(),
+                    "the elements of a List or array cannot be Lists or arrays");
+        }
+        return element;
+    }
+
+    /** Characters taken by a field: its length, times occurs for a list or array. */
+    private static int width(VariableElement field) {
+        FlatField a = field.getAnnotation(FlatField.class);
+        return a.occurs() > 0 ? a.length() * a.occurs() : a.length();
     }
 
     private TypeElement nestableType(String label, TypeMirror type) {
@@ -115,7 +154,7 @@ public class FlatFieldProcessor extends AbstractProcessor {
         if (annotatedFields(element).isEmpty()) {
             throw MappingRules.unsupportedType(label, name, null);
         }
-        if (!hasNoArgConstructor(element)) {
+        if (element.getKind() != ElementKind.RECORD && !hasNoArgConstructor(element)) {
             String hint =
                     element.getNestingKind().isNested()
                                     && !element.getModifiers().contains(Modifier.STATIC)
@@ -135,6 +174,11 @@ public class FlatFieldProcessor extends AbstractProcessor {
         path.addLast(nested);
         for (VariableElement field : annotatedFields(nested)) {
             TypeMirror type = field.asType();
+            if (type.getKind() == TypeKind.ARRAY) {
+                type = ((ArrayType) type).getComponentType();
+            } else if (isRepeated(type) && !((DeclaredType) type).getTypeArguments().isEmpty()) {
+                type = ((DeclaredType) type).getTypeArguments().get(0);
+            }
             if (type.getKind() == TypeKind.DECLARED
                     && FieldKind.ofTypeName(typeName(type)).isEmpty()) {
                 checkNoCycle((TypeElement) ((DeclaredType) type).asElement(), path);

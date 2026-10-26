@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /** For every value that fits its column, {@code read(write(r))} equals {@code r}. */
 class RoundTripPropertiesTest {
@@ -33,7 +34,14 @@ class RoundTripPropertiesTest {
 
         @FlatField(length = 4)
         String tag;
+
+        @FlatField(length = 3, occurs = 2)
+        int[] counts;
     }
+
+    record Tagged(
+            @FlatField(length = 5) String tag,
+            @FlatField(length = 4, occurs = 3) List<Integer> values) {}
 
     static class Sample {
         @FlatField(length = 12)
@@ -54,8 +62,11 @@ class RoundTripPropertiesTest {
         @FlatField(length = 17, dateTimeFormat = "yyyyMMddHHmmssSSS")
         LocalDateTime timestamp;
 
-        @FlatField(length = 13)
+        @FlatField(length = 19)
         Inner inner;
+
+        @FlatField(length = 17)
+        Tagged tagged;
     }
 
     @Property
@@ -102,14 +113,21 @@ class RoundTripPropertiesTest {
         Arbitrary<Inner> inner =
                 Combinators.combine(
                                 Arbitraries.longs().between(0, 999_999_999L),
-                                Arbitraries.strings().alpha().ofLength(4))
+                                Arbitraries.strings().alpha().ofLength(4),
+                                Arbitraries.integers().between(0, 999).array(int[].class).ofSize(2))
                         .as(
-                                (code, tag) -> {
+                                (code, tag, counts) -> {
                                     Inner i = new Inner();
                                     i.code = code;
                                     i.tag = tag;
+                                    i.counts = counts;
                                     return i;
                                 });
+        Arbitrary<Tagged> tagged =
+                Combinators.combine(
+                                Arbitraries.strings().alpha().ofMinLength(1).ofMaxLength(5),
+                                Arbitraries.integers().between(0, 9999).list().ofSize(3))
+                        .as(Tagged::new);
         return Combinators.combine(
                         text,
                         Arbitraries.integers().between(0, Integer.MAX_VALUE),
@@ -120,9 +138,10 @@ class RoundTripPropertiesTest {
                         amount,
                         date,
                         timestamp,
-                        inner)
+                        inner,
+                        tagged)
                 .as(
-                        (t, n, b, a, d, ts, i) -> {
+                        (t, n, b, a, d, ts, i, tg) -> {
                             Sample s = new Sample();
                             s.text = t;
                             s.number = n;
@@ -131,6 +150,7 @@ class RoundTripPropertiesTest {
                             s.date = d;
                             s.timestamp = ts;
                             s.inner = i;
+                            s.tagged = tg;
                             return s;
                         });
     }

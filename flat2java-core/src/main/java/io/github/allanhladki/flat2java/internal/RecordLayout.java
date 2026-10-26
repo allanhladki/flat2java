@@ -15,13 +15,13 @@ import java.util.List;
 public final class RecordLayout {
 
     private final Class<?> type;
-    private final Constructor<?> constructor;
+    private final Instantiator instantiator;
     private final List<Column> columns;
     private final int length;
 
-    RecordLayout(Class<?> type, Constructor<?> constructor, List<Column> columns) {
+    RecordLayout(Class<?> type, Instantiator instantiator, List<Column> columns) {
         this.type = type;
-        this.constructor = constructor;
+        this.instantiator = instantiator;
         this.columns = List.copyOf(columns);
         this.length = columns.stream().mapToInt(c -> c.codec.length()).sum();
     }
@@ -83,27 +83,84 @@ public final class RecordLayout {
     }
 
     Object decode(String line, int start) {
-        Object instance = newInstance();
+        Object[] values = new Object[columns.size()];
         int offset = start;
-        for (Column column : columns) {
-            Object value = column.codec.decode(line, offset);
-            try {
-                column.field.set(instance, value);
-            } catch (IllegalAccessException e) {
-                throw new DeserializationException(column.label + ": field cannot be assigned", e);
-            }
-            offset += column.codec.length();
+        for (int i = 0; i < values.length; i++) {
+            FieldCodec codec = columns.get(i).codec;
+            values[i] = codec.decode(line, offset);
+            offset += codec.length();
         }
-        return instance;
+        return instantiator.create(type, columns, values);
     }
 
-    private Object newInstance() {
+    /** Creates an instance of the mapped type from the decoded column values. */
+    interface Instantiator {
+        Object create(Class<?> type, List<Column> columns, Object[] values);
+    }
+
+    /** A class with a no-arg constructor; the fields are assigned after construction. */
+    static final class NoArgInstantiator implements Instantiator {
+        private final Constructor<?> constructor;
+
+        NoArgInstantiator(Constructor<?> constructor) {
+            this.constructor = constructor;
+        }
+
+        @Override
+        public Object create(Class<?> type, List<Column> columns, Object[] values) {
+            Object instance = invoke(type, constructor, "no-arg constructor");
+            for (int i = 0; i < values.length; i++) {
+                Column column = columns.get(i);
+                try {
+                    column.field.set(instance, values[i]);
+                } catch (IllegalAccessException e) {
+                    throw new DeserializationException(
+                            column.label + ": field cannot be assigned", e);
+                }
+            }
+            return instance;
+        }
+    }
+
+    /**
+     * A Java record, created through its canonical constructor. Components without
+     * {@code @FlatField} receive {@code null}, {@code 0} or {@code false}.
+     */
+    static final class CanonicalInstantiator implements Instantiator {
+        private final Constructor<?> constructor;
+        private final int[] argumentOfColumn;
+        private final Object[] defaults;
+
+        /**
+         * @param argumentOfColumn for each column, the index of its record component
+         * @param defaults the argument values of the components that are not mapped
+         */
+        CanonicalInstantiator(
+                Constructor<?> constructor, int[] argumentOfColumn, Object[] defaults) {
+            this.constructor = constructor;
+            this.argumentOfColumn = argumentOfColumn;
+            this.defaults = defaults;
+        }
+
+        @Override
+        public Object create(Class<?> type, List<Column> columns, Object[] values) {
+            Object[] arguments = defaults.clone();
+            for (int i = 0; i < values.length; i++) {
+                arguments[argumentOfColumn[i]] = values[i];
+            }
+            return invoke(type, constructor, "canonical constructor", arguments);
+        }
+    }
+
+    private static Object invoke(
+            Class<?> type, Constructor<?> constructor, String description, Object... arguments) {
         try {
-            return constructor.newInstance();
+            return constructor.newInstance(arguments);
         } catch (InvocationTargetException e) {
             throw new DeserializationException(
-                    type.getSimpleName() + ": no-arg constructor threw an exception", e.getCause());
-        } catch (ReflectiveOperationException e) {
+                    type.getSimpleName() + ": " + description + " threw an exception",
+                    e.getCause());
+        } catch (ReflectiveOperationException | IllegalArgumentException e) {
             throw new DeserializationException(
                     type.getSimpleName() + ": cannot create an instance", e);
         }

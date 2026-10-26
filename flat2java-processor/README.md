@@ -45,13 +45,16 @@ MapStruct, add this one to the same list.
 
 - `length` greater than zero. `precision` not negative, smaller than `length`, and only on
   `BigDecimal`.
-- Supported field type, or a concrete nested class with `@FlatField` fields. `Object`, interfaces,
+- Supported field type, or a concrete nested class or record with `@FlatField` fields. `Object`, interfaces,
   abstract classes and type variables are rejected.
 - `dateTimeFormat` present on `LocalDate`/`LocalDateTime` fields only. It must be a valid pattern
   with a fixed width equal to `length`.
 - `padding` only on `String` fields. `@FlatField` not on `static` fields.
 - `position` all-or-nothing across the class hierarchy, unique and contiguous from 1.
-- Nested records: `length` equal to the sum of the nested fields, no cycles, a no-arg constructor.
+- Nested records: `length` equal to the sum of the nested fields, no cycles, a no-arg constructor
+  (not required for Java records).
+- `List` and array fields: `occurs` set and greater than zero, and only on those fields; an element
+  type that is not itself a list or array; no raw `List` or wildcard.
 
 Example output:
 
