@@ -7,7 +7,7 @@
 
     <groupId>io.github.allanhladki.flat2java</groupId>
     <artifactId>flat2java</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
 
     <name>flat2java</name>
