@@ -1,367 +1,213 @@
-# Flat2Java
+# flat2java
 
-[![Version](https://img.shields.io/badge/version-0.0.1--rc2-blue.svg)](https://github.com/allanhladki/flat2java/releases)
-[![Java](https://img.shields.io/badge/java-11+-green.svg)](https://openjdk.java.net/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+flat2java maps Java classes to fixed-width text records, the layout used by COBOL copybooks,
+mainframe exports and many bank and government file formats, and reads those records back into
+objects. Fields are described with one annotation, `@FlatField`, and the mapping of each class is
+validated once, at first use or at compile time with the optional annotation processor.
 
-A comprehensive Java library for serializing and deserializing Java objects to/from fixed-length flat file formats, similar to COBOL's data structures.
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Record format](#record-format)
+- [Field order](#field-order)
+- [Configuration](#configuration)
+- [Errors](#errors)
+- [Limitations](#limitations)
+- [Modules](#modules)
+- [Building](#building)
 
-## Description
+## Requirements
 
-Flat2Java provides robust functionality to serialize Java objects into fixed-length text fields for flat file formats and deserialize them back to Java objects. It's particularly useful when working with legacy systems, flat file formats that use fixed-length field definitions, or when you need reliable round-trip serialization.
+Java 17 or later.
 
-## ✨ Key Features
-
-- **Complete Round-Trip Support**: Serialize objects to flat strings and deserialize them back to identical objects
-- **Comprehensive Type Support**: String, Integer, Long, BigInteger, BigDecimal, LocalDate, LocalDateTime
-- **Annotation-Based Mapping**: `@FlatField` annotation for declarative field configuration
-- **Flexible Configuration**: Environment variables and programmatic configuration options
-- **Robust Validation**: Compile-time and runtime validation with detailed error messages
-- **Interface-Based Architecture**: Clean interfaces with dependency injection support
-- **Exception Translation**: Automatic exception translation with interceptors
-- **Inheritance Support**: Handle object inheritance in serialization/deserialization
-- **Padding Consistency**: Reliable padding handling between serialization and deserialization
-
-
-## 🚀 Quick Start
-
-### Basic Usage
-
-```java
-import io.github.allanhladki.flat2java.annotation.FlatField;
-import io.github.allanhladki.flat2java.serializer.ObjectSerializer;
-import io.github.allanhladki.flat2java.deserializer.ObjectDeserializer;
-
-public class MyRecord {
-    @FlatField(length = 10)
-    private String id;
-
-    @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
-    private LocalDate date;
-
-    @FlatField(length = 10, precision = 2)
-    private BigDecimal amount;
-    
-    // getters and setters...
-}
-
-// Serialize and deserialize
-MyRecord record = new MyRecord("1234567890", LocalDate.of(2024, 3, 15), new BigDecimal("99.99"));
-String flatFileString = ObjectSerializer.serialize(record);
-MyRecord deserializedRecord = ObjectDeserializer.deserialize(flatFileString, MyRecord.class);
-```
-
-### Interface-Based Approach (Recommended)
-
-```java
-import io.github.allanhladki.flat2java.factory.Flat2JavaFactory;
-import io.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
-import io.github.allanhladki.flat2java.interfaces.ObjectDeserializationInterface;
-
-Flat2JavaFactory factory = new Flat2JavaFactory();
-ObjectSerializationInterface objectSerializer = factory.getObjectSerializationInterface();
-ObjectDeserializationInterface objectDeserializer = factory.getObjectDeserializationInterface();
-
-String flatFileString = objectSerializer.serialize(record);
-MyRecord deserializedRecord = objectDeserializer.deserialize(flatFileString, MyRecord.class);
-```
-
-### Dependency Injection with Spring
-
-```java
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import io.github.allanhladki.flat2java.interfaces.*;
-
-@Service
-public class FlatFileService {
-    
-    @Autowired
-    private ObjectSerializationInterface objectSerializer;
-    
-    @Autowired
-    private ObjectDeserializationInterface objectDeserializer;
-    
-    
-    public String serializeRecord(MyRecord record) {
-        return objectSerializer.serialize(record);
-    }
-    
-    public MyRecord deserializeRecord(String flatString) {
-        return objectDeserializer.deserialize(flatString, MyRecord.class);
-    }
-}
-```
-
-**Spring Configuration:**
-```java
-@Configuration
-public class Flat2JavaConfig {
-    
-    @Bean
-    public Flat2JavaFactory flat2JavaFactory() {
-        return new Flat2JavaFactory();
-    }
-    
-    @Bean
-    public ObjectSerializationInterface objectSerializer(Flat2JavaFactory factory) {
-        return factory.getObjectSerializationInterface();
-    }
-    
-    @Bean
-    public ObjectDeserializationInterface objectDeserializer(Flat2JavaFactory factory) {
-        return factory.getObjectDeserializationInterface();
-    }
-}
-```
-
-### Dependency Injection with Quarkus
-
-```java
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import io.github.allanhladki.flat2java.interfaces.*;
-
-@ApplicationScoped
-public class FlatFileService {
-    
-    @Inject
-    ObjectSerializationInterface objectSerializer;
-    
-    @Inject
-    ObjectDeserializationInterface objectDeserializer;
-    
-    public String serializeRecord(MyRecord record) {
-        return objectSerializer.serialize(record);
-    }
-    
-    public MyRecord deserializeRecord(String flatString) {
-        return objectDeserializer.deserialize(flatString, MyRecord.class);
-    }
-}
-```
-
-**Quarkus Configuration:**
-```java
-@ApplicationScoped
-public class Flat2JavaProducer {
-    
-    @Produces
-    @ApplicationScoped
-    public Flat2JavaFactory flat2JavaFactory() {
-        return new Flat2JavaFactory();
-    }
-    
-    @Produces
-    @ApplicationScoped
-    public ObjectSerializationInterface objectSerializer(Flat2JavaFactory factory) {
-        return factory.getObjectSerializationInterface();
-    }
-    
-    @Produces
-    @ApplicationScoped
-    public ObjectDeserializationInterface objectDeserializer(Flat2JavaFactory factory) {
-        return factory.getObjectDeserializationInterface();
-    }
-}
-```
-
-## 🔄 Round-Trip Operations
-
-The library excels at complete round-trip operations, ensuring data integrity:
-
-```java
-// Create and populate a record
-MyRecord original = new MyRecord();
-original.setId("TEST123");
-original.setDate(LocalDate.of(2024, 3, 15));
-original.setAmount(new BigDecimal("99.99"));
-
-// Serialize to flat string
-String flatString = ObjectSerializer.serialize(original);
-
-// Deserialize back to object
-MyRecord deserialized = ObjectDeserializer.deserialize(flatString, MyRecord.class);
-
-// Verify round-trip integrity
-assertEquals(original.getId(), deserialized.getId());
-assertEquals(original.getDate(), deserialized.getDate());
-assertEquals(original.getAmount(), deserialized.getAmount());
-```
-
-## 🏗️ Architecture
-
-### Core Components
-
-- **`ObjectSerializer`**: Main API for serializing objects to flat file strings
-- **`ObjectDeserializer`**: Main API for deserializing flat file strings to objects
-- **`FieldSerializer`**: Type-specific serialization logic for individual fields
-- **`FieldDeserializer`**: Type-specific deserialization logic for individual fields
-- **`FieldMetadata`**: Encapsulates field configuration and metadata
-- **`FieldMetadataExtractor`**: Extracts and validates field metadata from classes
-
-
-### Exception Handling
-
-Comprehensive error handling with custom exceptions:
-
-- `Flat2JavaException`: Base exception for all library errors
-- `SerializationException`: Thrown during serialization failures
-- `ValidationException`: Thrown during validation failures
-- `DeserializationException`: Thrown during deserialization failures
-
-## 📝 @FlatField Annotation
-
-The `@FlatField` annotation is the core of field configuration:
-
-### Required Attributes
-
-- **`length`** (int): The length of the field in the flat file record
-
-### Optional Attributes
-
-- **`name`** (String): Custom field name (defaults to field name)
-- **`precision`** (int): Decimal places for BigDecimal fields
-- **`dateTimeFormat`** (String): Date format pattern for date/time fields
-- **`padding`** (char): Custom padding character (defaults to space)
-
-### Examples
-
-```java
-public class ExampleRecord {
-    @FlatField(length = 10)
-    private String id;
-
-    @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
-    private LocalDate date;
-
-    @FlatField(length = 10, precision = 2)
-    private BigDecimal amount;
-
-    @FlatField(length = 5, padding = '*')
-    private String code;
-}
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-The library supports extensive configuration through environment variables:
-
-| Variable | Description | Values | Default | Example |
-|----------|-------------|---------|---------|---------|
-| `FLAT2JAVA_ALLOW_NULL_STRINGS` | Allow null string field values | `true`, `false` | `false` | `export FLAT2JAVA_ALLOW_NULL_STRINGS="true"` |
-| `FLAT2JAVA_NULL_VALUE_PADDING` | Padding character for null string values | Any single character | ` ` (space) | `export FLAT2JAVA_NULL_VALUE_PADDING="*"` |
-| `FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR` | Use decimal separator in BigDecimal serialization | `true`, `false` | `false` | `export FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR="true"` |
-| `FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR` | Decimal separator character for BigDecimal | Any single character | `.` | `export FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR=","` |
-| `FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE` | Rounding mode for BigDecimal precision | `UNNECESSARY`, `UP`, `DOWN`, `CEILING`, `FLOOR`, `HALF_UP`, `HALF_DOWN`, `HALF_EVEN` | `UNNECESSARY` | `export FLAT2JAVA_BIGDECIMAL_ROUNDING_MODE="HALF_UP"` |
-| `FLAT2JAVA_THROW_ON_STRING_TRUNCATION` | Throw exception when string values exceed field length | `true`, `false` | `false` | `export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="true"` |
-
-**Quick Setup:**
-```bash
-# Enable null handling and set custom padding
-export FLAT2JAVA_ALLOW_NULL_STRINGS="true"
-export FLAT2JAVA_NULL_VALUE_PADDING="*"
-
-# Use decimal separators with comma
-export FLAT2JAVA_BIGDECIMAL_USE_DECIMAL_SEPARATOR="true"
-export FLAT2JAVA_BIGDECIMAL_DECIMAL_SEPARATOR=","
-
-# Strict string validation
-export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="true"
-```
-
-### Programmatic Configuration
-
-```java
-import io.github.allanhladki.flat2java.config.Flat2JavaConfig;
-
-// Configure programmatically
-Flat2JavaConfig config = new Flat2JavaConfig();
-config.setAllowNullStrings(true);
-config.setNullValuePadding(' ');
-config.setBigDecimalUseDecimalSeparator(false);
-```
-
-## 🔧 Installation
-
-> **Note**: This project is currently in Release Candidate phase (version `0.0.1-rc2`). The API is stable but may have minor changes before the final release.
-
-### Core Library
+## Installation
 
 ```xml
 <dependency>
-    <groupId>io.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki.flat2java</groupId>
     <artifactId>flat2java-core</artifactId>
-    <version>0.0.1-rc2</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
-### Framework Integrations
+Gradle: `implementation("io.github.allanhladki.flat2java:flat2java-core:0.1.0")`.
 
-#### Spring Boot Integration
+## Quick start
 
-```xml
-<dependency>
-    <groupId>io.github.allanhladki</groupId>
-    <artifactId>flat2java-spring</artifactId>
-    <version>0.0.1-rc2</version>
-</dependency>
+```java
+public class Payment {
+    @FlatField(length = 10)
+    private String id;
+
+    @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")
+    private LocalDate date;
+
+    @FlatField(length = 9, precision = 2)
+    private BigDecimal amount;
+
+    public Payment() {}  // a no-arg constructor is required; it may be private
+    // other constructors, getters...
+}
 ```
 
-#### Quarkus Integration
+```java
+Flat2Java flat = Flat2Java.create();
 
-```xml
-<dependency>
-    <groupId>io.github.allanhladki</groupId>
-    <artifactId>flat2java-quarkus</artifactId>
-    <version>0.0.1-rc2</version>
-</dependency>
+String line = flat.write(payment);            // "P-0001    20240315000009990"
+Payment copy = flat.read(line, Payment.class);
+int length = flat.recordLength(Payment.class); // 27
 ```
 
-### Annotation Processor (Optional)
+`Flat2Java` is immutable and thread-safe. Create one instance per configuration and reuse it:
+the mapping of each class is validated and cached on first use.
 
-For compile-time validation:
+Reading a file with one record per line:
 
-```xml
-<dependency>
-    <groupId>io.github.allanhladki</groupId>
-    <artifactId>flat2java-processor</artifactId>
-    <version>0.0.1-rc2</version>
-    <scope>provided</scope>
-</dependency>
+```java
+try (Stream<String> lines = Files.lines(path)) {
+    List<Payment> payments = lines.map(line -> flat.read(line, Payment.class)).toList();
+}
 ```
 
+## Record format
 
+A record is the concatenation of its fields, superclass fields first. Each field occupies exactly
+`length` characters.
 
-## 🧪 Testing
+| Java type | Written as | Example (`length`) |
+|---|---|---|
+| `String` | Left-aligned, filled on the right with `padding` (default space). | `"ABC"` (6) → `ABC   ` |
+| `int`, `Integer`, `long`, `Long`, `BigInteger` | Unsigned digits, zero-filled on the left. | `42` (5) → `00042` |
+| `BigDecimal` | Unsigned digits with `precision` implied decimal places, zero-filled on the left. | `12.34`, precision 2 (7) → `0001234` |
+| `BigDecimal` with `useDecimalSeparator` | Same, with an explicit separator. | `12.34`, precision 2 (7) → `0012.34` |
+| `LocalDate`, `LocalDateTime` | Formatted with `dateTimeFormat`. | `2024-03-15`, `yyyyMMdd` (8) → `20240315` |
+| A class with `@FlatField` fields | Its own record, inlined. | see below |
 
-The library includes comprehensive test coverage:
+Rules applied to every value:
+
+- Numbers are never truncated. A value that needs more digits than `length`, or a negative value,
+  fails.
+- A `String` longer than its column is truncated, with a warning in the log, unless
+  `failOnStringTruncation` is enabled. Then it fails.
+- `BigDecimal` values with more decimal places than `precision` fail unless a `roundingMode` other
+  than `UNNECESSARY` is configured.
+- Date patterns must have a fixed width (`dd`, not `d`). Parsing is strict: `20240231` is rejected,
+  not adjusted to February 29. Patterns use `Locale.ROOT`. `yyyy` and `uuuu` are both accepted.
+- Reading checks every column: numeric columns must contain digits only, so signs and spaces are
+  errors.
+
+### Nested records
+
+A field whose type is a concrete class with `@FlatField` fields is written inline. Its `length`
+must equal the sum of the nested fields' lengths, so the total record length is visible where the
+field is declared.
+
+```java
+public class Address {
+    @FlatField(length = 20) private String street;
+    @FlatField(length = 2)  private String state;
+}
+
+public class Customer {
+    @FlatField(length = 6)  private int id;
+    @FlatField(length = 22) private Address address;  // 20 + 2
+}
+// "000042Rua das Flores 100  PR"
+```
+
+Fields declared as `Object`, an interface, an abstract class or a type variable are rejected,
+because the class to instantiate when reading would be unknown. A nested record cannot be `null`
+and cannot contain itself, directly or indirectly.
+
+## Field order
+
+By default fields follow declaration order, superclass first. That order is what
+`Class.getDeclaredFields()` returns. It matches the source on mainstream JVMs, but the Java
+specification does not guarantee it. When the layout must not depend on it, set `position` on every
+field:
+
+```java
+public class Header {
+    @FlatField(position = 1, length = 2) private String type;
+    @FlatField(position = 3, length = 8, dateTimeFormat = "yyyyMMdd") private LocalDate created;
+    @FlatField(position = 2, length = 5) private int sequence;
+}
+// type, sequence, created: "HD0000120240315"
+```
+
+Positions are all-or-nothing across a class hierarchy, must be unique, and must be contiguous from 1.
+A nested record's positions are independent from the enclosing class.
+
+## Configuration
+
+```java
+Flat2JavaOptions options = Flat2JavaOptions.builder()
+        .useDecimalSeparator(true)
+        .decimalSeparator(',')
+        .roundingMode(RoundingMode.HALF_UP)
+        .build();
+Flat2Java flat = Flat2Java.create(options);
+```
+
+The same settings can be read from environment variables with `Flat2JavaOptions.fromEnvironment()`.
+Invalid values fail. The Spring and Quarkus modules read them from the application configuration.
+
+| Option | Environment variable | Spring / Quarkus property | Default |
+|---|---|---|---|
+| `allowNullStrings` | `FLAT2JAVA_ALLOW_NULL_STRINGS` | `flat2java.allow-null-strings` | `true` |
+| `nullValuePadding` | `FLAT2JAVA_NULL_VALUE_PADDING` | `flat2java.null-value-padding` | space |
+| `failOnStringTruncation` | `FLAT2JAVA_FAIL_ON_STRING_TRUNCATION` | `flat2java.fail-on-string-truncation` | `false` |
+| `useDecimalSeparator` | `FLAT2JAVA_DECIMAL_USE_SEPARATOR` | `flat2java.decimal.use-separator` | `false` |
+| `decimalSeparator` | `FLAT2JAVA_DECIMAL_SEPARATOR` | `flat2java.decimal.separator` | `.` |
+| `roundingMode` | `FLAT2JAVA_DECIMAL_ROUNDING_MODE` | `flat2java.decimal.rounding-mode` | `UNNECESSARY` |
+
+- `allowNullStrings`: when `true`, a `null` `String` is written as an empty column. Fields of other
+  types never accept `null`.
+- `nullValuePadding`: fills the column of a `null` `String` whose `padding` is the default space.
+  A column made entirely of this character reads back as `""`.
+
+## Errors
+
+All exceptions extend `Flat2JavaException`, an unchecked exception:
+
+| Exception | Thrown when |
+|---|---|
+| `MappingException` | A class has invalid `@FlatField` declarations: unsupported type, `precision` not smaller than `length`, a date pattern whose width differs from `length`, inconsistent positions, a missing no-arg constructor, and so on. |
+| `SerializationException` | A value cannot be written: `null` on a non-`String` field, a negative number, a number wider than its column. |
+| `DeserializationException` | A record cannot be read: wrong record length, non-digits in a numeric column, an invalid date. The message gives the field and its column range. |
+
+Messages name the field as `Class.field` and never include field values, so they can be logged.
+
+## Limitations
+
+- Numbers are unsigned. There is no sign position or overpunch encoding.
+- `null` is supported only for `String` fields, and reads back as `""`.
+- Trailing padding characters are removed when a `String` is read. A value that ends with its own
+  padding character does not survive a round trip.
+- Records are read and written one line at a time. Repeated groups (COBOL `OCCURS`), records of
+  different types in one file, and Java `record` classes are not supported.
+- Mapped classes need a no-arg constructor, which may be private. Inner classes must be `static`.
+
+## Modules
+
+| Artifact | Purpose |
+|---|---|
+| `flat2java-core` | The library. |
+| [`flat2java-processor`](flat2java-processor/README.md) | Optional annotation processor that reports invalid mappings at compile time. |
+| [`flat2java-spring`](flat2java-spring/README.md) | Spring Boot 3 auto-configuration of a `Flat2Java` bean. |
+| [`flat2java-quarkus`](flat2java-quarkus/README.md) | CDI producer of a `Flat2Java` bean for Quarkus. |
+
+Classes in the `io.github.allanhladki.flat2java.internal` package are not part of the API.
+
+## Building
 
 ```bash
-# Run all tests
-mvn test
-
-# Run specific test class
-mvn test -Dtest=ObjectRoundTripTest
-
-# Run tests in specific module
-mvn test -pl flat2java-core
+mvn verify
 ```
 
-## 📚 Documentation
+Runs the tests of all modules, the Spotless format check and the JaCoCo coverage report. Format the
+code with `mvn spotless:apply`. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
-- **[Core Module](flat2java-core/README.md)**: Detailed information about the core library
-- **[Processor Module](flat2java-processor/README.md)**: Annotation processor documentation
-- **[Spring Integration](flat2java-spring/README.md)**: Spring Boot integration guide
-- **[Quarkus Integration](flat2java-quarkus/README.md)**: Quarkus integration guide
+## License
 
-
-## 🤝 Contributing
-
-Contributions are welcome! Please ensure all tests pass before submitting a pull request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+[MIT](LICENSE)
