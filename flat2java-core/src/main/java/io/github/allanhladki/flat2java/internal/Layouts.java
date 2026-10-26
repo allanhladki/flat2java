@@ -91,7 +91,7 @@ public final class Layouts {
         List<RecordLayout.Column> columns = new ArrayList<>(fields.size());
         for (Field field : fields) {
             columns.add(new RecordLayout.Column(field, label(field), codec(field, path)));
-            field.setAccessible(true);
+            makeAccessible(field);
         }
         path.removeLast();
 
@@ -305,6 +305,16 @@ public final class Layouts {
             // InaccessibleObjectException when the class is in a module that is not open.
             throw new MappingException(
                     type.getSimpleName() + ": constructor is not accessible: " + e.getMessage(), e);
+        }
+    }
+
+    private static void makeAccessible(Field field) {
+        try {
+            field.setAccessible(true);
+        } catch (RuntimeException e) {
+            // InaccessibleObjectException when the class is in a module that is not open.
+            throw new MappingException(
+                    label(field) + ": field is not accessible: " + e.getMessage(), e);
         }
     }
 

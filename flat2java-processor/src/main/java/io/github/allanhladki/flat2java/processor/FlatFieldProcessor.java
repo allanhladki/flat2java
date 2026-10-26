@@ -140,11 +140,15 @@ public class FlatFieldProcessor extends AbstractProcessor {
                         : null;
         String name = element != null ? element.getQualifiedName().toString() : type.toString();
         MappingRules.checkNestable(label, name, shape(type, element));
-        if (element.getKind() != ElementKind.RECORD && !hasNoArgConstructor(element)) {
+        // The model shows an inner class's implicit constructor without its outer-instance
+        // parameter, but reflection finds no no-arg constructor: reject inner classes outright.
+        boolean innerClass =
+                element.getNestingKind().isNested()
+                        && !element.getModifiers().contains(Modifier.STATIC);
+        if (element.getKind() != ElementKind.RECORD
+                && (innerClass || !hasNoArgConstructor(element))) {
             throw MappingRules.noArgConstructorRequired(
-                    element.getSimpleName().toString(),
-                    element.getNestingKind().isNested()
-                            && !element.getModifiers().contains(Modifier.STATIC));
+                    element.getSimpleName().toString(), innerClass);
         }
         return element;
     }

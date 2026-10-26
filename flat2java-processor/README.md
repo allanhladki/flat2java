@@ -19,8 +19,10 @@ applies the same rules, with the same messages, as the validation `flat2java-cor
 runtime, so a mapping that compiles will not fail with a `MappingException` later.
 
 > [!NOTE]
-> The one exception is a missing no-arg constructor on a top-level mapped class: the processor
-> cannot tell which classes are read. Nested classes are checked.
+> Two rules are checked only at runtime. A missing no-arg constructor on a top-level mapped class:
+> the processor cannot tell which classes are read, and an abstract class may only be the base of
+> mapped subclasses. The room for a decimal separator: it depends on the `useDecimalSeparator`
+> option, which is known only when `Flat2Java` is created.
 
 ## Setup
 
@@ -70,11 +72,11 @@ dependencies {
 | Length | `length` greater than zero. |
 | Precision | Not negative, smaller than `length`, and only on `BigDecimal`. |
 | Type | A supported scalar, a concrete nested class or record with `@FlatField` fields, or a `List`/array of those. `Object`, interfaces, abstract classes and type variables are rejected. |
-| Dates | `dateTimeFormat` present on `LocalDate`/`LocalDateTime` fields only. It must be a valid pattern with a fixed width equal to `length`. |
+| Dates | `dateTimeFormat` present on `LocalDate`/`LocalDateTime` fields only. It must be a valid pattern with a fixed width equal to `length`, and keep the century (no `yy`). |
 | Padding | Only on `String` fields. |
 | Modifiers | `@FlatField` not on `static` fields. |
 | Position | All-or-nothing across the class hierarchy, unique and contiguous from 1. |
-| Nested records | `length` equal to the sum of the nested fields, no cycles, a no-arg constructor (not required for Java records). |
+| Nested records | `length` equal to the sum of the nested fields, no cycles, a no-arg constructor (not required for Java records). Inner classes must be `static`. |
 | Lists and arrays | `occurs` set, greater than zero and only on those fields; elements that are not lists or arrays; no raw `List` or wildcard. |
 
 ## Example output

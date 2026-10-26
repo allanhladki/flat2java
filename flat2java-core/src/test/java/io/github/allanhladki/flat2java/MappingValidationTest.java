@@ -306,4 +306,30 @@ class MappingValidationTest {
                 "PositionedDerived: either every @FlatField sets position or none does; missing on"
                         + " PositionedDerived.derived");
     }
+
+    static class TwoDigitYear {
+        @FlatField(length = 6, dateTimeFormat = "yyMMdd")
+        LocalDate date;
+    }
+
+    @Test
+    void patternsWithoutTheCenturyAreRejected() {
+        assertMappingError(
+                TwoDigitYear.class,
+                "TwoDigitYear.date: dateTimeFormat 'yyMMdd' does not keep the century (as with"
+                        + " yy); use yyyy");
+    }
+
+    static class Huge {
+        @FlatField(length = 1_500_000_000)
+        String a;
+
+        @FlatField(length = 1_500_000_000)
+        String b;
+    }
+
+    @Test
+    void recordLengthMustFitAnInt() {
+        assertMappingError(Huge.class, "Huge: the record length exceeds 2147483647 characters");
+    }
 }

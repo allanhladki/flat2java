@@ -1,7 +1,6 @@
 package io.github.allanhladki.flat2java.internal;
 
 import io.github.allanhladki.flat2java.exception.DeserializationException;
-import io.github.allanhladki.flat2java.exception.MappingException;
 import io.github.allanhladki.flat2java.exception.SerializationException;
 
 import java.math.BigDecimal;
@@ -35,14 +34,8 @@ final class DecimalCodec implements FieldCodec {
         this.roundingMode = roundingMode;
         this.useSeparator = useDecimalSeparator && precision > 0;
         this.separator = separator;
-        if (useSeparator && length < precision + 2) {
-            throw new MappingException(
-                    label
-                            + ": length "
-                            + length
-                            + " cannot hold "
-                            + precision
-                            + " decimal places plus a decimal separator");
+        if (useSeparator) {
+            MappingRules.checkDecimalSeparator(label, length, precision);
         }
     }
 

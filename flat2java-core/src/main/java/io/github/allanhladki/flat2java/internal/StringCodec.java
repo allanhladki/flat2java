@@ -54,7 +54,10 @@ final class StringCodec implements FieldCodec {
                                 + " and failOnStringTruncation is true");
             }
             LOG.warn("{}: value truncated from {} to {} characters", label, text.length(), length);
-            out.append(text, 0, length);
+            // Never split a surrogate pair: drop the whole character and pad instead.
+            int end = Character.isHighSurrogate(text.charAt(length - 1)) ? length - 1 : length;
+            out.append(text, 0, end);
+            Text.appendRepeated(out, padding, length - end);
             return;
         }
         out.append(text);

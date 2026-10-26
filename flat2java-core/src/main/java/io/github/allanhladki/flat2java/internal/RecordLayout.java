@@ -23,7 +23,15 @@ public final class RecordLayout {
         this.type = type;
         this.instantiator = instantiator;
         this.columns = List.copyOf(columns);
-        this.length = columns.stream().mapToInt(c -> c.codec().length()).sum();
+        int total = 0;
+        try {
+            for (Column column : columns) {
+                total = Math.addExact(total, column.codec().length());
+            }
+        } catch (ArithmeticException e) {
+            throw MappingRules.recordTooLong(type.getSimpleName());
+        }
+        this.length = total;
     }
 
     /**

@@ -183,11 +183,14 @@ Rules applied to every value:
 - Numbers are never truncated. A value that needs more digits than `length`, or a negative value,
   fails.
 - A `String` longer than its column is truncated, with a warning in the log, unless
-  `failOnStringTruncation` is enabled. Then it fails.
+  `failOnStringTruncation` is enabled. Then it fails. Truncation never splits a character made of
+  two UTF-16 units, such as an emoji: the whole character is dropped and the column is padded.
 - `BigDecimal` values with more decimal places than `precision` fail unless a `roundingMode` other
-  than `UNNECESSARY` is configured.
-- Date patterns must have a fixed width (`dd`, not `d`). Parsing is strict: `20240231` is rejected,
-  not adjusted to February 29. Patterns use `Locale.ROOT`. `yyyy` and `uuuu` are both accepted.
+  than `UNNECESSARY` is configured. With `useDecimalSeparator`, `length` must be at least
+  `precision + 2` (one integer digit and the separator); this is checked when the layout is built.
+- Date patterns must have a fixed width (`dd`, not `d`) and keep the century: `yy` is rejected,
+  because `990501` would be read back as 2099. Parsing is strict: `20240231` is rejected, not
+  adjusted to February 29. Patterns use `Locale.ROOT`. `yyyy` and `uuuu` are both accepted.
 - Reading checks every column: numeric columns must contain digits only, so signs and spaces are
   errors.
 

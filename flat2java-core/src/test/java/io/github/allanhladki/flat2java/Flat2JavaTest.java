@@ -197,6 +197,14 @@ class Flat2JavaTest {
     @Nested
     class Strings {
 
+        @Test
+        void truncationDoesNotSplitSurrogatePairs() {
+            Short s = new Short();
+            s.value = "ab\uD83D\uDE00"; // "ab" followed by an emoji (two UTF-16 units)
+
+            assertThat(flat.write(s)).isEqualTo("ab ");
+        }
+
         static class Padded {
             @FlatField(length = 5, padding = '_')
             String code;
@@ -498,6 +506,25 @@ class Flat2JavaTest {
 
             assertThat(flat.write(p)).isEqualTo("11122");
             assertThat(flat.read("11122", Positioned.class).second).isEqualTo("22");
+        }
+
+        static class PositionedBase {
+            @FlatField(position = 2, length = 2)
+            String base;
+        }
+
+        static class PositionedDerived extends PositionedBase {
+            @FlatField(position = 1, length = 3)
+            String derived;
+        }
+
+        @Test
+        void positionsOrderTheWholeHierarchy() {
+            PositionedDerived d = new PositionedDerived();
+            d.base = "AB";
+            d.derived = "CDE";
+
+            assertThat(flat.write(d)).isEqualTo("CDEAB");
         }
     }
 

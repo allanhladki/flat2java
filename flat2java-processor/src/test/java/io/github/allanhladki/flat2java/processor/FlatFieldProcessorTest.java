@@ -382,4 +382,38 @@ class FlatFieldProcessorTest {
                                         + " List<Node> children; }"))
                 .hadErrorContaining("Cyclic nested records");
     }
+
+    @Test
+    void innerClassIsRejected() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(length = 5) Address address;\n"
+                                        + "  class Address { @FlatField(length = 5) String zip; }\n"
+                                        + "}"))
+                .hadErrorContaining(
+                        "Address: a no-arg constructor is required (inner classes must be declared"
+                                + " static)");
+    }
+
+    @Test
+    void staticNestedClassCompiles() {
+        assertThat(
+                        compile(
+                                "public class Sample {\n"
+                                        + "  @FlatField(length = 5) Address address;\n"
+                                        + "  static class Address { @FlatField(length = 5) String"
+                                        + " zip; }\n"
+                                        + "}"))
+                .succeededWithoutWarnings();
+    }
+
+    @Test
+    void twoDigitYearIsRejected() {
+        assertThat(
+                        compile(
+                                "public class Sample { @FlatField(length = 6, dateTimeFormat ="
+                                        + " \"yyMMdd\") LocalDate d; }"))
+                .hadErrorContaining("does not keep the century (as with yy); use yyyy");
+    }
 }

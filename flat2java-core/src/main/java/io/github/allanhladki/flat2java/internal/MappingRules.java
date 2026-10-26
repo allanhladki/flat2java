@@ -245,6 +245,38 @@ public final class MappingRules {
     }
 
     /**
+     * Validates a {@code BigDecimal} field written with an explicit decimal separator. Depends on
+     * the {@code useDecimalSeparator} option, so it is checked when the layout is built, not by the
+     * annotation processor.
+     *
+     * @param label the field label
+     * @param length the declared length
+     * @param precision the declared precision
+     */
+    public static void checkDecimalSeparator(String label, int length, int precision) {
+        if (precision > 0 && length < precision + 2) {
+            throw new MappingException(
+                    label
+                            + ": length "
+                            + length
+                            + " cannot hold "
+                            + precision
+                            + " decimal places plus a decimal separator");
+        }
+    }
+
+    /**
+     * Returns the error for a record whose total length does not fit an {@code int}.
+     *
+     * @param typeName simple name of the mapped class
+     * @return the exception to throw
+     */
+    public static MappingException recordTooLong(String typeName) {
+        return new MappingException(
+                typeName + ": the record length exceeds " + Integer.MAX_VALUE + " characters");
+    }
+
+    /**
      * Validates the attributes of a nested record field.
      *
      * @param label the field label
@@ -422,6 +454,18 @@ public final class MappingRules {
                             + ": "
                             + e.getMessage(),
                     e);
+        }
+        String centuryEarlier =
+                formatter.format(
+                        dateOnly
+                                ? SAMPLE_A.minusYears(100).toLocalDate()
+                                : SAMPLE_A.minusYears(100));
+        if (centuryEarlier.equals(a)) {
+            throw new MappingException(
+                    label
+                            + ": dateTimeFormat '"
+                            + pattern
+                            + "' does not keep the century (as with yy); use yyyy");
         }
         if (a.length() != b.length()) {
             throw new MappingException(

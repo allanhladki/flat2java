@@ -15,9 +15,9 @@ import java.lang.annotation.Target;
  * record), and a {@code List} or array of one of those types with {@link #occurs()} set. See the
  * project README for the encoding of each type.
  *
- * <p>Fields are laid out superclass first. Within that order they follow {@link #position()} when
- * it is set, or declaration order otherwise. On a Java record, annotate the record components;
- * their declaration order is the component order.
+ * <p>Without {@link #position()}, fields are laid out in declaration order, superclass first. When
+ * positions are set, they order every field of the class hierarchy, superclass fields included. On
+ * a Java record, annotate the record components; their declaration order is the component order.
  */
 @Documented
 @Target(ElementType.FIELD)
@@ -58,7 +58,8 @@ public @interface FlatField {
     int occurs() default 0;
 
     /**
-     * Number of decimal places of a {@code BigDecimal} field. Not allowed on other types.
+     * Number of decimal places of a {@code BigDecimal} field. Not allowed on other types. With the
+     * {@code useDecimalSeparator} option, {@link #length()} must be at least {@code precision + 2}.
      *
      * @return the number of decimal places, smaller than {@link #length()}
      */
@@ -67,7 +68,8 @@ public @interface FlatField {
     /**
      * {@link java.time.format.DateTimeFormatter} pattern of a {@code LocalDate} or {@code
      * LocalDateTime} field. Required for those types and not allowed on others. The pattern must
-     * produce output of exactly {@link #length()} characters for every date.
+     * produce output of exactly {@link #length()} characters for every date and keep the century,
+     * so {@code yy} is rejected.
      *
      * @return the date/time pattern
      */
