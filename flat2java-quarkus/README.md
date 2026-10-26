@@ -57,6 +57,9 @@ public class PaymentFileService {
 }
 ```
 
+A complete Quarkus application that uses this module is in
+[flat2java-quarkus-demo](https://github.com/allanhladki/flat2java-quarkus-demo).
+
 ## Properties
 
 `application.properties`, with the default values:

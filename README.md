@@ -357,6 +357,16 @@ DeserializationException: Payment.amount (columns 19-27): expected digits only
 Classes in the `io.github.allanhladki.flat2java.internal` package are not part of the API and may
 change in any release.
 
+### Demo applications
+
+Two applications show the library in a running REST service, with the same endpoints, samples and
+tests: `/read` turns a record into JSON, `/write` does the reverse, and `/file` reads a file.
+
+| Repository | Framework | Module used |
+|---|---|---|
+| [flat2java-spring-demo](https://github.com/allanhladki/flat2java-spring-demo) | Spring Boot 3.5 | `flat2java-spring` |
+| [flat2java-quarkus-demo](https://github.com/allanhladki/flat2java-quarkus-demo) | Quarkus 3.40 LTS | `flat2java-quarkus` |
+
 ## Building from source
 
 ```bash
