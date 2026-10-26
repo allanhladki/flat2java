@@ -11,9 +11,7 @@
 
     <modules>
         <module>flat2java-core</module>
-        <module>flat2java-processor</module>
-        <module>flat2java-spring</module>
-        <module>flat2java-quarkus</module>
+        <!-- Re-enabled one by one while they are migrated to the new core API. -->
     </modules>
 
     <properties>

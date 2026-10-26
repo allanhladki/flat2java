@@ -1,73 +1,69 @@
 package io.github.allanhladki.flat2java.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to mark fields that should be mapped from flat file data. This annotation is used to
- * define the length and format of fields in a flat file record.
+ * Maps a field to a fixed-width column of a flat record.
+ *
+ * <p>Supported field types are {@code String}, {@code int}/{@code Integer}, {@code long}/{@code
+ * Long}, {@code BigInteger}, {@code BigDecimal}, {@code LocalDate}, {@code LocalDateTime}, and any
+ * concrete class whose own fields are annotated with {@code @FlatField} (a nested record). See the
+ * project README for the encoding of each type.
+ *
+ * <p>Fields are laid out superclass first. Within that order they follow {@link #position()} when
+ * it is set, or declaration order otherwise.
  */
+@Documented
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FlatField {
 
-    /** Default values for annotation attributes. */
-    final class Defaults {
-        /** Default name value (empty string) */
-        public static final String NAME = "";
-
-        /** Default precision value */
-        public static final int PRECISION = 0;
-
-        /** Default date/time format value (empty string) */
-        public static final String DATE_TIME_FORMAT = "";
-
-        /** Default padding character (space) */
-        public static final char PADDING = ' ';
-
-        /** Private constructor to prevent instantiation */
-        private Defaults() {}
-    }
-
     /**
-     * The name of the field.
+     * One-based position of the field in the record. The default {@code 0} means "not set", in
+     * which case declaration order is used.
      *
-     * @return the name
+     * <p>Either every annotated field of a class hierarchy sets a position or none does. Positions
+     * must be unique and contiguous, starting at 1. Declaration order is what the JVM reports
+     * through reflection; it matches the source order on mainstream JVMs, but the Java
+     * specification does not guarantee it. Set positions when the layout must not depend on it.
+     *
+     * @return the position, or {@code 0} when not set
      */
-    String name() default Defaults.NAME;
+    int position() default 0;
 
     /**
-     * The length of the field in the flat file record.
+     * Width of the field in characters. For a nested record it must equal the sum of the lengths of
+     * the nested type's fields.
      *
-     * @return the field length
+     * @return the field width, greater than zero
      */
     int length();
 
     /**
-     * The precision for decimal numbers (number of decimal places). Only used for BigDecimal
-     * fields.
+     * Number of decimal places of a {@code BigDecimal} field. Not allowed on other types.
      *
-     * @return the precision
+     * @return the number of decimal places, smaller than {@link #length()}
      */
-    int precision() default Defaults.PRECISION;
+    int precision() default 0;
 
     /**
-     * The date format pattern to use when parsing date fields. Uses the standard Java date format
-     * patterns. Example: "yyyyMMdd" for dates like "20240315"
+     * {@link java.time.format.DateTimeFormatter} pattern of a {@code LocalDate} or {@code
+     * LocalDateTime} field. Required for those types and not allowed on others. The pattern must
+     * produce output of exactly {@link #length()} characters for every date.
      *
-     * @return the date format pattern
+     * @return the date/time pattern
      */
-    String dateTimeFormat() default Defaults.DATE_TIME_FORMAT;
+    String dateTimeFormat() default "";
 
     /**
-     * Optional padding character used in the field.
+     * Character used to fill a {@code String} field on the right. Not allowed on other types:
+     * numeric fields are always zero-filled on the left.
      *
-     * <p><strong>Note:</strong> For numeric fields, this setting is ignored - numeric fields are
-     * always padded with zeros ('0') for consistency and reliability.
-     *
-     * @return the padding character, default is space
+     * @return the padding character
      */
-    char padding() default Defaults.PADDING;
+    char padding() default ' ';
 }

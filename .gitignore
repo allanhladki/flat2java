@@ -31,3 +31,6 @@ CLAUDE.md
 docs/planning/
 PROJECT_REVIEW.md
 TODO.md
+
+# jqwik failure database
+.jqwik-database

@@ -1,13 +1,12 @@
 package io.github.allanhladki.flat2java.exception;
 
-/**
- * Exception thrown when deserialization operations fail. This includes errors during
- * string-to-object conversion and parsing.
- */
+/** Thrown when a flat record cannot be read into an object. */
 public class DeserializationException extends Flat2JavaException {
 
+    private static final long serialVersionUID = 1L;
+
     /**
-     * Constructs a new DeserializationException with the specified detail message.
+     * Creates an exception with a message.
      *
      * @param message the detail message
      */
@@ -16,21 +15,12 @@ public class DeserializationException extends Flat2JavaException {
     }
 
     /**
-     * Constructs a new DeserializationException with the specified detail message and cause.
+     * Creates an exception with a message and a cause.
      *
      * @param message the detail message
-     * @param cause the cause
+     * @param cause the underlying cause
      */
     public DeserializationException(String message, Throwable cause) {
         super(message, cause);
-    }
-
-    /**
-     * Constructs a new DeserializationException with the specified cause.
-     *
-     * @param cause the cause
-     */
-    public DeserializationException(Throwable cause) {
-        super(cause);
     }
 }

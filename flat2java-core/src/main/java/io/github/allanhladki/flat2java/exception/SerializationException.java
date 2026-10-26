@@ -1,13 +1,12 @@
 package io.github.allanhladki.flat2java.exception;
 
-/**
- * Exception thrown when serialization operations fail. This includes errors during object-to-string
- * conversion and formatting.
- */
+/** Thrown when an object cannot be written as a flat record. */
 public class SerializationException extends Flat2JavaException {
 
+    private static final long serialVersionUID = 1L;
+
     /**
-     * Constructs a new SerializationException with the specified detail message.
+     * Creates an exception with a message.
      *
      * @param message the detail message
      */
@@ -16,21 +15,12 @@ public class SerializationException extends Flat2JavaException {
     }
 
     /**
-     * Constructs a new SerializationException with the specified detail message and cause.
+     * Creates an exception with a message and a cause.
      *
      * @param message the detail message
-     * @param cause the cause
+     * @param cause the underlying cause
      */
     public SerializationException(String message, Throwable cause) {
         super(message, cause);
-    }
-
-    /**
-     * Constructs a new SerializationException with the specified cause.
-     *
-     * @param cause the cause
-     */
-    public SerializationException(Throwable cause) {
-        super(cause);
     }
 }
