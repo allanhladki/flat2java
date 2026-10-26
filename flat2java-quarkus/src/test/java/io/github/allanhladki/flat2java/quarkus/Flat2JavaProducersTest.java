@@ -1,73 +1,62 @@
 package io.github.allanhladki.flat2java.quarkus;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.allanhladki.flat2java.interfaces.*;
+import io.github.allanhladki.flat2java.Flat2JavaOptions;
+import io.smallrye.config.PropertiesConfigSource;
+import io.smallrye.config.SmallRyeConfigBuilder;
 
-import org.junit.jupiter.api.DisplayName;
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.Test;
 
-/** Test class for Flat2JavaProducers to ensure CDI beans are properly created. */
-@DisplayName("Flat2JavaProducers")
+import java.math.RoundingMode;
+import java.util.Map;
+
 class Flat2JavaProducersTest {
 
-    @Test
-    @DisplayName("Should create field metadata interface bean")
-    void testFieldMetadataInterfaceBean() {
-        Flat2JavaProducers producers = new Flat2JavaProducers();
-        FieldMetadataInterface bean = producers.fieldMetadataInterface();
-
-        assertNotNull(bean);
-        assertTrue(bean instanceof FieldMetadataInterface);
+    static Config config(Map<String, String> properties) {
+        return new SmallRyeConfigBuilder()
+                .withSources(new PropertiesConfigSource(properties, "test", 100))
+                .build();
     }
 
     @Test
-    @DisplayName("Should create field serialization interface bean")
-    void testFieldSerializationInterfaceBean() {
-        Flat2JavaProducers producers = new Flat2JavaProducers();
-        FieldSerializationInterface bean = producers.fieldSerializationInterface();
-
-        assertNotNull(bean);
-        assertTrue(bean instanceof FieldSerializationInterface);
+    void emptyConfigurationGivesDefaults() {
+        assertThat(Flat2JavaProducers.toOptions(config(Map.of())))
+                .isEqualTo(Flat2JavaOptions.defaults());
     }
 
     @Test
-    @DisplayName("Should create object serialization interface bean")
-    void testObjectSerializationInterfaceBean() {
-        Flat2JavaProducers producers = new Flat2JavaProducers();
-        ObjectSerializationInterface bean = producers.objectSerializationInterface();
+    void readsEveryProperty() {
+        Config config =
+                config(
+                        Map.of(
+                                "flat2java.allow-null-strings", "false",
+                                "flat2java.null-value-padding", "*",
+                                "flat2java.fail-on-string-truncation", "true",
+                                "flat2java.decimal.use-separator", "true",
+                                "flat2java.decimal.separator", ",",
+                                "flat2java.decimal.rounding-mode", "half-up"));
 
-        assertNotNull(bean);
-        assertTrue(bean instanceof ObjectSerializationInterface);
+        assertThat(Flat2JavaProducers.toOptions(config))
+                .isEqualTo(
+                        Flat2JavaOptions.builder()
+                                .allowNullStrings(false)
+                                .nullValuePadding('*')
+                                .failOnStringTruncation(true)
+                                .useDecimalSeparator(true)
+                                .decimalSeparator(',')
+                                .roundingMode(RoundingMode.HALF_UP)
+                                .build());
     }
 
     @Test
-    @DisplayName("Should create field deserialization interface bean")
-    void testFieldDeserializationInterfaceBean() {
-        Flat2JavaProducers producers = new Flat2JavaProducers();
-        FieldDeserializationInterface bean = producers.fieldDeserializationInterface();
+    void multiCharacterValuesAreRejected() {
+        Config config = config(Map.of("flat2java.decimal.separator", ",,"));
 
-        assertNotNull(bean);
-        assertTrue(bean instanceof FieldDeserializationInterface);
-    }
-
-    @Test
-    @DisplayName("Should create object deserialization interface bean")
-    void testObjectDeserializationInterfaceBean() {
-        Flat2JavaProducers producers = new Flat2JavaProducers();
-        ObjectDeserializationInterface bean = producers.objectDeserializationInterface();
-
-        assertNotNull(bean);
-        assertTrue(bean instanceof ObjectDeserializationInterface);
-    }
-
-    @Test
-    @DisplayName("Should create flat2java factory bean")
-    void testFlat2JavaFactoryBean() {
-        Flat2JavaProducers producers = new Flat2JavaProducers();
-        var factory = producers.flat2JavaFactory();
-
-        assertNotNull(factory);
-        assertTrue(factory instanceof io.github.allanhladki.flat2java.factory.Flat2JavaFactory);
+        assertThatThrownBy(() -> Flat2JavaProducers.toOptions(config))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("flat2java.decimal.separator must be a single character, got ',,'");
     }
 }

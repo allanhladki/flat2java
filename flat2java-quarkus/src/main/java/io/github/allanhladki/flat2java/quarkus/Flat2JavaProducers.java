@@ -1,122 +1,84 @@
 package io.github.allanhladki.flat2java.quarkus;
 
-import io.github.allanhladki.flat2java.factory.Flat2JavaFactory;
-import io.github.allanhladki.flat2java.interfaces.*;
+import io.github.allanhladki.flat2java.Flat2Java;
+import io.github.allanhladki.flat2java.Flat2JavaOptions;
+import io.quarkus.arc.DefaultBean;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
-import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Singleton;
 
+import org.eclipse.microprofile.config.Config;
+
+import java.math.RoundingMode;
+import java.util.Locale;
+
 /**
- * CDI producers for Flat2Java services in Quarkus applications.
+ * CDI producers of {@link Flat2Java} and {@link Flat2JavaOptions}, configured from the {@code
+ * flat2java.*} MicroProfile Config properties (the same keys as the Spring module).
  *
- * <p>This class provides CDI beans for all Flat2Java interfaces, making them available for
- * dependency injection in Quarkus applications. The services are created using the Flat2JavaFactory
- * and are configured with exception translation.
- *
- * <p>The following beans are produced:
- *
- * <ul>
- *   <li>{@link FieldMetadataInterface} - Field metadata extraction service
- *   <li>{@link FieldSerializationInterface} - Field serialization service
- *   <li>{@link ObjectSerializationInterface} - Object serialization service
- *   <li>{@link FieldDeserializationInterface} - Field deserialization service
- *   <li>{@link ObjectDeserializationInterface} - Object deserialization service
- * </ul>
- *
- * <p>Usage example:
- *
- * <pre>
- * @ApplicationScoped
- * public class MyService {
- *     @Inject
- *     private ObjectSerializationInterface serializer;
- *
- *     @Inject
- *     private ObjectDeserializationInterface deserializer;
- * }
- * </pre>
- *
- * @since 0.0.1-rc2
+ * <p>Both beans are {@link DefaultBean}s: declaring a producer of either type in the application
+ * replaces them.
  */
 @ApplicationScoped
 public class Flat2JavaProducers {
 
+    static final String PREFIX = "flat2java.";
+
     /**
-     * Produces the Flat2Java factory as a singleton bean.
+     * Options read from the application configuration.
      *
-     * @return configured Flat2Java factory
+     * @param config the application configuration
+     * @return the options
      */
     @Produces
     @Singleton
-    @Typed(Flat2JavaFactory.class)
-    public Flat2JavaFactory flat2JavaFactory() {
-        return new Flat2JavaFactory();
+    @DefaultBean
+    public Flat2JavaOptions flat2JavaOptions(Config config) {
+        return toOptions(config);
     }
 
     /**
-     * Produces the field metadata interface bean.
+     * The shared, thread-safe {@link Flat2Java} instance.
      *
-     * @return configured field metadata interface
+     * @param options the options
+     * @return the instance
      */
     @Produces
-    @ApplicationScoped
-    @Typed(FieldMetadataInterface.class)
-    public FieldMetadataInterface fieldMetadataInterface() {
-        Flat2JavaFactory factory = new Flat2JavaFactory();
-        return factory.getFieldMetadataInterface();
+    @Singleton
+    @DefaultBean
+    public Flat2Java flat2Java(Flat2JavaOptions options) {
+        return Flat2Java.create(options);
     }
 
-    /**
-     * Produces the field serialization interface bean.
-     *
-     * @return configured field serialization interface
-     */
-    @Produces
-    @ApplicationScoped
-    @Typed(FieldSerializationInterface.class)
-    public FieldSerializationInterface fieldSerializationInterface() {
-        Flat2JavaFactory factory = new Flat2JavaFactory();
-        return factory.getFieldSerializationInterface();
+    static Flat2JavaOptions toOptions(Config config) {
+        Flat2JavaOptions.Builder builder = Flat2JavaOptions.builder();
+        config.getOptionalValue(PREFIX + "allow-null-strings", Boolean.class)
+                .ifPresent(builder::allowNullStrings);
+        config.getOptionalValue(PREFIX + "null-value-padding", String.class)
+                .map(value -> character("null-value-padding", value))
+                .ifPresent(builder::nullValuePadding);
+        config.getOptionalValue(PREFIX + "fail-on-string-truncation", Boolean.class)
+                .ifPresent(builder::failOnStringTruncation);
+        config.getOptionalValue(PREFIX + "decimal.use-separator", Boolean.class)
+                .ifPresent(builder::useDecimalSeparator);
+        config.getOptionalValue(PREFIX + "decimal.separator", String.class)
+                .map(value -> character("decimal.separator", value))
+                .ifPresent(builder::decimalSeparator);
+        config.getOptionalValue(PREFIX + "decimal.rounding-mode", String.class)
+                .map(
+                        value ->
+                                RoundingMode.valueOf(
+                                        value.trim().replace('-', '_').toUpperCase(Locale.ROOT)))
+                .ifPresent(builder::roundingMode);
+        return builder.build();
     }
 
-    /**
-     * Produces the object serialization interface bean.
-     *
-     * @return configured object serialization interface
-     */
-    @Produces
-    @ApplicationScoped
-    @Typed(ObjectSerializationInterface.class)
-    public ObjectSerializationInterface objectSerializationInterface() {
-        Flat2JavaFactory factory = new Flat2JavaFactory();
-        return factory.getObjectSerializationInterface();
-    }
-
-    /**
-     * Produces the field deserialization interface bean.
-     *
-     * @return configured field deserialization interface
-     */
-    @Produces
-    @ApplicationScoped
-    @Typed(FieldDeserializationInterface.class)
-    public FieldDeserializationInterface fieldDeserializationInterface() {
-        Flat2JavaFactory factory = new Flat2JavaFactory();
-        return factory.getFieldDeserializationInterface();
-    }
-
-    /**
-     * Produces the object deserialization interface bean.
-     *
-     * @return configured object deserialization interface
-     */
-    @Produces
-    @ApplicationScoped
-    @Typed(ObjectDeserializationInterface.class)
-    public ObjectDeserializationInterface objectDeserializationInterface() {
-        Flat2JavaFactory factory = new Flat2JavaFactory();
-        return factory.getObjectDeserializationInterface();
+    private static char character(String key, String value) {
+        if (value.length() != 1) {
+            throw new IllegalArgumentException(
+                    PREFIX + key + " must be a single character, got '" + value + "'");
+        }
+        return value.charAt(0);
     }
 }
