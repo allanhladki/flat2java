@@ -4,7 +4,7 @@
  */
 package test;
 
-import com.github.allanhladki.flat2java.markers.FlatField;
+import io.github.allanhladki.flat2java.annotation.FlatField;
 import java.time.LocalDate;
 
 public class DateTimeFormatLengthMismatch {

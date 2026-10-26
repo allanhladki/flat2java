@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.allanhladki.flat2java" level="TRACE" additivity="false">
+    <logger name="io.github.allanhladki.flat2java" level="TRACE" additivity="false">
         <appender-ref ref="CONSOLE" />
     </logger>
 

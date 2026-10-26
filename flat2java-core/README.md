@@ -306,7 +306,7 @@ export FLAT2JAVA_ALLOW_NULL_STRINGS="true"
 
 ```java
 // Enable debug logging for troubleshooting
-logging.level.com.github.allanhladki.flat2java=DEBUG
+logging.level.io.github.allanhladki.flat2java=DEBUG
 
 // Key debug points:
 // - Field metadata extraction

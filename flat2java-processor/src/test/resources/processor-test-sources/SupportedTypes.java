@@ -4,7 +4,7 @@
  */
 package test;
 
-import com.github.allanhladki.flat2java.markers.FlatField;
+import io.github.allanhladki.flat2java.annotation.FlatField;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.time.LocalDate;

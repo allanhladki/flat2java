@@ -28,9 +28,9 @@ Flat2Java provides robust functionality to serialize Java objects into fixed-len
 ### Basic Usage
 
 ```java
-import com.github.allanhladki.flat2java.markers.FlatField;
-import com.github.allanhladki.flat2java.serializer.ObjectSerializer;
-import com.github.allanhladki.flat2java.deserializer.ObjectDeserializer;
+import io.github.allanhladki.flat2java.annotation.FlatField;
+import io.github.allanhladki.flat2java.serializer.ObjectSerializer;
+import io.github.allanhladki.flat2java.deserializer.ObjectDeserializer;
 
 public class MyRecord {
     @FlatField(length = 10)
@@ -54,9 +54,9 @@ MyRecord deserializedRecord = ObjectDeserializer.deserialize(flatFileString, MyR
 ### Interface-Based Approach (Recommended)
 
 ```java
-import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
-import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
-import com.github.allanhladki.flat2java.interfaces.ObjectDeserializationInterface;
+import io.github.allanhladki.flat2java.factory.Flat2JavaFactory;
+import io.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
+import io.github.allanhladki.flat2java.interfaces.ObjectDeserializationInterface;
 
 Flat2JavaFactory factory = new Flat2JavaFactory();
 ObjectSerializationInterface objectSerializer = factory.getObjectSerializationInterface();
@@ -71,7 +71,7 @@ MyRecord deserializedRecord = objectDeserializer.deserialize(flatFileString, MyR
 ```java
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.github.allanhladki.flat2java.interfaces.*;
+import io.github.allanhladki.flat2java.interfaces.*;
 
 @Service
 public class FlatFileService {
@@ -120,7 +120,7 @@ public class Flat2JavaConfig {
 ```java
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import com.github.allanhladki.flat2java.interfaces.*;
+import io.github.allanhladki.flat2java.interfaces.*;
 
 @ApplicationScoped
 public class FlatFileService {
@@ -275,7 +275,7 @@ export FLAT2JAVA_THROW_ON_STRING_TRUNCATION="true"
 ### Programmatic Configuration
 
 ```java
-import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
+import io.github.allanhladki.flat2java.config.Flat2JavaConfig;
 
 // Configure programmatically
 Flat2JavaConfig config = new Flat2JavaConfig();
@@ -292,7 +292,7 @@ config.setBigDecimalUseDecimalSeparator(false);
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-core</artifactId>
     <version>0.0.1-rc2</version>
 </dependency>
@@ -304,7 +304,7 @@ config.setBigDecimalUseDecimalSeparator(false);
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-spring</artifactId>
     <version>0.0.1-rc2</version>
 </dependency>
@@ -314,7 +314,7 @@ config.setBigDecimalUseDecimalSeparator(false);
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-quarkus</artifactId>
     <version>0.0.1-rc2</version>
 </dependency>
@@ -326,7 +326,7 @@ For compile-time validation:
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-processor</artifactId>
     <version>0.0.1-rc2</version>
     <scope>provided</scope>

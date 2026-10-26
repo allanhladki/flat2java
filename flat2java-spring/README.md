@@ -15,7 +15,7 @@ Spring Boot integration module for Flat2Java, providing automatic configuration 
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-spring</artifactId>
     <version>0.0.1-rc2</version>
 </dependency>
@@ -24,7 +24,7 @@ Spring Boot integration module for Flat2Java, providing automatic configuration 
 ### Gradle Dependency
 
 ```gradle
-implementation 'com.github.allanhladki:flat2java-spring:0.0.1-rc2'
+implementation 'io.github.allanhladki:flat2java-spring:0.0.1-rc2'
 ```
 
 ## ✨ Features
@@ -223,7 +223,7 @@ public class CustomFlat2JavaConfig {
 Enable debug logging to see auto-configuration details:
 
 ```properties
-logging.level.com.github.allanhladki.flat2java.spring=DEBUG
+logging.level.io.github.allanhladki.flat2java.spring=DEBUG
 logging.level.org.springframework.boot.autoconfigure=DEBUG
 ```
 

@@ -45,7 +45,7 @@ Add the following dependency to your project:
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-processor</artifactId>
     <version>0.0.1-rc2</version>
     <scope>provided</scope>
@@ -94,7 +94,7 @@ The processor works automatically with Maven when added as a dependency. For exp
     <configuration>
         <annotationProcessorPaths>
             <path>
-                <groupId>com.github.allanhladki</groupId>
+                <groupId>io.github.allanhladki</groupId>
                 <artifactId>flat2java-processor</artifactId>
                 <version>0.0.1-rc2</version>
             </path>

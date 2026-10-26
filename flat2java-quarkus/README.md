@@ -15,7 +15,7 @@ A CDI integration module for Flat2Java in Quarkus applications, providing automa
 
 ```xml
 <dependency>
-    <groupId>com.github.allanhladki</groupId>
+    <groupId>io.github.allanhladki</groupId>
     <artifactId>flat2java-quarkus</artifactId>
     <version>0.0.1-rc2</version>
 </dependency>
@@ -240,7 +240,7 @@ mvn clean package -Pnative
 ```properties
 # Native image configuration
 quarkus.native.additional-build-args=\
-    --initialize-at-build-time=com.github.allanhladki.flat2java,\
+    --initialize-at-build-time=io.github.allanhladki.flat2java,\
     --report-unsupported-elements-at-runtime
 ```
 
@@ -250,7 +250,7 @@ quarkus.native.additional-build-args=\
 Enable debug logging to see CDI bean creation:
 
 ```properties
-quarkus.log.category."com.github.allanhladki.flat2java.quarkus".level=DEBUG
+quarkus.log.category."io.github.allanhladki.flat2java.quarkus".level=DEBUG
 quarkus.log.category."io.quarkus.arc".level=DEBUG
 ```
 

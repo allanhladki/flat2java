@@ -1,3 +1,3 @@
 # Auto-configuration for Flat2Java Spring Boot integration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.github.allanhladki.flat2java.spring.Flat2JavaAutoConfiguration
+io.github.allanhladki.flat2java.spring.Flat2JavaAutoConfiguration
