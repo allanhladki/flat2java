@@ -1,7 +1,23 @@
+<div align="center">
+
 # flat2java-spring
 
-Spring Boot auto-configuration that registers a `Flat2Java` bean configured from `flat2java.*`
-properties. Requires Spring Boot 3. The module is built against 3.3.
+**Spring Boot auto-configuration for flat2java.**
+
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.allanhladki.flat2java/flat2java-spring?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.allanhladki.flat2java/flat2java-spring)
+![Java 17+](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3-6DB33F?logo=springboot&logoColor=white)
+
+[Installation](#installation) · [Usage](#usage) · [Properties](#properties) · [Replacing the beans](#replacing-the-beans) · [Project README](../README.md)
+
+</div>
+
+---
+
+Registers a `Flat2Java` bean configured from `flat2java.*` properties. Requires Spring Boot 3; the
+module is built against 3.3.
+
+## Installation
 
 ```xml
 <dependency>
@@ -11,7 +27,20 @@ properties. Requires Spring Boot 3. The module is built against 3.3.
 </dependency>
 ```
 
+<details>
+<summary>Gradle</summary>
+
+```kotlin
+dependencies {
+    implementation("io.github.allanhladki.flat2java:flat2java-spring:0.1.0")
+}
+```
+
+</details>
+
 ## Usage
+
+Inject `Flat2Java` like any other bean:
 
 ```java
 @Service
@@ -31,6 +60,13 @@ public class PaymentFileService {
 
 ## Properties
 
+The values shown are the defaults.
+
+<table>
+<tr><th><code>application.yml</code></th><th><code>application.properties</code></th></tr>
+<tr>
+<td>
+
 ```yaml
 flat2java:
   allow-null-strings: true
@@ -42,14 +78,36 @@ flat2java:
     rounding-mode: unnecessary
 ```
 
-The values shown are the defaults. Their meaning is described in the
-[project README](../README.md#configuration). Spring's relaxed binding also accepts the
-environment variables of the same name, such as `FLAT2JAVA_DECIMAL_SEPARATOR`.
+</td>
+<td>
+
+```properties
+flat2java.allow-null-strings=true
+# flat2java.null-value-padding defaults to a space
+flat2java.fail-on-string-truncation=false
+flat2java.decimal.use-separator=false
+flat2java.decimal.separator=.
+flat2java.decimal.rounding-mode=unnecessary
+```
+
+</td>
+</tr>
+</table>
+
+The meaning of each property is described in the [project README](../README.md#configuration).
+
+> [!TIP]
+> Spring's relaxed binding also accepts environment variables of the same name, such as
+> `FLAT2JAVA_DECIMAL_SEPARATOR`.
 
 ## Replacing the beans
 
-The auto-configuration defines two beans, `Flat2JavaOptions` and `Flat2Java`, and backs off when
-the application defines either one:
+The auto-configuration defines two beans and backs off when the application defines either one:
+
+| Bean | Condition |
+|---|---|
+| `Flat2JavaOptions` | `@ConditionalOnMissingBean`, built from the properties |
+| `Flat2Java` | `@ConditionalOnMissingBean`, built from the `Flat2JavaOptions` bean |
 
 ```java
 @Bean

@@ -10,6 +10,8 @@ Initial release. Requires Java 17.
 
 ### Added
 
+**Core (`flat2java-core`)**
+
 - `Flat2Java`, an immutable and thread-safe entry point with `write`, `read` and `recordLength`.
   The mapping of each class is validated on first use and cached per instance.
 - `@FlatField` to map a field to a fixed-width column, with `length`, `position`, `precision`,
@@ -28,10 +30,18 @@ Initial release. Requires Java 17.
 - Unchecked exceptions under `Flat2JavaException`: `MappingException`, `SerializationException` and
   `DeserializationException`. Read errors give the column range of the failing field, and no
   message includes field values.
-- `flat2java-processor`: an annotation processor that reports invalid mappings at compile time
-  with the same rules and messages as the runtime.
-- `flat2java-spring`: Spring Boot 3 auto-configuration of a `Flat2Java` bean from `flat2java.*`
+
+**Annotation processor (`flat2java-processor`)**
+
+- Reports invalid mappings at compile time with the same rules and messages as the runtime.
+
+**Spring (`flat2java-spring`)**
+
+- Spring Boot 3 auto-configuration of `Flat2JavaOptions` and `Flat2Java` beans from `flat2java.*`
   properties.
-- `flat2java-quarkus`: a CDI producer of a `Flat2Java` bean configured from MicroProfile Config.
+
+**Quarkus (`flat2java-quarkus`)**
+
+- CDI producers of `Flat2JavaOptions` and `Flat2Java` beans configured from MicroProfile Config.
 
 [0.1.0]: https://github.com/allanhladki/flat2java/releases/tag/v0.1.0

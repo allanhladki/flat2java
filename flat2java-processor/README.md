@@ -1,18 +1,36 @@
+<div align="center">
+
 # flat2java-processor
 
-Annotation processor that reports invalid `@FlatField` declarations as compilation errors. It
+**Compile-time validation of `@FlatField` mappings.**
+
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.allanhladki.flat2java/flat2java-processor?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.allanhladki.flat2java/flat2java-processor)
+![Java 17+](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
+![javac](https://img.shields.io/badge/javac-annotation%20processor-555555)
+
+[Setup](#setup) · [Checks](#checks) · [Example output](#example-output) · [Project README](../README.md)
+
+</div>
+
+---
+
+An annotation processor that reports invalid `@FlatField` declarations as compilation errors. It
 applies the same rules, with the same messages, as the validation `flat2java-core` performs at
-runtime, so a mapping that compiles will not fail with a `MappingException` later. The one
-exception is a missing no-arg constructor on a top-level mapped class: the processor cannot tell
-which classes are read.
+runtime, so a mapping that compiles will not fail with a `MappingException` later.
+
+> [!NOTE]
+> The one exception is a missing no-arg constructor on a top-level mapped class: the processor
+> cannot tell which classes are read. Nested classes are checked.
 
 ## Setup
 
-Register the processor on the annotation processor path. Since JDK 23, `javac` no longer runs
-processors found on the regular classpath unless `-proc:full` is set, so a plain dependency is not
-enough.
+Register the processor on the annotation processor path.
 
-Maven:
+> [!IMPORTANT]
+> Since JDK 23, `javac` no longer runs processors found on the regular classpath unless
+> `-proc:full` is set, so a plain `<dependency>` is not enough.
+
+**Maven**
 
 ```xml
 <plugin>
@@ -30,7 +48,8 @@ Maven:
 </plugin>
 ```
 
-Gradle:
+<details>
+<summary>Gradle</summary>
 
 ```kotlin
 dependencies {
@@ -38,27 +57,29 @@ dependencies {
 }
 ```
 
-If the build already declares other processors in `annotationProcessorPaths`, such as Lombok or
-MapStruct, add this one to the same list.
+</details>
+
+> [!TIP]
+> If the build already declares other processors in `annotationProcessorPaths`, such as Lombok or
+> MapStruct, add this one to the same list.
 
 ## Checks
 
-- `length` greater than zero. `precision` not negative, smaller than `length`, and only on
-  `BigDecimal`.
-- Supported field type, or a concrete nested class or record with `@FlatField` fields. `Object`, interfaces,
-  abstract classes and type variables are rejected.
-- `dateTimeFormat` present on `LocalDate`/`LocalDateTime` fields only. It must be a valid pattern
-  with a fixed width equal to `length`.
-- `padding` only on `String` fields. `@FlatField` not on `static` fields.
-- `position` all-or-nothing across the class hierarchy, unique and contiguous from 1.
-- Nested records: `length` equal to the sum of the nested fields, no cycles, a no-arg constructor
-  (not required for Java records).
-- `List` and array fields: `occurs` set and greater than zero, and only on those fields; an element
-  type that is not itself a list or array; no raw `List` or wildcard.
+| Area | Rule |
+|---|---|
+| Length | `length` greater than zero. |
+| Precision | Not negative, smaller than `length`, and only on `BigDecimal`. |
+| Type | A supported scalar, a concrete nested class or record with `@FlatField` fields, or a `List`/array of those. `Object`, interfaces, abstract classes and type variables are rejected. |
+| Dates | `dateTimeFormat` present on `LocalDate`/`LocalDateTime` fields only. It must be a valid pattern with a fixed width equal to `length`. |
+| Padding | Only on `String` fields. |
+| Modifiers | `@FlatField` not on `static` fields. |
+| Position | All-or-nothing across the class hierarchy, unique and contiguous from 1. |
+| Nested records | `length` equal to the sum of the nested fields, no cycles, a no-arg constructor (not required for Java records). |
+| Lists and arrays | `occurs` set, greater than zero and only on those fields; elements that are not lists or arrays; no raw `List` or wildcard. |
 
-Example output:
+## Example output
 
-```
+```text
 Payment.java:12: error: Payment.date: dateTimeFormat 'yyyyMMdd' produces 8 characters, but length is 10
     private LocalDate date;
                       ^

@@ -1,8 +1,10 @@
 package io.github.allanhladki.flat2java;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.allanhladki.flat2java.annotation.FlatField;
+import io.github.allanhladki.flat2java.exception.DeserializationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -177,5 +179,13 @@ class ReadmeExamplesTest {
 
         assertThat(flat.write(new Point(12, 7))).isEqualTo("00120007");
         assertThat(flat.read("00120007", Point.class)).isEqualTo(new Point(12, 7));
+    }
+
+    @Test
+    void errorMessage() {
+        assertThatThrownBy(
+                        () -> Flat2Java.create().read("P-0001    202403150000099,9", Payment.class))
+                .isInstanceOf(DeserializationException.class)
+                .hasMessage("Payment.amount (columns 19-27): expected digits only");
     }
 }

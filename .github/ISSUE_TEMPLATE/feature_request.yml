@@ -1,0 +1,22 @@
+name: Feature request
+description: A field type, record layout or integration that flat2java does not support.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: layout
+    attributes:
+      label: Record layout
+      description: The file format you need to map, for example a copybook excerpt or a field table.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed mapping
+      description: How you would like to declare it with @FlatField.
+      render: java
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Current workaround

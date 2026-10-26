@@ -7,6 +7,7 @@ on:
 
 jobs:
   verify:
+    name: verify (${{ matrix.java }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,3 +22,16 @@ jobs:
           cache: maven
       - name: Build and test
         run: mvn -B verify
+
+  release-check:
+    name: release artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - name: Build sources and Javadoc jars
+        run: mvn -B -Prelease -Dgpg.skip verify
