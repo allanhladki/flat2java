@@ -3,17 +3,19 @@ package com.github.allanhladki.flat2java.serializer;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 /** Test class for SerializationTypes utility. */
 @DisplayName("SerializationTypes Tests")
@@ -25,7 +27,8 @@ class SerializationTypesTest {
     void testIsNumericField(String fieldName, boolean expected) throws Exception {
         assertEquals(
                 expected,
-                SerializationTypes.isNumericField(TestFixtures.TestClass.class.getField(fieldName)));
+                SerializationTypes.isNumericField(
+                        TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> numericFieldTestCases() {
@@ -71,7 +74,8 @@ class SerializationTypesTest {
     void testIsDateTimeField(String fieldName, boolean expected) throws Exception {
         assertEquals(
                 expected,
-                SerializationTypes.isDateTimeField(TestFixtures.TestClass.class.getField(fieldName)));
+                SerializationTypes.isDateTimeField(
+                        TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> dateTimeFieldTestCases() {
@@ -139,7 +143,8 @@ class SerializationTypesTest {
     void testIsSupportedField(String fieldName, boolean expected) throws Exception {
         assertEquals(
                 expected,
-                SerializationTypes.isSupportedField(TestFixtures.TestClass.class.getField(fieldName)));
+                SerializationTypes.isSupportedField(
+                        TestFixtures.TestClass.class.getField(fieldName)));
     }
 
     static Stream<Arguments> supportedFieldTestCases() {
@@ -226,11 +231,13 @@ class SerializationTypesTest {
     @Test
     @DisplayName("Should prevent instantiation of SupportedTypes inner class")
     void testSupportedTypesInstantiation() {
-        // The SupportedTypes inner class doesn't have a private constructor, so it can be instantiated
+        // The SupportedTypes inner class doesn't have a private constructor, so it can be
+        // instantiated
         // This test verifies that it can be instantiated (which is the current behavior)
         assertDoesNotThrow(
                 () -> {
-                    var constructor = SerializationTypes.SupportedTypes.class.getDeclaredConstructor();
+                    var constructor =
+                            SerializationTypes.SupportedTypes.class.getDeclaredConstructor();
                     constructor.setAccessible(true);
                     constructor.newInstance();
                 });

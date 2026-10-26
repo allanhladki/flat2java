@@ -1,13 +1,13 @@
 package com.github.allanhladki.flat2java.quarkus;
 
-import com.github.allanhladki.flat2java.interfaces.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Test class for Flat2JavaProducers to ensure CDI beans are properly created.
- */
+import com.github.allanhladki.flat2java.interfaces.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/** Test class for Flat2JavaProducers to ensure CDI beans are properly created. */
 @DisplayName("Flat2JavaProducers")
 class Flat2JavaProducersTest {
 
@@ -16,7 +16,7 @@ class Flat2JavaProducersTest {
     void testFieldMetadataInterfaceBean() {
         Flat2JavaProducers producers = new Flat2JavaProducers();
         FieldMetadataInterface bean = producers.fieldMetadataInterface();
-        
+
         assertNotNull(bean);
         assertTrue(bean instanceof FieldMetadataInterface);
     }
@@ -26,7 +26,7 @@ class Flat2JavaProducersTest {
     void testFieldSerializationInterfaceBean() {
         Flat2JavaProducers producers = new Flat2JavaProducers();
         FieldSerializationInterface bean = producers.fieldSerializationInterface();
-        
+
         assertNotNull(bean);
         assertTrue(bean instanceof FieldSerializationInterface);
     }
@@ -36,7 +36,7 @@ class Flat2JavaProducersTest {
     void testObjectSerializationInterfaceBean() {
         Flat2JavaProducers producers = new Flat2JavaProducers();
         ObjectSerializationInterface bean = producers.objectSerializationInterface();
-        
+
         assertNotNull(bean);
         assertTrue(bean instanceof ObjectSerializationInterface);
     }
@@ -46,7 +46,7 @@ class Flat2JavaProducersTest {
     void testFieldDeserializationInterfaceBean() {
         Flat2JavaProducers producers = new Flat2JavaProducers();
         FieldDeserializationInterface bean = producers.fieldDeserializationInterface();
-        
+
         assertNotNull(bean);
         assertTrue(bean instanceof FieldDeserializationInterface);
     }
@@ -56,7 +56,7 @@ class Flat2JavaProducersTest {
     void testObjectDeserializationInterfaceBean() {
         Flat2JavaProducers producers = new Flat2JavaProducers();
         ObjectDeserializationInterface bean = producers.objectDeserializationInterface();
-        
+
         assertNotNull(bean);
         assertTrue(bean instanceof ObjectDeserializationInterface);
     }
@@ -66,7 +66,7 @@ class Flat2JavaProducersTest {
     void testFlat2JavaFactoryBean() {
         Flat2JavaProducers producers = new Flat2JavaProducers();
         var factory = producers.flat2JavaFactory();
-        
+
         assertNotNull(factory);
         assertTrue(factory instanceof com.github.allanhladki.flat2java.factory.Flat2JavaFactory);
     }

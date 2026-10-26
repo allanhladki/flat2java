@@ -8,12 +8,14 @@ import com.github.allanhladki.flat2java.fixtures.TestFixtures.NumericRecord;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures.SubRecord;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures.TestRecord;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures.ZeroValueRecord;
-import java.math.BigDecimal;
-import java.math.BigInteger;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ObjectDeserializer Tests")
@@ -91,7 +93,8 @@ class ObjectDeserializerTest {
 
         // then
         assertNotNull(parsed, "Parsed record should not be null");
-        assertEquals(123, parsed.zeroInteger.intValue(), "Integer field should be parsed correctly");
+        assertEquals(
+                123, parsed.zeroInteger.intValue(), "Integer field should be parsed correctly");
         assertEquals(42L, parsed.zeroLong.longValue(), "Long field should be parsed correctly");
         assertEquals(BigInteger.ZERO, parsed.zeroBigInteger, "BigInteger field should be zero");
         assertEquals(
@@ -125,7 +128,8 @@ class ObjectDeserializerTest {
     @DisplayName("Should deserialize with inheritance enabled")
     void shouldDeserializeWithInheritanceEnabled() {
         // given
-        // SubRecord with inheritance: superField1(5) + superField2(5) + subField1(5) + subField2(5) =
+        // SubRecord with inheritance: superField1(5) + superField2(5) + subField1(5) + subField2(5)
+        // =
         // 20 characters
         // Each field is exactly 5 characters, so we need exactly 20 characters total
         // "super" (5) + "super" (5) + "sub1 " (5) + "sub2 " (5) = 20 characters
@@ -156,8 +160,10 @@ class ObjectDeserializerTest {
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
-        assertNull(parsed.getSuperField1(), "Super field 1 should be null when inheritance disabled");
-        assertNull(parsed.getSuperField2(), "Super field 2 should be null when inheritance disabled");
+        assertNull(
+                parsed.getSuperField1(), "Super field 1 should be null when inheritance disabled");
+        assertNull(
+                parsed.getSuperField2(), "Super field 2 should be null when inheritance disabled");
         assertEquals("sub1", parsed.getSubField1(), "Sub field 1 should be preserved");
         assertEquals("sub2", parsed.getSubField2(), "Sub field 2 should be preserved");
     }
@@ -169,7 +175,8 @@ class ObjectDeserializerTest {
     void shouldThrowNullPointerExceptionWhenFlatStringIsNull() {
         // when/then
         assertThrows(
-                NullPointerException.class, () -> ObjectDeserializer.deserialize(null, TestRecord.class));
+                NullPointerException.class,
+                () -> ObjectDeserializer.deserialize(null, TestRecord.class));
         assertThrows(
                 NullPointerException.class,
                 () -> ObjectDeserializer.deserialize(null, TestRecord.class, true));
@@ -182,11 +189,14 @@ class ObjectDeserializerTest {
     @DisplayName("Should throw NullPointerException when class is null")
     void shouldThrowNullPointerExceptionWhenClassIsNull() {
         // when/then
-        assertThrows(NullPointerException.class, () -> ObjectDeserializer.deserialize("test", null));
         assertThrows(
-                NullPointerException.class, () -> ObjectDeserializer.deserialize("test", null, true));
+                NullPointerException.class, () -> ObjectDeserializer.deserialize("test", null));
         assertThrows(
-                NullPointerException.class, () -> ObjectDeserializer.deserialize("test", null, false));
+                NullPointerException.class,
+                () -> ObjectDeserializer.deserialize("test", null, true));
+        assertThrows(
+                NullPointerException.class,
+                () -> ObjectDeserializer.deserialize("test", null, false));
     }
 
     @Test
@@ -235,7 +245,8 @@ class ObjectDeserializerTest {
 
         // when/then
         assertThrows(
-                IllegalArgumentException.class, () -> ObjectDeserializer.deserialize(flat, noNoArgClass));
+                IllegalArgumentException.class,
+                () -> ObjectDeserializer.deserialize(flat, noNoArgClass));
     }
 
     @Test
@@ -253,7 +264,8 @@ class ObjectDeserializerTest {
         // when the reflection tries to set the field value, because the deserializer validates the
         // class has a no-arg constructor first
         assertThrows(
-                IllegalArgumentException.class, () -> ObjectDeserializer.deserialize(flat, primitiveClass));
+                IllegalArgumentException.class,
+                () -> ObjectDeserializer.deserialize(flat, primitiveClass));
     }
 
     // ==================== EDGE CASE TESTS ====================

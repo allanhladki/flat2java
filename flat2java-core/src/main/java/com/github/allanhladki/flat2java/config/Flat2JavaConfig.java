@@ -1,8 +1,9 @@
 package com.github.allanhladki.flat2java.config;
 
-import java.math.RoundingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.RoundingMode;
 
 /**
  * Configuration class for flat2java library settings. This class manages all environment variables
@@ -123,7 +124,9 @@ public class Flat2JavaConfig {
         try {
             boolean config = Boolean.parseBoolean(envValue);
             logger.trace(
-                    "Environment variable {} set to: {}", BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR, config);
+                    "Environment variable {} set to: {}",
+                    BIGDECIMAL_USE_DECIMAL_SEPARATOR_ENV_VAR,
+                    config);
             return config;
         } catch (Exception e) {
             logger.warn(
@@ -181,11 +184,13 @@ public class Flat2JavaConfig {
 
         try {
             RoundingMode config = RoundingMode.valueOf(envValue.toUpperCase());
-            logger.trace("Environment variable {} set to: {}", BIGDECIMAL_ROUNDING_MODE_ENV_VAR, config);
+            logger.trace(
+                    "Environment variable {} set to: {}", BIGDECIMAL_ROUNDING_MODE_ENV_VAR, config);
             return config;
         } catch (IllegalArgumentException e) {
             logger.warn(
-                    "Environment variable {} has an invalid value '{}', using default: {}. Valid values: {}",
+                    "Environment variable {} has an invalid value '{}', using default: {}. Valid"
+                            + " values: {}",
                     BIGDECIMAL_ROUNDING_MODE_ENV_VAR,
                     envValue,
                     DEFAULT_BIGDECIMAL_ROUNDING_MODE,
@@ -230,7 +235,9 @@ public class Flat2JavaConfig {
         try {
             boolean config = Boolean.parseBoolean(envValue);
             logger.trace(
-                    "Environment variable {} set to: {}", THROW_ON_STRING_TRUNCATION_ENV_VAR, config);
+                    "Environment variable {} set to: {}",
+                    THROW_ON_STRING_TRUNCATION_ENV_VAR,
+                    config);
             return config;
         } catch (Exception e) {
             logger.warn(

@@ -6,13 +6,7 @@ import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.stream.Stream;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +18,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FieldDeserializer Tests")
@@ -278,7 +280,8 @@ class FieldDeserializerTest {
 
         IllegalArgumentException exception =
                 assertThrows(
-                        IllegalArgumentException.class, () -> FieldDeserializer.parse(inputSlice, metadata));
+                        IllegalArgumentException.class,
+                        () -> FieldDeserializer.parse(inputSlice, metadata));
         assertTrue(exception.getMessage().contains(expectedError));
     }
 
@@ -320,7 +323,8 @@ class FieldDeserializerTest {
     @DisplayName("Should deserialize BigInteger fields correctly")
     void testBigIntegerDeserialization(String inputSlice, BigInteger expectedValue, char padding)
             throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -343,7 +347,8 @@ class FieldDeserializerTest {
     @DisplayName("Should deserialize BigDecimal fields correctly")
     void testBigDecimalDeserialization(String inputSlice, BigDecimal expectedValue, char padding)
             throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -367,7 +372,8 @@ class FieldDeserializerTest {
         mockedConfig.when(Flat2JavaConfig::isBigDecimalUseDecimalSeparator).thenReturn(true);
         mockedConfig.when(Flat2JavaConfig::getBigDecimalDecimalSeparator).thenReturn(separator);
 
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -386,7 +392,8 @@ class FieldDeserializerTest {
     @Test
     @DisplayName("Should throw exception for negative precision")
     void testBigDecimalNegativePrecision() throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
 
         // Mock the annotation to return negative precision
         FlatField mockAnnotation = Mockito.mock(FlatField.class);
@@ -398,7 +405,8 @@ class FieldDeserializerTest {
         FieldMetadata mockMetadata = new FieldMetadata(field, mockAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("12345", mockMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("12345", mockMetadata));
     }
 
     // ==================== SPACE PADDING EXCEPTION TESTS ====================
@@ -412,7 +420,8 @@ class FieldDeserializerTest {
         FieldMetadata intMetadata = new FieldMetadata(intField, intAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("     ", intMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("     ", intMetadata));
 
         // Test long field
         Field longField = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("longField");
@@ -420,7 +429,8 @@ class FieldDeserializerTest {
         FieldMetadata longMetadata = new FieldMetadata(longField, longAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("         ", longMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("         ", longMetadata));
 
         // Test BigInteger field
         Field bigIntField =
@@ -429,7 +439,8 @@ class FieldDeserializerTest {
         FieldMetadata bigIntMetadata = new FieldMetadata(bigIntField, bigIntAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("         ", bigIntMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("         ", bigIntMetadata));
 
         // Test BigDecimal field
         Field bigDecField =
@@ -438,7 +449,8 @@ class FieldDeserializerTest {
         FieldMetadata bigDecMetadata = new FieldMetadata(bigDecField, bigDecAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("     ", bigDecMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("     ", bigDecMetadata));
     }
 
     // ==================== DATE/TIME TESTS ====================
@@ -496,7 +508,8 @@ class FieldDeserializerTest {
         FieldMetadata mockMetadata = new FieldMetadata(field, mockAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("20240315", mockMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("20240315", mockMetadata));
     }
 
     @Test
@@ -538,7 +551,8 @@ class FieldDeserializerTest {
         FieldMetadata dateMetadata = new FieldMetadata(dateField, dateAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("        ", dateMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("        ", dateMetadata));
 
         // Test LocalDateTime field
         Field dateTimeField =
@@ -560,7 +574,8 @@ class FieldDeserializerTest {
         FieldMetadata dateMetadata = new FieldMetadata(dateField, dateAnnotation);
 
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("00000000", dateMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("00000000", dateMetadata));
 
         // Test LocalDateTime field
         Field dateTimeField =
@@ -640,7 +655,8 @@ class FieldDeserializerTest {
         assertEquals(0, result);
 
         // All spaces should throw exception for numeric fields
-        assertThrows(IllegalArgumentException.class, () -> FieldDeserializer.parse("     ", metadata));
+        assertThrows(
+                IllegalArgumentException.class, () -> FieldDeserializer.parse("     ", metadata));
     }
 
     @Test
@@ -663,7 +679,8 @@ class FieldDeserializerTest {
 
         // All asterisks should throw exception for numeric fields
         assertThrows(
-                IllegalArgumentException.class, () -> FieldDeserializer.parse("*****", mockMetadata));
+                IllegalArgumentException.class,
+                () -> FieldDeserializer.parse("*****", mockMetadata));
     }
 
     // ==================== EDGE CASE TESTS ====================
@@ -687,13 +704,15 @@ class FieldDeserializerTest {
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
         // All spaces should throw exception for numeric fields
-        assertThrows(IllegalArgumentException.class, () -> FieldDeserializer.parse("     ", metadata));
+        assertThrows(
+                IllegalArgumentException.class, () -> FieldDeserializer.parse("     ", metadata));
     }
 
     @Test
     @DisplayName("Should handle all padding for primitive types")
     void testAllPaddingForPrimitiveTypes() throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intPrimitiveField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intPrimitiveField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 

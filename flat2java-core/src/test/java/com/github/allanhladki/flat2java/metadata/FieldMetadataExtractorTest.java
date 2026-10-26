@@ -3,9 +3,11 @@ package com.github.allanhladki.flat2java.metadata;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
-import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 class FieldMetadataExtractorTest {
 
@@ -13,7 +15,8 @@ class FieldMetadataExtractorTest {
     @DisplayName("Should extract annotated fields")
     void shouldExtractAnnotatedFields() {
         // when
-        List<FieldMetadata> metadata = FieldMetadataExtractor.extract(TestFixtures.TestRecord.class);
+        List<FieldMetadata> metadata =
+                FieldMetadataExtractor.extract(TestFixtures.TestRecord.class);
 
         // then
         assertNotNull(metadata, "Metadata list should not be null");
@@ -43,7 +46,8 @@ class FieldMetadataExtractorTest {
     @DisplayName("Should handle empty class")
     void shouldHandleEmptyClass() {
         // when
-        List<FieldMetadata> metadata = FieldMetadataExtractor.extract(TestFixtures.EmptyClass.class);
+        List<FieldMetadata> metadata =
+                FieldMetadataExtractor.extract(TestFixtures.EmptyClass.class);
 
         // then
         assertNotNull(metadata, "Metadata list should not be null");
@@ -67,7 +71,9 @@ class FieldMetadataExtractorTest {
         // then
         assertNotNull(metadata, "Metadata list should not be null");
         assertEquals(
-                4, metadata.size(), "Should find 4 annotated fields from both superclass and subclass");
+                4,
+                metadata.size(),
+                "Should find 4 annotated fields from both superclass and subclass");
         assertEquals("superField1", metadata.get(0).getName());
         assertEquals("superField2", metadata.get(1).getName());
         assertEquals("subField1", metadata.get(2).getName());
@@ -143,19 +149,21 @@ class FieldMetadataExtractorTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> {
-                            FieldMetadataExtractor.extract(TestFixtures.UnsupportedObjectRecord.class);
+                            FieldMetadataExtractor.extract(
+                                    TestFixtures.UnsupportedObjectRecord.class);
                         });
 
         assertTrue(
                 exception
                         .getMessage()
-                        .contains("Field 'unsupportedObjectField': unsupported field type 'Object'"));
+                        .contains(
+                                "Field 'unsupportedObjectField': unsupported field type 'Object'"));
         assertTrue(
                 exception
                         .getMessage()
                         .contains(
-                                "Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal,"
-                                        + " LocalDate, LocalDateTime"));
+                                "Supported types: String, Integer/int, Long/long, BigInteger,"
+                                        + " BigDecimal, LocalDate, LocalDateTime"));
     }
 
     @Test
@@ -165,19 +173,21 @@ class FieldMetadataExtractorTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> {
-                            FieldMetadataExtractor.extract(TestFixtures.UnsupportedDoubleRecord.class);
+                            FieldMetadataExtractor.extract(
+                                    TestFixtures.UnsupportedDoubleRecord.class);
                         });
 
         assertTrue(
                 exception
                         .getMessage()
-                        .contains("Field 'unsupportedDoubleField': unsupported field type 'Double'"));
+                        .contains(
+                                "Field 'unsupportedDoubleField': unsupported field type 'Double'"));
         assertTrue(
                 exception
                         .getMessage()
                         .contains(
-                                "Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal,"
-                                        + " LocalDate, LocalDateTime"));
+                                "Supported types: String, Integer/int, Long/long, BigInteger,"
+                                        + " BigDecimal, LocalDate, LocalDateTime"));
     }
 
     @Test
@@ -187,7 +197,8 @@ class FieldMetadataExtractorTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> {
-                            FieldMetadataExtractor.extract(TestFixtures.UnsupportedFloatRecord.class);
+                            FieldMetadataExtractor.extract(
+                                    TestFixtures.UnsupportedFloatRecord.class);
                         });
 
         assertTrue(
@@ -198,8 +209,8 @@ class FieldMetadataExtractorTest {
                 exception
                         .getMessage()
                         .contains(
-                                "Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal,"
-                                        + " LocalDate, LocalDateTime"));
+                                "Supported types: String, Integer/int, Long/long, BigInteger,"
+                                        + " BigDecimal, LocalDate, LocalDateTime"));
     }
 
     @Test
@@ -209,19 +220,22 @@ class FieldMetadataExtractorTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> {
-                            FieldMetadataExtractor.extract(TestFixtures.UnsupportedBooleanRecord.class);
+                            FieldMetadataExtractor.extract(
+                                    TestFixtures.UnsupportedBooleanRecord.class);
                         });
 
         assertTrue(
                 exception
                         .getMessage()
-                        .contains("Field 'unsupportedBooleanField': unsupported field type 'Boolean'"));
+                        .contains(
+                                "Field 'unsupportedBooleanField': unsupported field type"
+                                        + " 'Boolean'"));
         assertTrue(
                 exception
                         .getMessage()
                         .contains(
-                                "Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal,"
-                                        + " LocalDate, LocalDateTime"));
+                                "Supported types: String, Integer/int, Long/long, BigInteger,"
+                                        + " BigDecimal, LocalDate, LocalDateTime"));
     }
 
     @Test
@@ -231,7 +245,8 @@ class FieldMetadataExtractorTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> {
-                            FieldMetadataExtractor.extract(TestFixtures.UnsupportedListRecord.class);
+                            FieldMetadataExtractor.extract(
+                                    TestFixtures.UnsupportedListRecord.class);
                         });
 
         assertTrue(
@@ -242,15 +257,16 @@ class FieldMetadataExtractorTest {
                 exception
                         .getMessage()
                         .contains(
-                                "Supported types: String, Integer/int, Long/long, BigInteger, BigDecimal,"
-                                        + " LocalDate, LocalDateTime"));
+                                "Supported types: String, Integer/int, Long/long, BigInteger,"
+                                        + " BigDecimal, LocalDate, LocalDateTime"));
     }
 
     @Test
     @DisplayName("Should validate correct LocalDate format length")
     void shouldValidateCorrectLocalDateFormatLength() {
         // This should not throw an exception
-        List<FieldMetadata> metadata = FieldMetadataExtractor.extract(TestFixtures.TestRecord.class);
+        List<FieldMetadata> metadata =
+                FieldMetadataExtractor.extract(TestFixtures.TestRecord.class);
         assertFalse(metadata.isEmpty());
 
         // Find the date field and verify it has correct format
@@ -272,7 +288,10 @@ class FieldMetadataExtractorTest {
 
         // Find the dateTime field and verify it has correct format
         FieldMetadata dateTimeField =
-                metadata.stream().filter(m -> m.getName().equals("dateTimeField")).findFirst().orElse(null);
+                metadata.stream()
+                        .filter(m -> m.getName().equals("dateTimeField"))
+                        .findFirst()
+                        .orElse(null);
 
         assertNotNull(dateTimeField);
         assertEquals("yyyyMMddHHmmss", dateTimeField.getDateTimeFormat());

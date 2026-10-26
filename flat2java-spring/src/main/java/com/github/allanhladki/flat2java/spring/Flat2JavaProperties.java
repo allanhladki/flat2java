@@ -6,11 +6,12 @@ import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for Flat2Java Spring Boot integration.
- * 
+ *
  * <p>These properties allow users to configure Flat2Java behavior through
- * application.properties/application.yml files or environment variables.</p>
- * 
- * <p>Example configuration:</p>
+ * application.properties/application.yml files or environment variables.
+ *
+ * <p>Example configuration:
+ *
  * <pre>
  * flat2java:
  *   allow-null-strings: true
@@ -22,7 +23,7 @@ import org.springframework.validation.annotation.Validated;
  *   validation:
  *     throw-on-string-truncation: true
  * </pre>
- * 
+ *
  * @since 0.0.1-rc2
  */
 @ConfigurationProperties(prefix = "flat2java")
@@ -30,24 +31,16 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class Flat2JavaProperties {
 
-    /**
-     * Whether to allow null string field values.
-     */
+    /** Whether to allow null string field values. */
     private boolean allowNullStrings = false;
 
-    /**
-     * Padding character for null string values.
-     */
+    /** Padding character for null string values. */
     private char nullValuePadding = ' ';
 
-    /**
-     * BigDecimal-specific configuration.
-     */
+    /** BigDecimal-specific configuration. */
     private BigDecimalConfig bigdecimal = new BigDecimalConfig();
 
-    /**
-     * Validation-specific configuration.
-     */
+    /** Validation-specific configuration. */
     private ValidationConfig validation = new ValidationConfig();
 
     // Getters and setters
@@ -83,23 +76,15 @@ public class Flat2JavaProperties {
         this.validation = validation;
     }
 
-    /**
-     * BigDecimal-specific configuration properties.
-     */
+    /** BigDecimal-specific configuration properties. */
     public static class BigDecimalConfig {
-        /**
-         * Whether to use decimal separator in BigDecimal serialization.
-         */
+        /** Whether to use decimal separator in BigDecimal serialization. */
         private boolean useDecimalSeparator = false;
 
-        /**
-         * Decimal separator character for BigDecimal.
-         */
+        /** Decimal separator character for BigDecimal. */
         private char decimalSeparator = '.';
 
-        /**
-         * Rounding mode for BigDecimal precision.
-         */
+        /** Rounding mode for BigDecimal precision. */
         private String roundingMode = "UNNECESSARY";
 
         // Getters and setters
@@ -128,13 +113,9 @@ public class Flat2JavaProperties {
         }
     }
 
-    /**
-     * Validation-specific configuration properties.
-     */
+    /** Validation-specific configuration properties. */
     public static class ValidationConfig {
-        /**
-         * Whether to throw exception when string values exceed field length.
-         */
+        /** Whether to throw exception when string values exceed field length. */
         private boolean throwOnStringTruncation = false;
 
         // Getters and setters

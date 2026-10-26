@@ -4,6 +4,7 @@ import com.github.allanhladki.flat2java.exception.TranslateExceptions;
 import com.github.allanhladki.flat2java.interfaces.FieldMetadataInterface;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
+
 import java.util.List;
 
 /**

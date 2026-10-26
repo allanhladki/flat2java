@@ -1,6 +1,7 @@
 package com.github.allanhladki.flat2java.interfaces;
 
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
+
 import java.util.List;
 
 /**

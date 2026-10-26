@@ -3,6 +3,7 @@ package com.github.allanhladki.flat2java.deserializer;
 import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.serializer.SerializationTypes;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -26,8 +27,8 @@ public final class FieldDeserializer {
      *
      * @param slice the string slice to parse
      * @param metadata the field metadata containing type and formatting information
-     * @return the parsed value. For string fields, all-padding values return empty strings (not null)
-     *     to maintain round-trip consistency when null handling is enabled.
+     * @return the parsed value. For string fields, all-padding values return empty strings (not
+     *     null) to maintain round-trip consistency when null handling is enabled.
      * @throws IllegalArgumentException if the slice cannot be parsed or type is unsupported
      */
     public static Object parse(String slice, FieldMetadata metadata) {
@@ -82,8 +83,8 @@ public final class FieldDeserializer {
         if (isAllPadding(slice, ' ')) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Field '%s': cannot deserialize all-padding value '%s' to numeric field - numeric"
-                                    + " fields must contain valid values",
+                            "Field '%s': cannot deserialize all-padding value '%s' to numeric field"
+                                    + " - numeric fields must contain valid values",
                             metadata.getName(), slice));
         }
 
@@ -128,8 +129,8 @@ public final class FieldDeserializer {
         if (isAllPadding(slice, metadata.getPadding()) || isAllPadding(slice, '0')) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Field '%s': cannot deserialize all-padding value '%s' to date/time field - date/time"
-                                    + " fields must contain valid values",
+                            "Field '%s': cannot deserialize all-padding value '%s' to date/time"
+                                    + " field - date/time fields must contain valid values",
                             metadata.getName(), slice));
         }
 
@@ -137,7 +138,8 @@ public final class FieldDeserializer {
         if (dateTimeFormat == null || dateTimeFormat.isEmpty()) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Field '%s': dateTimeFormat is required for date/time fields", metadata.getName()));
+                            "Field '%s': dateTimeFormat is required for date/time fields",
+                            metadata.getName()));
         }
 
         try {
@@ -169,7 +171,8 @@ public final class FieldDeserializer {
             int v = Integer.parseInt(s);
             if (v < 0) {
                 throw new IllegalArgumentException(
-                        String.format("Field '%s': value must be non-negative, got %d", fieldName, v));
+                        String.format(
+                                "Field '%s': value must be non-negative, got %d", fieldName, v));
             }
             return v;
         } catch (NumberFormatException e) {
@@ -183,7 +186,8 @@ public final class FieldDeserializer {
             long v = Long.parseLong(s);
             if (v < 0) {
                 throw new IllegalArgumentException(
-                        String.format("Field '%s': value must be non-negative, got %d", fieldName, v));
+                        String.format(
+                                "Field '%s': value must be non-negative, got %d", fieldName, v));
             }
             return v;
         } catch (NumberFormatException e) {
@@ -197,7 +201,8 @@ public final class FieldDeserializer {
             BigInteger v = new BigInteger(s);
             if (v.compareTo(BigInteger.ZERO) < 0) {
                 throw new IllegalArgumentException(
-                        String.format("Field '%s': value must be non-negative, got %s", fieldName, v));
+                        String.format(
+                                "Field '%s': value must be non-negative, got %s", fieldName, v));
             }
             return v;
         } catch (NumberFormatException e) {
@@ -210,7 +215,8 @@ public final class FieldDeserializer {
         int precision = metadata.getPrecision();
         if (precision < 0) {
             throw new IllegalArgumentException(
-                    String.format("Field '%s': precision must be non-negative", metadata.getName()));
+                    String.format(
+                            "Field '%s': precision must be non-negative", metadata.getName()));
         }
 
         try {

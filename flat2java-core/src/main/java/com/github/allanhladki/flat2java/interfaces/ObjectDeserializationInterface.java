@@ -8,8 +8,8 @@ package com.github.allanhladki.flat2java.interfaces;
 public interface ObjectDeserializationInterface {
 
     /**
-     * Deserializes a flat string into an instance of the specified class, including inherited fields.
-     * This is the default behavior.
+     * Deserializes a flat string into an instance of the specified class, including inherited
+     * fields. This is the default behavior.
      *
      * @param flat the flat string to deserialize
      * @param clazz the class to instantiate and populate

@@ -4,6 +4,7 @@ import com.github.allanhladki.flat2java.exception.TranslateExceptions;
 import com.github.allanhladki.flat2java.interfaces.FieldSerializationInterface;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.serializer.FieldSerializer;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;

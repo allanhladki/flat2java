@@ -126,6 +126,7 @@ public class Flat2JavaFactory {
      */
     private ObjectDeserializationInterface createObjectDeserializationInterface() {
         ObjectDeserializationImpl impl = new ObjectDeserializationImpl();
-        return ExceptionTranslationInterceptor.intercept(impl, ObjectDeserializationInterface.class);
+        return ExceptionTranslationInterceptor.intercept(
+                impl, ObjectDeserializationInterface.class);
     }
 }

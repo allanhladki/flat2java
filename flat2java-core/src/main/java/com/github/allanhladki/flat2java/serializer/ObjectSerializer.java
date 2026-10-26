@@ -3,6 +3,10 @@ package com.github.allanhladki.flat2java.serializer;
 import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -10,8 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for serializing objects to flat file format strings. This class uses field metadata
@@ -66,7 +68,8 @@ public class ObjectSerializer {
 
         if (fieldMetadataList.isEmpty()) {
             throw new IllegalArgumentException(
-                    "No fields annotated with @FlatField found in class: " + object.getClass().getName());
+                    "No fields annotated with @FlatField found in class: "
+                            + object.getClass().getName());
         }
 
         StringBuilder result = new StringBuilder();
@@ -125,10 +128,12 @@ public class ObjectSerializer {
                 return serialize(null, metadata);
             }
 
-            logger.error("Null field value for '{}' but null handling is disabled", metadata.getName());
+            logger.error(
+                    "Null field value for '{}' but null handling is disabled", metadata.getName());
             throw new NullPointerException(
                     String.format(
-                            "Field '%s' cannot be null. Set %s=true to allow null string field values.",
+                            "Field '%s' cannot be null. Set %s=true to allow null string field"
+                                    + " values.",
                             metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
         }
 
@@ -158,7 +163,8 @@ public class ObjectSerializer {
         } else if (fieldValue == null) {
             throw new NullPointerException(
                     String.format(
-                            "Field '%s' cannot be null. Set %s=true to allow null string field values.",
+                            "Field '%s' cannot be null. Set %s=true to allow null string field"
+                                    + " values.",
                             metadata.getName(), Flat2JavaConfig.getNullHandlingEnvVarName()));
         }
 
@@ -195,7 +201,8 @@ public class ObjectSerializer {
         }
 
         if (fieldValue instanceof LocalDateTime) {
-            return FieldSerializer.serialize((LocalDateTime) fieldValue, metadata.getDateTimeFormat());
+            return FieldSerializer.serialize(
+                    (LocalDateTime) fieldValue, metadata.getDateTimeFormat());
         }
 
         throw new IllegalArgumentException(

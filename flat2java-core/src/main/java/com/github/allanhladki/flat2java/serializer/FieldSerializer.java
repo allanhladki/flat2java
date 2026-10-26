@@ -3,14 +3,16 @@ package com.github.allanhladki.flat2java.serializer;
 import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for serializing field values of specific types to strings. This class provides
@@ -62,7 +64,8 @@ public class FieldSerializer {
             throw new NullPointerException("BigInteger value cannot be null");
         }
         if (value.compareTo(BigInteger.ZERO) < 0) {
-            throw new IllegalArgumentException("BigInteger value must be non-negative, got: " + value);
+            throw new IllegalArgumentException(
+                    "BigInteger value must be non-negative, got: " + value);
         }
         return value.toString();
     }
@@ -73,12 +76,14 @@ public class FieldSerializer {
             throw new NullPointerException("BigDecimal value cannot be null");
         }
         if (value.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("BigDecimal value must be non-negative, got: " + value);
+            throw new IllegalArgumentException(
+                    "BigDecimal value must be non-negative, got: " + value);
         }
 
         if (precision == 0) {
             // Apply rounding mode when converting to integer
-            BigDecimal roundedValue = value.setScale(0, Flat2JavaConfig.getBigDecimalRoundingMode());
+            BigDecimal roundedValue =
+                    value.setScale(0, Flat2JavaConfig.getBigDecimalRoundingMode());
             return serialize(roundedValue.intValue());
         }
 
@@ -114,7 +119,8 @@ public class FieldSerializer {
 
             // Don't use decimal separator - convert to integer representation
             // For example: 12.34 with precision 2 becomes "1234"
-            BigDecimal multiplied = scaledValue.multiply(BigDecimal.valueOf(Math.pow(10, precision)));
+            BigDecimal multiplied =
+                    scaledValue.multiply(BigDecimal.valueOf(Math.pow(10, precision)));
             return multiplied.toBigInteger().toString();
         }
         return value.toPlainString();
@@ -135,7 +141,8 @@ public class FieldSerializer {
             return value.format(formatter);
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    String.format("Invalid date format '%s': %s", dateTimeFormat, e.getMessage()), e);
+                    String.format("Invalid date format '%s': %s", dateTimeFormat, e.getMessage()),
+                    e);
         }
     }
 
@@ -143,10 +150,12 @@ public class FieldSerializer {
     public static String serialize(LocalDateTime value, String dateTimeFormat) {
         if (value == null) {
             throw new NullPointerException(
-                    "LocalDateTime value cannot be null - date/time fields must contain valid values");
+                    "LocalDateTime value cannot be null - date/time fields must contain valid"
+                            + " values");
         }
         if (dateTimeFormat.isEmpty()) {
-            throw new IllegalArgumentException("DateTime format is required for LocalDateTime field");
+            throw new IllegalArgumentException(
+                    "DateTime format is required for LocalDateTime field");
         }
 
         try {
@@ -154,7 +163,8 @@ public class FieldSerializer {
             return value.format(formatter);
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    String.format("Invalid date format '%s': %s", dateTimeFormat, e.getMessage()), e);
+                    String.format("Invalid date format '%s': %s", dateTimeFormat, e.getMessage()),
+                    e);
         }
     }
 
@@ -182,8 +192,9 @@ public class FieldSerializer {
             if (SerializationTypes.isNumericField(field)) {
                 throw new IllegalArgumentException(
                         String.format(
-                                "Field '%s' value '%s' (length %d) exceeds target length %d. Numeric fields cannot"
-                                        + " be truncated to prevent data corruption.",
+                                "Field '%s' value '%s' (length %d) exceeds target length %d."
+                                        + " Numeric fields cannot be truncated to prevent data"
+                                        + " corruption.",
                                 metadata.getName(), value, value.length(), targetLength));
             }
 
@@ -191,8 +202,8 @@ public class FieldSerializer {
             if (Flat2JavaConfig.isThrowOnStringTruncationEnabled()) {
                 throw new IllegalArgumentException(
                         String.format(
-                                "Field '%s' value '%s' (length %d) exceeds target length %d. Set %s=false to allow"
-                                        + " truncation.",
+                                "Field '%s' value '%s' (length %d) exceeds target length %d. Set"
+                                        + " %s=false to allow truncation.",
                                 metadata.getName(),
                                 value,
                                 value.length(),
@@ -247,7 +258,8 @@ public class FieldSerializer {
         if (SerializationTypes.isDateTimeField(field)) {
             throw new NullPointerException(
                     String.format(
-                            "Field '%s' cannot be null - date/time fields must contain valid values",
+                            "Field '%s' cannot be null - date/time fields must contain valid"
+                                    + " values",
                             metadata.getName()));
         }
 

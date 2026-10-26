@@ -14,8 +14,8 @@ public interface FieldDeserializationInterface {
      *
      * @param slice the string slice to parse
      * @param metadata the field metadata containing type and formatting information
-     * @return the parsed value. For string fields, all-padding values return empty strings (not null)
-     *     to maintain round-trip consistency when null handling is enabled.
+     * @return the parsed value. For string fields, all-padding values return empty strings (not
+     *     null) to maintain round-trip consistency when null handling is enabled.
      */
     Object parse(String slice, FieldMetadata metadata);
 }

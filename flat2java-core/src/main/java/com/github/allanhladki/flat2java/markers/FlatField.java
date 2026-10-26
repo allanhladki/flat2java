@@ -46,7 +46,8 @@ public @interface FlatField {
     int length();
 
     /**
-     * The precision for decimal numbers (number of decimal places). Only used for BigDecimal fields.
+     * The precision for decimal numbers (number of decimal places). Only used for BigDecimal
+     * fields.
      *
      * @return the precision
      */

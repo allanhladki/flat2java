@@ -6,13 +6,7 @@ import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.stream.Stream;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +19,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FieldSerializer Tests")
@@ -56,7 +58,8 @@ class FieldSerializerTest {
     @MethodSource("stringSerializationAndFormattingTestCases")
     @DisplayName("Should serialize and format string fields correctly")
     void testStringSerializationAndFormatting(
-            String inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
+            String inputValue, String expectedSerialized, String expectedFormatted)
+            throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("stringField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
@@ -105,7 +108,8 @@ class FieldSerializerTest {
                 exception
                         .getMessage()
                         .contains(
-                                "Field 'stringField' value 'VeryLongString' (length 14) exceeds target length 8"));
+                                "Field 'stringField' value 'VeryLongString' (length 14) exceeds"
+                                        + " target length 8"));
     }
 
     // ==================== NUMERIC TESTS ====================
@@ -114,7 +118,8 @@ class FieldSerializerTest {
     @MethodSource("integerSerializationAndFormattingTestCases")
     @DisplayName("Should serialize and format integer fields correctly")
     void testIntegerSerializationAndFormatting(
-            Integer inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
+            Integer inputValue, String expectedSerialized, String expectedFormatted)
+            throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("intField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
@@ -166,8 +171,10 @@ class FieldSerializerTest {
     @MethodSource("bigIntegerSerializationAndFormattingTestCases")
     @DisplayName("Should serialize and format BigInteger fields correctly")
     void testBigIntegerSerializationAndFormatting(
-            BigInteger inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
+            BigInteger inputValue, String expectedSerialized, String expectedFormatted)
+            throws Exception {
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -194,8 +201,10 @@ class FieldSerializerTest {
     @MethodSource("bigDecimalSerializationAndFormattingTestCases")
     @DisplayName("Should serialize and format BigDecimal fields correctly")
     void testBigDecimalSerializationAndFormatting(
-            BigDecimal inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
+            BigDecimal inputValue, String expectedSerialized, String expectedFormatted)
+            throws Exception {
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -242,7 +251,8 @@ class FieldSerializerTest {
     @MethodSource("localDateSerializationAndFormattingTestCases")
     @DisplayName("Should serialize and format LocalDate fields correctly")
     void testLocalDateSerializationAndFormatting(
-            LocalDate inputValue, String expectedSerialized, String expectedFormatted) throws Exception {
+            LocalDate inputValue, String expectedSerialized, String expectedFormatted)
+            throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("dateField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
@@ -284,10 +294,16 @@ class FieldSerializerTest {
 
     static Stream<Arguments> localDateTimeSerializationAndFormattingTestCases() {
         return Stream.of(
-                Arguments.of(LocalDateTime.of(2024, 3, 15, 12, 30, 45), "20240315123045", "20240315123045"),
                 Arguments.of(
-                        LocalDateTime.of(2024, 12, 31, 23, 59, 59), "20241231235959", "20241231235959"),
-                Arguments.of(LocalDateTime.of(2024, 1, 1, 0, 0, 0), "20240101000000", "20240101000000"));
+                        LocalDateTime.of(2024, 3, 15, 12, 30, 45),
+                        "20240315123045",
+                        "20240315123045"),
+                Arguments.of(
+                        LocalDateTime.of(2024, 12, 31, 23, 59, 59),
+                        "20241231235959",
+                        "20241231235959"),
+                Arguments.of(
+                        LocalDateTime.of(2024, 1, 1, 0, 0, 0), "20240101000000", "20240101000000"));
     }
 
     // ==================== ERROR TESTS ====================
@@ -421,7 +437,9 @@ class FieldSerializerTest {
         assertTrue(
                 exception
                         .getMessage()
-                        .contains("Field 'intField' value '123456789' (length 9) exceeds target length 8"));
+                        .contains(
+                                "Field 'intField' value '123456789' (length 9) exceeds target"
+                                        + " length 8"));
         assertTrue(exception.getMessage().contains("Numeric fields cannot be truncated"));
     }
 
@@ -502,7 +520,8 @@ class FieldSerializerTest {
 
         String numericSerialized = FieldSerializer.serialize(123);
         assertEquals("123", numericSerialized);
-        String numericFormatted = FieldSerializer.formatToLength(numericSerialized, numericMetadata);
+        String numericFormatted =
+                FieldSerializer.formatToLength(numericSerialized, numericMetadata);
         assertEquals("00123", numericFormatted); // length 5, left-padded with zeros
 
         // Test BigDecimal field

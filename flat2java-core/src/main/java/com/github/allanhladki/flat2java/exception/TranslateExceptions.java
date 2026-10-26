@@ -38,8 +38,8 @@ public @interface TranslateExceptions {
     String context() default "";
 
     /**
-     * The type of operation being performed. This determines which type of exception should be thrown
-     * for unknown exception types.
+     * The type of operation being performed. This determines which type of exception should be
+     * thrown for unknown exception types.
      *
      * @return the operation type
      */

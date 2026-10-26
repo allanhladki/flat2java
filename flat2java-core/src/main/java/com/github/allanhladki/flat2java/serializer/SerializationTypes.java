@@ -154,8 +154,8 @@ public final class SerializationTypes {
     }
 
     /**
-     * Attempts to get a Class<?> from a type name. This method is designed for annotation processing
-     * to convert TypeMirror to Class<?>.
+     * Attempts to get a Class<?> from a type name. This method is designed for annotation
+     * processing to convert TypeMirror to Class<?>.
      *
      * @param typeName the fully qualified type name
      * @return the Class<?> if the type is supported, null otherwise
@@ -172,9 +172,12 @@ public final class SerializationTypes {
             if (typeName.equals(SupportedTypes.STRING.getName())) return SupportedTypes.STRING;
             if (typeName.equals(SupportedTypes.INTEGER.getName())) return SupportedTypes.INTEGER;
             if (typeName.equals(SupportedTypes.LONG.getName())) return SupportedTypes.LONG;
-            if (typeName.equals(SupportedTypes.BIG_INTEGER.getName())) return SupportedTypes.BIG_INTEGER;
-            if (typeName.equals(SupportedTypes.BIG_DECIMAL.getName())) return SupportedTypes.BIG_DECIMAL;
-            if (typeName.equals(SupportedTypes.LOCAL_DATE.getName())) return SupportedTypes.LOCAL_DATE;
+            if (typeName.equals(SupportedTypes.BIG_INTEGER.getName()))
+                return SupportedTypes.BIG_INTEGER;
+            if (typeName.equals(SupportedTypes.BIG_DECIMAL.getName()))
+                return SupportedTypes.BIG_DECIMAL;
+            if (typeName.equals(SupportedTypes.LOCAL_DATE.getName()))
+                return SupportedTypes.LOCAL_DATE;
             if (typeName.equals(SupportedTypes.LOCAL_DATE_TIME.getName()))
                 return SupportedTypes.LOCAL_DATE_TIME;
 

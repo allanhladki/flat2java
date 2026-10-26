@@ -1,6 +1,7 @@
 package com.github.allanhladki.flat2java.fixtures;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -38,7 +39,11 @@ public class TestFixtures {
         public TestRecord() {}
 
         public TestRecord(
-                String id, LocalDate date, Integer quantity, BigDecimal price, LocalDate expiryDate) {
+                String id,
+                LocalDate date,
+                Integer quantity,
+                BigDecimal price,
+                LocalDate expiryDate) {
             this.id = id;
             this.date = date;
             this.quantity = quantity;
@@ -239,7 +244,8 @@ public class TestFixtures {
 
         public SubRecord() {}
 
-        public SubRecord(String superField1, String superField2, String subField1, String subField2) {
+        public SubRecord(
+                String superField1, String superField2, String subField1, String subField2) {
             super(superField1, superField2);
             this.subField1 = subField1;
             this.subField2 = subField2;
@@ -315,7 +321,8 @@ public class TestFixtures {
 
         @FlatField(
                 length = 10,
-                dateTimeFormat = "yyyyMMddHHmmss") // Invalid: format produces 14 chars, length is 10
+                dateTimeFormat =
+                        "yyyyMMddHHmmss") // Invalid: format produces 14 chars, length is 10
         public LocalDateTime invalidDateTimeField;
 
         @FlatField(length = 5, dateTimeFormat = "invalid") // Invalid: invalid format

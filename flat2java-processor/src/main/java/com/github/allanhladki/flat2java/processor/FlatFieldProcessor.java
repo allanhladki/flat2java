@@ -3,7 +3,9 @@ package com.github.allanhladki.flat2java.processor;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
 import com.github.allanhladki.flat2java.serializer.SerializationTypes;
+
 import java.util.Set;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -56,7 +58,8 @@ public class FlatFieldProcessor extends AbstractProcessor {
             } else {
                 // Report error for non-field elements annotated with @FlatField
                 printErrorMessage(
-                        "@FlatField annotation can only be applied to fields, got: " + element.getKind(),
+                        "@FlatField annotation can only be applied to fields, got: "
+                                + element.getKind(),
                         element);
             }
         }
@@ -84,7 +87,8 @@ public class FlatFieldProcessor extends AbstractProcessor {
         } catch (Exception e) {
             // Catch any unexpected errors and report them
             printErrorMessage(
-                    "Unexpected error validating field '" + fieldName + "': " + e.getMessage(), element);
+                    "Unexpected error validating field '" + fieldName + "': " + e.getMessage(),
+                    element);
         }
     }
 
@@ -97,7 +101,8 @@ public class FlatFieldProcessor extends AbstractProcessor {
      */
     private void validateFieldType(Element element, String fieldName) {
         if (element.getKind() != ElementKind.FIELD) {
-            throw new IllegalArgumentException("Element must be a field, got: " + element.getKind());
+            throw new IllegalArgumentException(
+                    "Element must be a field, got: " + element.getKind());
         }
 
         VariableElement variableElement = (VariableElement) element;
@@ -115,7 +120,9 @@ public class FlatFieldProcessor extends AbstractProcessor {
                 throw new IllegalArgumentException(
                         String.format(
                                 "Field '%s': unsupported field type '%s'. %s",
-                                fieldName, typeName, SerializationTypes.getSupportedTypesDescription()));
+                                fieldName,
+                                typeName,
+                                SerializationTypes.getSupportedTypesDescription()));
             }
         }
     }
@@ -171,17 +178,22 @@ public class FlatFieldProcessor extends AbstractProcessor {
                 if (typeName.equals(SerializationTypes.SupportedTypes.LOCAL_DATE.getName())) {
                     sampleDate =
                             java.time.LocalDate.of(2024, 1, 1)
-                                    .format(java.time.format.DateTimeFormatter.ofPattern(dateTimeFormat));
+                                    .format(
+                                            java.time.format.DateTimeFormatter.ofPattern(
+                                                    dateTimeFormat));
                 } else {
                     sampleDate =
                             java.time.LocalDateTime.of(2024, 1, 1, 12, 0, 0)
-                                    .format(java.time.format.DateTimeFormatter.ofPattern(dateTimeFormat));
+                                    .format(
+                                            java.time.format.DateTimeFormatter.ofPattern(
+                                                    dateTimeFormat));
                 }
 
                 if (sampleDate.length() != length) {
                     throw new IllegalArgumentException(
                             String.format(
-                                    "Field '%s': dateTimeFormat '%s' produces %d characters, but length is %d",
+                                    "Field '%s': dateTimeFormat '%s' produces %d characters, but"
+                                            + " length is %d",
                                     fieldName, dateTimeFormat, sampleDate.length(), length));
                 }
             } catch (Exception e) {

@@ -5,11 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.github.allanhladki.flat2java.deserializer.ObjectDeserializer;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.serializer.ObjectSerializer;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.stream.Stream;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +13,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Object Round-Trip Tests")
@@ -50,7 +52,8 @@ class ObjectRoundTripTest {
                 record.getPrice().compareTo(parsed.getPrice()),
                 "Price should be preserved with correct scale");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     @Test
@@ -74,10 +77,13 @@ class ObjectRoundTripTest {
         assertEquals(record.getId(), parsed.getId(), "ID should be preserved");
         assertEquals(record.getDate(), parsed.getDate(), "Date should be preserved");
         assertEquals(
-                0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved as zero");
+                0,
+                record.getPrice().compareTo(parsed.getPrice()),
+                "Price should be preserved as zero");
         assertEquals(
                 record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved as zero");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     @Test
@@ -105,7 +111,8 @@ class ObjectRoundTripTest {
                 record.getPrice().compareTo(parsed.getPrice()),
                 "Price should be preserved with correct scale");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     @Test
@@ -133,7 +140,8 @@ class ObjectRoundTripTest {
                 record.getPrice().compareTo(parsed.getPrice()),
                 "Price should be preserved with correct scale");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     // ==================== COMPREHENSIVE TEST RECORD ROUND-TRIP TESTS ====================
@@ -213,7 +221,8 @@ class ObjectRoundTripTest {
     @DisplayName("Should handle round trip with inheritance enabled for SubRecord")
     void shouldHandleRoundTripWithInheritanceEnabled() {
         // given
-        TestFixtures.SubRecord record = new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
+        TestFixtures.SubRecord record =
+                new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
 
         // when
         String flat = ObjectSerializer.serialize(record, true);
@@ -223,17 +232,22 @@ class ObjectRoundTripTest {
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
         // String fields are truncated to fit the field length (5 chars)
-        assertEquals("super", parsed.getSuperField1(), "Super field 1 should be truncated to 5 chars");
-        assertEquals("super", parsed.getSuperField2(), "Super field 2 should be truncated to 5 chars");
-        assertEquals(record.getSubField1(), parsed.getSubField1(), "Sub field 1 should be preserved");
-        assertEquals(record.getSubField2(), parsed.getSubField2(), "Sub field 2 should be preserved");
+        assertEquals(
+                "super", parsed.getSuperField1(), "Super field 1 should be truncated to 5 chars");
+        assertEquals(
+                "super", parsed.getSuperField2(), "Super field 2 should be truncated to 5 chars");
+        assertEquals(
+                record.getSubField1(), parsed.getSubField1(), "Sub field 1 should be preserved");
+        assertEquals(
+                record.getSubField2(), parsed.getSubField2(), "Sub field 2 should be preserved");
     }
 
     @Test
     @DisplayName("Should handle round trip without inheritance for SubRecord")
     void shouldHandleRoundTripWithoutInheritance() {
         // given
-        TestFixtures.SubRecord record = new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
+        TestFixtures.SubRecord record =
+                new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
 
         // when
         String flat = ObjectSerializer.serialize(record, false);
@@ -242,10 +256,14 @@ class ObjectRoundTripTest {
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
-        assertNull(parsed.getSuperField1(), "Super field 1 should be null when inheritance disabled");
-        assertNull(parsed.getSuperField2(), "Super field 2 should be null when inheritance disabled");
-        assertEquals(record.getSubField1(), parsed.getSubField1(), "Sub field 1 should be preserved");
-        assertEquals(record.getSubField2(), parsed.getSubField2(), "Sub field 2 should be preserved");
+        assertNull(
+                parsed.getSuperField1(), "Super field 1 should be null when inheritance disabled");
+        assertNull(
+                parsed.getSuperField2(), "Super field 2 should be null when inheritance disabled");
+        assertEquals(
+                record.getSubField1(), parsed.getSubField1(), "Sub field 1 should be preserved");
+        assertEquals(
+                record.getSubField2(), parsed.getSubField2(), "Sub field 2 should be preserved");
     }
 
     // ==================== ZERO VALUE ROUND-TRIP TESTS ====================
@@ -269,7 +287,9 @@ class ObjectRoundTripTest {
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
         assertEquals(
-                record.zeroInteger, parsed.zeroInteger, "Integer field should be preserved as zero");
+                record.zeroInteger,
+                parsed.zeroInteger,
+                "Integer field should be preserved as zero");
         assertEquals(record.zeroLong, parsed.zeroLong, "Long field should be preserved as zero");
         assertEquals(
                 record.zeroBigInteger,
@@ -306,7 +326,9 @@ class ObjectRoundTripTest {
         assertEquals(record.zeroInteger, parsed.zeroInteger, "Integer field should be preserved");
         assertEquals(record.zeroLong, parsed.zeroLong, "Long field should be preserved as zero");
         assertEquals(
-                record.zeroBigInteger, parsed.zeroBigInteger, "BigInteger field should be preserved");
+                record.zeroBigInteger,
+                parsed.zeroBigInteger,
+                "BigInteger field should be preserved");
         assertEquals(
                 0,
                 record.zeroBigDecimalNoPrecision.compareTo(parsed.zeroBigDecimalNoPrecision),
@@ -340,8 +362,10 @@ class ObjectRoundTripTest {
         assertEquals(record.getId(), parsed.getId(), "Empty string ID should be preserved");
         assertEquals(record.getDate(), parsed.getDate(), "Date should be preserved");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     @Test
@@ -362,11 +386,14 @@ class ObjectRoundTripTest {
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
-        assertEquals(record.getId(), parsed.getId(), "ID with special characters should be preserved");
+        assertEquals(
+                record.getId(), parsed.getId(), "ID with special characters should be preserved");
         assertEquals(record.getDate(), parsed.getDate(), "Date should be preserved");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     @Test
@@ -390,8 +417,10 @@ class ObjectRoundTripTest {
         assertEquals(record.getId(), parsed.getId(), "ID should be preserved");
         assertEquals(record.getDate(), parsed.getDate(), "Earliest date should be preserved");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Latest date should be preserved");
+        assertEquals(
+                0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Latest date should be preserved");
     }
 
     // ==================== PRECISION AND SCALE ROUND-TRIP TESTS ====================
@@ -423,7 +452,8 @@ class ObjectRoundTripTest {
                 0,
                 record.getPrice().compareTo(parsed.getPrice()),
                 "BigDecimal with precision should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     static Stream<Arguments> precisionAndScaleRoundTripTestCases() {
@@ -460,12 +490,15 @@ class ObjectRoundTripTest {
         assertEquals(record.getId(), parsed.getId(), "Maximum length ID should be preserved");
         assertEquals(record.getDate(), parsed.getDate(), "Date should be preserved");
         assertEquals(
-                record.getQuantity(), parsed.getQuantity(), "Maximum length quantity should be preserved");
+                record.getQuantity(),
+                parsed.getQuantity(),
+                "Maximum length quantity should be preserved");
         assertEquals(
                 0,
                 record.getPrice().compareTo(parsed.getPrice()),
                 "Maximum length price should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     @Test
@@ -489,12 +522,15 @@ class ObjectRoundTripTest {
         assertEquals(record.getId(), parsed.getId(), "Minimum length ID should be preserved");
         assertEquals(record.getDate(), parsed.getDate(), "Date should be preserved");
         assertEquals(
-                record.getQuantity(), parsed.getQuantity(), "Minimum length quantity should be preserved");
+                record.getQuantity(),
+                parsed.getQuantity(),
+                "Minimum length quantity should be preserved");
         assertEquals(
                 0,
                 record.getPrice().compareTo(parsed.getPrice()),
                 "Minimum length price should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     // ==================== NULL HANDLING ROUND-TRIP TESTS ====================
@@ -517,15 +553,18 @@ class ObjectRoundTripTest {
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
-        // Null string fields are serialized as spaces, so they should be deserialized as empty strings
+        // Null string fields are serialized as spaces, so they should be deserialized as empty
+        // strings
         // or trimmed
         assertTrue(
                 parsed.getId() == null || parsed.getId().trim().isEmpty(),
                 "Null ID should be handled appropriately");
         assertEquals(record.getDate(), parsed.getDate(), "Date should be preserved");
         assertEquals(record.getQuantity(), parsed.getQuantity(), "Quantity should be preserved");
-        assertEquals(0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
-        assertEquals(record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
+        assertEquals(
+                0, record.getPrice().compareTo(parsed.getPrice()), "Price should be preserved");
+        assertEquals(
+                record.getExpiryDate(), parsed.getExpiryDate(), "Expiry date should be preserved");
     }
 
     // ==================== COMPLEX OBJECT ROUND-TRIP TESTS ====================
@@ -549,23 +588,29 @@ class ObjectRoundTripTest {
         // when
         String flat = ObjectSerializer.serialize(record);
         TestFixtures.ValidComprehensiveTestRecord parsed =
-                ObjectDeserializer.deserialize(flat, TestFixtures.ValidComprehensiveTestRecord.class);
+                ObjectDeserializer.deserialize(
+                        flat, TestFixtures.ValidComprehensiveTestRecord.class);
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
         assertEquals(record.stringField, parsed.stringField, "String field should be preserved");
         assertEquals(record.intField, parsed.intField, "Integer field should be preserved");
         assertEquals(
-                record.intWrapperField, parsed.intWrapperField, "Int wrapper field should be preserved");
+                record.intWrapperField,
+                parsed.intWrapperField,
+                "Int wrapper field should be preserved");
         assertEquals(record.longField, parsed.longField, "Long field should be preserved");
         assertEquals(
-                record.bigIntegerField, parsed.bigIntegerField, "BigInteger field should be preserved");
+                record.bigIntegerField,
+                parsed.bigIntegerField,
+                "BigInteger field should be preserved");
         assertEquals(
                 0,
                 record.bigDecimalField.compareTo(parsed.bigDecimalField),
                 "BigDecimal field should be preserved");
         assertEquals(record.dateField, parsed.dateField, "Date field should be preserved");
-        assertEquals(record.dateTimeField, parsed.dateTimeField, "DateTime field should be preserved");
+        assertEquals(
+                record.dateTimeField, parsed.dateTimeField, "DateTime field should be preserved");
         assertEquals(
                 record.dateFieldWithFormat,
                 parsed.dateFieldWithFormat,
@@ -591,23 +636,29 @@ class ObjectRoundTripTest {
         // when
         String flat = ObjectSerializer.serialize(record);
         TestFixtures.ValidComprehensiveTestRecord parsed =
-                ObjectDeserializer.deserialize(flat, TestFixtures.ValidComprehensiveTestRecord.class);
+                ObjectDeserializer.deserialize(
+                        flat, TestFixtures.ValidComprehensiveTestRecord.class);
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
         assertEquals(record.stringField, parsed.stringField, "String field should be preserved");
         assertEquals(record.intField, parsed.intField, "Integer field should be preserved");
         assertEquals(
-                record.intWrapperField, parsed.intWrapperField, "Int wrapper field should be preserved");
+                record.intWrapperField,
+                parsed.intWrapperField,
+                "Int wrapper field should be preserved");
         assertEquals(record.longField, parsed.longField, "Long field should be preserved");
         assertEquals(
-                record.bigIntegerField, parsed.bigIntegerField, "BigInteger field should be preserved");
+                record.bigIntegerField,
+                parsed.bigIntegerField,
+                "BigInteger field should be preserved");
         assertEquals(
                 0,
                 record.bigDecimalField.compareTo(parsed.bigDecimalField),
                 "BigDecimal field should be preserved");
         assertEquals(record.dateField, parsed.dateField, "Date field should be preserved");
-        assertEquals(record.dateTimeField, parsed.dateTimeField, "DateTime field should be preserved");
+        assertEquals(
+                record.dateTimeField, parsed.dateTimeField, "DateTime field should be preserved");
         assertEquals(
                 record.dateFieldWithFormat,
                 parsed.dateFieldWithFormat,
@@ -633,23 +684,29 @@ class ObjectRoundTripTest {
         // when
         String flat = ObjectSerializer.serialize(record);
         TestFixtures.ValidComprehensiveTestRecord parsed =
-                ObjectDeserializer.deserialize(flat, TestFixtures.ValidComprehensiveTestRecord.class);
+                ObjectDeserializer.deserialize(
+                        flat, TestFixtures.ValidComprehensiveTestRecord.class);
 
         // then
         assertNotNull(parsed, "Deserialized record should not be null");
         assertEquals(record.stringField, parsed.stringField, "String field should be preserved");
         assertEquals(record.intField, parsed.intField, "Integer field should be preserved");
         assertEquals(
-                record.intWrapperField, parsed.intWrapperField, "Int wrapper field should be preserved");
+                record.intWrapperField,
+                parsed.intWrapperField,
+                "Int wrapper field should be preserved");
         assertEquals(record.longField, parsed.longField, "Long field should be preserved");
         assertEquals(
-                record.bigIntegerField, parsed.bigIntegerField, "BigInteger field should be preserved");
+                record.bigIntegerField,
+                parsed.bigIntegerField,
+                "BigInteger field should be preserved");
         assertEquals(
                 0,
                 record.bigDecimalField.compareTo(parsed.bigDecimalField),
                 "BigDecimal field should be preserved");
         assertEquals(record.dateField, parsed.dateField, "Date field should be preserved");
-        assertEquals(record.dateTimeField, parsed.dateTimeField, "DateTime field should be preserved");
+        assertEquals(
+                record.dateTimeField, parsed.dateTimeField, "DateTime field should be preserved");
         assertEquals(
                 record.dateFieldWithFormat,
                 parsed.dateFieldWithFormat,

@@ -1,6 +1,7 @@
 package com.github.allanhladki.flat2java.metadata;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
+
 import java.lang.reflect.Field;
 import java.util.Objects;
 
@@ -122,7 +123,8 @@ public class FieldMetadata {
     @Override
     public String toString() {
         return String.format(
-                "FieldMetadata{name='%s', length=%d, precision=%d, dateTimeFormat='%s', padding='%c'}",
+                "FieldMetadata{name='%s', length=%d, precision=%d, dateTimeFormat='%s',"
+                        + " padding='%c'}",
                 name, length, precision, dateTimeFormat, padding);
     }
 }

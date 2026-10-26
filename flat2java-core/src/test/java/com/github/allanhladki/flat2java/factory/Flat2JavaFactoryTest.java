@@ -12,11 +12,13 @@ import com.github.allanhladki.flat2java.interfaces.FieldSerializationInterface;
 import com.github.allanhladki.flat2java.interfaces.ObjectDeserializationInterface;
 import com.github.allanhladki.flat2java.interfaces.ObjectSerializationInterface;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
-import java.math.BigDecimal;
-import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Tests for {@link Flat2JavaFactory} to ensure it properly creates intercepted services with
@@ -211,7 +213,8 @@ class Flat2JavaFactoryTest {
                 assertThrows(
                         DeserializationException.class,
                         () -> {
-                            objectDeserializationInterface.deserialize(null, TestFixtures.FactoryTestClass.class);
+                            objectDeserializationInterface.deserialize(
+                                    null, TestFixtures.FactoryTestClass.class);
                         });
 
         assertTrue(exception.getMessage().contains("deserializing object"));

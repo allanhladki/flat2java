@@ -5,9 +5,11 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
-import javax.tools.JavaFileObject;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import javax.tools.JavaFileObject;
 
 /**
  * Comprehensive tests for the FlatFieldProcessor annotation processor using compile-testing. These
@@ -90,7 +92,8 @@ class FlatFieldProcessorTest {
     @DisplayName("Should fail compilation when date/time format length doesn't match field length")
     void shouldFailCompilationWhenDateTimeFormatLengthDoesNotMatchFieldLength() {
         JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/DateTimeFormatLengthMismatch.java");
+                JavaFileObjects.forResource(
+                        "processor-test-sources/DateTimeFormatLengthMismatch.java");
         Compilation compilation =
                 Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
         assertThat(compilation).hadErrorContaining("produces 8 characters, but length is 10");
@@ -110,7 +113,8 @@ class FlatFieldProcessorTest {
     @DisplayName("Should ignore date/time format validation for non-date/time fields")
     void shouldIgnoreDateTimeFormatValidationForNonDateTimeFields() {
         JavaFileObject source =
-                JavaFileObjects.forResource("processor-test-sources/NonDateTimeFieldWithFormat.java");
+                JavaFileObjects.forResource(
+                        "processor-test-sources/NonDateTimeFieldWithFormat.java");
         Compilation compilation =
                 Compiler.javac().withProcessors(new FlatFieldProcessor()).compile(source);
         assertThat(compilation).succeeded();

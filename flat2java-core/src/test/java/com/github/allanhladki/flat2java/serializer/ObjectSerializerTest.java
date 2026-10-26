@@ -6,9 +6,7 @@ import com.github.allanhladki.flat2java.config.Flat2JavaConfig;
 import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @ExtendWith(MockitoExtension.class)
 class ObjectSerializerTest {
@@ -44,8 +46,10 @@ class ObjectSerializerTest {
 
         // when/then
         assertThrows(IllegalArgumentException.class, () -> ObjectSerializer.serialize(record));
-        assertThrows(IllegalArgumentException.class, () -> ObjectSerializer.serialize(record, true));
-        assertThrows(IllegalArgumentException.class, () -> ObjectSerializer.serialize(record, false));
+        assertThrows(
+                IllegalArgumentException.class, () -> ObjectSerializer.serialize(record, true));
+        assertThrows(
+                IllegalArgumentException.class, () -> ObjectSerializer.serialize(record, false));
     }
 
     @Test
@@ -102,7 +106,8 @@ class ObjectSerializerTest {
         record.setExpiryDate(LocalDate.of(2025, 12, 31));
 
         // when/then - Mock the configuration to disable null handling
-        try (MockedStatic<Flat2JavaConfig> mockedConfig = Mockito.mockStatic(Flat2JavaConfig.class)) {
+        try (MockedStatic<Flat2JavaConfig> mockedConfig =
+                Mockito.mockStatic(Flat2JavaConfig.class)) {
             mockedConfig.when(Flat2JavaConfig::isNullHandlingEnabled).thenReturn(false);
             mockedConfig
                     .when(Flat2JavaConfig::getNullHandlingEnvVarName)
@@ -116,7 +121,8 @@ class ObjectSerializerTest {
     @DisplayName("Should serialize with inheritance enabled")
     void shouldSerializeWithInheritanceEnabled() {
         // given
-        TestFixtures.SubRecord record = new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
+        TestFixtures.SubRecord record =
+                new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
 
         // when
         String result = ObjectSerializer.serialize(record, true);
@@ -130,7 +136,8 @@ class ObjectSerializerTest {
     @DisplayName("Should serialize without inheritance")
     void shouldSerializeWithoutInheritance() {
         // given
-        TestFixtures.SubRecord record = new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
+        TestFixtures.SubRecord record =
+                new TestFixtures.SubRecord("super1", "super2", "sub1", "sub2");
 
         // when
         String result = ObjectSerializer.serialize(record, false);

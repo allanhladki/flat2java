@@ -2,6 +2,7 @@ package com.github.allanhladki.flat2java.quarkus;
 
 import com.github.allanhladki.flat2java.factory.Flat2JavaFactory;
 import com.github.allanhladki.flat2java.interfaces.*;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Typed;
@@ -9,32 +10,34 @@ import jakarta.inject.Singleton;
 
 /**
  * CDI producers for Flat2Java services in Quarkus applications.
- * 
- * <p>This class provides CDI beans for all Flat2Java interfaces, making them
- * available for dependency injection in Quarkus applications. The services are
- * created using the Flat2JavaFactory and are configured with exception translation.</p>
- * 
- * <p>The following beans are produced:</p>
+ *
+ * <p>This class provides CDI beans for all Flat2Java interfaces, making them available for
+ * dependency injection in Quarkus applications. The services are created using the Flat2JavaFactory
+ * and are configured with exception translation.
+ *
+ * <p>The following beans are produced:
+ *
  * <ul>
- *   <li>{@link FieldMetadataInterface} - Field metadata extraction service</li>
- *   <li>{@link FieldSerializationInterface} - Field serialization service</li>
- *   <li>{@link ObjectSerializationInterface} - Object serialization service</li>
- *   <li>{@link FieldDeserializationInterface} - Field deserialization service</li>
- *   <li>{@link ObjectDeserializationInterface} - Object deserialization service</li>
+ *   <li>{@link FieldMetadataInterface} - Field metadata extraction service
+ *   <li>{@link FieldSerializationInterface} - Field serialization service
+ *   <li>{@link ObjectSerializationInterface} - Object serialization service
+ *   <li>{@link FieldDeserializationInterface} - Field deserialization service
+ *   <li>{@link ObjectDeserializationInterface} - Object deserialization service
  * </ul>
- * 
- * <p>Usage example:</p>
+ *
+ * <p>Usage example:
+ *
  * <pre>
  * @ApplicationScoped
  * public class MyService {
  *     @Inject
  *     private ObjectSerializationInterface serializer;
- *     
+ *
  *     @Inject
  *     private ObjectDeserializationInterface deserializer;
  * }
  * </pre>
- * 
+ *
  * @since 0.0.1-rc2
  */
 @ApplicationScoped
@@ -42,7 +45,7 @@ public class Flat2JavaProducers {
 
     /**
      * Produces the Flat2Java factory as a singleton bean.
-     * 
+     *
      * @return configured Flat2Java factory
      */
     @Produces
@@ -54,7 +57,7 @@ public class Flat2JavaProducers {
 
     /**
      * Produces the field metadata interface bean.
-     * 
+     *
      * @return configured field metadata interface
      */
     @Produces
@@ -67,7 +70,7 @@ public class Flat2JavaProducers {
 
     /**
      * Produces the field serialization interface bean.
-     * 
+     *
      * @return configured field serialization interface
      */
     @Produces
@@ -80,7 +83,7 @@ public class Flat2JavaProducers {
 
     /**
      * Produces the object serialization interface bean.
-     * 
+     *
      * @return configured object serialization interface
      */
     @Produces
@@ -93,7 +96,7 @@ public class Flat2JavaProducers {
 
     /**
      * Produces the field deserialization interface bean.
-     * 
+     *
      * @return configured field deserialization interface
      */
     @Produces
@@ -106,7 +109,7 @@ public class Flat2JavaProducers {
 
     /**
      * Produces the object deserialization interface bean.
-     * 
+     *
      * @return configured object deserialization interface
      */
     @Produces

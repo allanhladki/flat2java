@@ -2,6 +2,10 @@ package com.github.allanhladki.flat2java.metadata;
 
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.serializer.SerializationTypes;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,8 +14,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Utility class for extracting field metadata from classes annotated with {@link FlatField}. */
 public class FieldMetadataExtractor {
@@ -44,8 +46,8 @@ public class FieldMetadataExtractor {
 
     /**
      * Extracts field metadata from all fields in the given class and its superclasses that are
-     * annotated with {@link FlatField}. The fields are ordered by their declaration order, superclass
-     * fields first.
+     * annotated with {@link FlatField}. The fields are ordered by their declaration order,
+     * superclass fields first.
      *
      * @param clazz the class to extract field metadata from
      * @return a list of FieldMetadata objects, one for each annotated field, in declaration order
@@ -54,7 +56,8 @@ public class FieldMetadataExtractor {
     public static List<FieldMetadata> extractIncludingInherited(Class<?> clazz) {
         Objects.requireNonNull(clazz, "Class cannot be null");
         logger.debug(
-                "Extracting field metadata from class hierarchy starting with: {}", clazz.getName());
+                "Extracting field metadata from class hierarchy starting with: {}",
+                clazz.getName());
 
         List<Class<?>> classHierarchy = new ArrayList<>();
         Class<?> currentClass = clazz;
@@ -115,18 +118,20 @@ public class FieldMetadataExtractor {
     }
 
     /**
-     * Validates that length and precision are positive integers and precision is smaller than length.
+     * Validates that length and precision are positive integers and precision is smaller than
+     * length.
      *
      * @param metadata the field metadata to validate
      * @throws IllegalArgumentException if validation fails
      */
     private static void validateLengthAndPrecision(FieldMetadata metadata) {
-        validateLengthAndPrecision(metadata.getLength(), metadata.getPrecision(), metadata.getName());
+        validateLengthAndPrecision(
+                metadata.getLength(), metadata.getPrecision(), metadata.getName());
     }
 
     /**
-     * Core validation method for length and precision. This is the single source of truth for length
-     * and precision validation.
+     * Core validation method for length and precision. This is the single source of truth for
+     * length and precision validation.
      *
      * @param length the field length
      * @param precision the field precision
@@ -138,7 +143,8 @@ public class FieldMetadataExtractor {
         if (length <= 0) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Field '%s': length must be a positive integer, got %d", fieldName, length));
+                            "Field '%s': length must be a positive integer, got %d",
+                            fieldName, length));
         }
 
         // Validate precision is positive if specified
@@ -193,7 +199,9 @@ public class FieldMetadataExtractor {
                 // Create a sample date to test the format
                 String sampleDate;
                 if (fieldType == LocalDate.class) {
-                    sampleDate = LocalDate.of(2024, 1, 1).format(DateTimeFormatter.ofPattern(dateTimeFormat));
+                    sampleDate =
+                            LocalDate.of(2024, 1, 1)
+                                    .format(DateTimeFormatter.ofPattern(dateTimeFormat));
                 } else {
                     sampleDate =
                             LocalDateTime.of(2024, 1, 1, 12, 0, 0)
@@ -203,7 +211,8 @@ public class FieldMetadataExtractor {
                 if (sampleDate.length() != length) {
                     throw new IllegalArgumentException(
                             String.format(
-                                    "Field '%s': dateTimeFormat '%s' produces %d characters, but length is %d",
+                                    "Field '%s': dateTimeFormat '%s' produces %d characters, but"
+                                            + " length is %d",
                                     fieldName, dateTimeFormat, sampleDate.length(), length));
                 }
             } catch (Exception e) {

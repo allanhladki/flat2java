@@ -8,13 +8,7 @@ import com.github.allanhladki.flat2java.fixtures.TestFixtures;
 import com.github.allanhladki.flat2java.markers.FlatField;
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.serializer.FieldSerializer;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.stream.Stream;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +20,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Field Round-Trip Tests")
@@ -82,7 +84,8 @@ class FieldRoundTripTest {
                 inputValue,
                 deserialized,
                 String.format(
-                        "String value should be preserved through round trip with padding '%c'", padding));
+                        "String value should be preserved through round trip with padding '%c'",
+                        padding));
     }
 
     static Stream<Arguments> stringRoundTripTestCases() {
@@ -143,7 +146,8 @@ class FieldRoundTripTest {
         Object deserialized = FieldDeserializer.parse(formatted, metadata);
 
         // Assert round-trip integrity
-        assertEquals(inputValue, deserialized, "Integer value should be preserved through round trip");
+        assertEquals(
+                inputValue, deserialized, "Integer value should be preserved through round trip");
     }
 
     static Stream<Arguments> integerRoundTripTestCases() {
@@ -191,7 +195,8 @@ class FieldRoundTripTest {
     @MethodSource("bigIntegerRoundTripTestCases")
     @DisplayName("Should maintain BigInteger values through serialize-then-deserialize round trip")
     void testBigIntegerRoundTrip(BigInteger inputValue) throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigIntegerField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -204,7 +209,9 @@ class FieldRoundTripTest {
 
         // Assert round-trip integrity
         assertEquals(
-                inputValue, deserialized, "BigInteger value should be preserved through round trip");
+                inputValue,
+                deserialized,
+                "BigInteger value should be preserved through round trip");
     }
 
     static Stream<Arguments> bigIntegerRoundTripTestCases() {
@@ -222,7 +229,8 @@ class FieldRoundTripTest {
     @MethodSource("bigDecimalRoundTripTestCases")
     @DisplayName("Should maintain BigDecimal values through serialize-then-deserialize round trip")
     void testBigDecimalRoundTrip(BigDecimal inputValue, int precision) throws Exception {
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
         FlatField annotation = field.getAnnotation(FlatField.class);
         FieldMetadata metadata = new FieldMetadata(field, annotation);
 
@@ -238,13 +246,15 @@ class FieldRoundTripTest {
             assertEquals(
                     0,
                     ((BigDecimal) inputValue).compareTo((BigDecimal) deserialized),
-                    "BigDecimal value should be preserved through round trip with annotation precision "
+                    "BigDecimal value should be preserved through round trip with annotation"
+                            + " precision "
                             + annotation.precision());
         } else {
             assertEquals(
                     inputValue,
                     deserialized,
-                    "BigDecimal value should be preserved through round trip with annotation precision "
+                    "BigDecimal value should be preserved through round trip with annotation"
+                            + " precision "
                             + annotation.precision());
         }
     }
@@ -272,7 +282,8 @@ class FieldRoundTripTest {
         String serialized = FieldSerializer.serialize(inputValue, precision);
 
         // Use a real field from test fixtures and create a mock annotation
-        Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
+        Field field =
+                TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("bigDecimalField");
 
         FlatField mockAnnotation = Mockito.mock(FlatField.class);
         Mockito.when(mockAnnotation.precision()).thenReturn(precision);
@@ -330,7 +341,8 @@ class FieldRoundTripTest {
 
     @ParameterizedTest
     @MethodSource("localDateTimeRoundTripTestCases")
-    @DisplayName("Should maintain LocalDateTime values through serialize-then-deserialize round trip")
+    @DisplayName(
+            "Should maintain LocalDateTime values through serialize-then-deserialize round trip")
     void testLocalDateTimeRoundTrip(LocalDateTime inputValue) throws Exception {
         Field field = TestFixtures.ComprehensiveTestRecord.class.getDeclaredField("dateTimeField");
         FlatField annotation = field.getAnnotation(FlatField.class);
@@ -347,7 +359,9 @@ class FieldRoundTripTest {
 
         // Assert round-trip integrity
         assertEquals(
-                inputValue, deserialized, "LocalDateTime value should be preserved through round trip");
+                inputValue,
+                deserialized,
+                "LocalDateTime value should be preserved through round trip");
     }
 
     static Stream<Arguments> localDateTimeRoundTripTestCases() {
@@ -387,7 +401,8 @@ class FieldRoundTripTest {
             // Verify padding is correct
             assertTrue(
                     formatted.endsWith(String.valueOf(padding).repeat(6)),
-                    String.format("Formatted string should end with padding character '%c'", padding));
+                    String.format(
+                            "Formatted string should end with padding character '%c'", padding));
 
             // Deserialize
             Object deserialized = FieldDeserializer.parse(formatted, metadata);
@@ -396,7 +411,9 @@ class FieldRoundTripTest {
             assertEquals(
                     inputValue,
                     deserialized,
-                    String.format("Value should be preserved through round trip with padding '%c'", padding));
+                    String.format(
+                            "Value should be preserved through round trip with padding '%c'",
+                            padding));
         }
     }
 
@@ -418,7 +435,8 @@ class FieldRoundTripTest {
 
         // Serialize null value using ObjectSerializer
         String formatted =
-                com.github.allanhladki.flat2java.serializer.ObjectSerializer.serialize(null, metadata);
+                com.github.allanhladki.flat2java.serializer.ObjectSerializer.serialize(
+                        null, metadata);
 
         // Should be all spaces (null value padding)
         assertEquals("        ", formatted, "Null value should be serialized as spaces");
@@ -456,13 +474,15 @@ class FieldRoundTripTest {
         String formatted = FieldSerializer.formatToLength(serialized, metadata);
 
         // Should be truncated to 5 characters
-        assertEquals(5, formatted.length(), "Formatted string should be truncated to specified length");
+        assertEquals(
+                5, formatted.length(), "Formatted string should be truncated to specified length");
 
         // Deserialize
         Object deserialized = FieldDeserializer.parse(formatted, metadata);
 
         // Should return the truncated value
-        assertEquals("VeryL", deserialized, "Truncated string should be preserved through round trip");
+        assertEquals(
+                "VeryL", deserialized, "Truncated string should be preserved through round trip");
     }
 
     @Test

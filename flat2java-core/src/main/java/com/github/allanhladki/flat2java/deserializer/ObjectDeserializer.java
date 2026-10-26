@@ -2,12 +2,14 @@ package com.github.allanhladki.flat2java.deserializer;
 
 import com.github.allanhladki.flat2java.metadata.FieldMetadata;
 import com.github.allanhladki.flat2java.metadata.FieldMetadataExtractor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for deserializing flat file strings into Java objects. This reverses the logic used
@@ -22,7 +24,8 @@ public final class ObjectDeserializer {
     }
 
     /**
-     * Deserializes a flat string into an instance of the specified class, including inherited fields.
+     * Deserializes a flat string into an instance of the specified class, including inherited
+     * fields.
      *
      * @param flat the flat string to deserialize
      * @param clazz the class to instantiate and populate
@@ -64,7 +67,8 @@ public final class ObjectDeserializer {
         if (flat.length() != expectedLength) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Input length (%d) does not match expected total length (%d) for class %s",
+                            "Input length (%d) does not match expected total length (%d) for class"
+                                    + " %s",
                             flat.length(), expectedLength, clazz.getName()));
         }
 
@@ -95,17 +99,20 @@ public final class ObjectDeserializer {
         } catch (InstantiationException e) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Class '%s' cannot be instantiated (abstract, interface, or missing no-arg"
-                                    + " constructor)",
+                            "Class '%s' cannot be instantiated (abstract, interface, or missing"
+                                    + " no-arg constructor)",
                             clazz.getName()),
                     e);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(
-                    String.format("No-arg constructor in class '%s' is not accessible", clazz.getName()), e);
+                    String.format(
+                            "No-arg constructor in class '%s' is not accessible", clazz.getName()),
+                    e);
         } catch (Exception e) {
             throw new RuntimeException(
                     String.format(
-                            "Failed to instantiate class '%s' with a no-arg constructor", clazz.getName()),
+                            "Failed to instantiate class '%s' with a no-arg constructor",
+                            clazz.getName()),
                     e);
         }
     }
@@ -119,14 +126,17 @@ public final class ObjectDeserializer {
                 throw new IllegalArgumentException(
                         String.format(
                                 "Field '%s': type mismatch - expected %s but got %s",
-                                fieldName, field.getType().getSimpleName(), value.getClass().getSimpleName()));
+                                fieldName,
+                                field.getType().getSimpleName(),
+                                value.getClass().getSimpleName()));
             }
 
             field.set(instance, value);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(
                     String.format(
-                            "Failed to set field '%s' on class '%s'", fieldName, instance.getClass().getName()),
+                            "Failed to set field '%s' on class '%s'",
+                            fieldName, instance.getClass().getName()),
                     e);
         }
     }
