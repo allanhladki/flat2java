@@ -113,7 +113,9 @@ jobs:
 
       - name: Publish to Maven Central
         if: steps.central.outputs.published == 'false'
-        run: mvn -B -Prelease deploy
+        # -V prints the Maven version. Maven 3.10 needs central-publishing 0.12.0 or later: older
+        # versions zip maven-metadata-local.xml files, and Central rejects the bundle.
+        run: mvn -B -V -Prelease deploy
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
