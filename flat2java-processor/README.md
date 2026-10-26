@@ -1,196 +1,88 @@
-# Flat2Java Annotation Processor
+<div align="center">
 
-This module provides compile-time validation for the flat2java library using Java's annotation processing API.
+# flat2java-processor
 
-## Description
+**Compile-time validation of `@FlatField` mappings.**
 
-The annotation processor automatically validates `@FlatField` annotations during compilation, catching configuration errors early in the development cycle. This helps prevent runtime errors and improves development experience by providing immediate feedback on configuration issues.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.allanhladki.flat2java/flat2java-processor?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.allanhladki.flat2java/flat2java-processor)
+![Java 17+](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
+![javac](https://img.shields.io/badge/javac-annotation%20processor-555555)
 
-## ✨ Features
+[Setup](#setup) · [Checks](#checks) · [Example output](#example-output) · [Project README](../README.md)
 
-- **Compile-time Validation**: Validates field configurations during compilation
-- **Early Error Detection**: Catches configuration errors before runtime
-- **IDE Integration**: Works seamlessly with IDEs that support annotation processing
-- **Build Integration**: Integrates with Maven and other build tools
-- **Comprehensive Validation**: Covers all aspects of field configuration
-- **Clear Error Messages**: Actionable error messages with field context
+</div>
 
-## 🔍 Validations Performed
+---
 
-The processor validates the following aspects of `@FlatField` annotations:
+An annotation processor that reports invalid `@FlatField` declarations as compilation errors. It
+applies the same rules, with the same messages, as the validation `flat2java-core` performs at
+runtime, so a mapping that compiles will not fail with a `MappingException` later.
 
-### Field Length Validation
-- Ensures `length` is a positive integer
-- Validates that `length > 0`
-- Provides clear error messages for invalid lengths
+> [!NOTE]
+> Two rules are checked only at runtime. A missing no-arg constructor on a top-level mapped class:
+> the processor cannot tell which classes are read, and an abstract class may only be the base of
+> mapped subclasses. The room for a decimal separator: it depends on the `useDecimalSeparator`
+> option, which is known only when `Flat2Java` is created.
 
-### Precision Validation
-- Ensures `precision` is a non-negative integer
-- Validates that `precision < length` (precision must be smaller than field length)
-- Prevents configuration errors that could cause runtime issues
+## Setup
 
-### DateTime Format Validation
-- Validates `dateTimeFormat` patterns are syntactically correct
-- Tests format patterns with sample dates to ensure they work
-- Catches invalid date format patterns early
+Register the processor on the annotation processor path.
 
-### Field Type Validation
-- Framework for validating supported field types (extensible)
-- Ensures only supported types are used with `@FlatField`
-- Prevents runtime type errors
+> [!IMPORTANT]
+> Since JDK 23, `javac` no longer runs processors found on the regular classpath unless
+> `-proc:full` is set, so a plain `<dependency>` is not enough.
 
-## 🔧 Installation
-
-Add the following dependency to your project:
-
-```xml
-<dependency>
-    <groupId>com.github.allanhladki</groupId>
-    <artifactId>flat2java-processor</artifactId>
-    <version>0.0.1-rc2</version>
-    <scope>provided</scope>
-</dependency>
-```
-
-## 🚀 Usage
-
-The annotation processor is automatically invoked during compilation when you have `@FlatField` annotations in your code.
-
-### Example Usage
-
-```java
-public class MyRecord {
-    @FlatField(length = 10)  // ✅ Valid
-    private String id;
-
-    @FlatField(length = 8, dateTimeFormat = "yyyyMMdd")  // ✅ Valid
-    private LocalDate date;
-
-    @FlatField(length = 10, precision = 2)  // ✅ Valid
-    private BigDecimal amount;
-
-    @FlatField(length = 0)  // ❌ Compile error: length must be positive
-    private String invalidField;
-
-    @FlatField(length = 5, precision = 6)  // ❌ Compile error: precision >= length
-    private BigDecimal invalidPrecision;
-
-    @FlatField(length = 8, dateTimeFormat = "invalid")  // ❌ Compile error: invalid format
-    private LocalDate invalidDate;
-}
-```
-
-## 🏗️ Build Integration
-
-### Maven
-
-The processor works automatically with Maven when added as a dependency. For explicit configuration:
+**Maven**
 
 ```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-compiler-plugin</artifactId>
-    <version>3.11.0</version>
     <configuration>
         <annotationProcessorPaths>
             <path>
-                <groupId>com.github.allanhladki</groupId>
+                <groupId>io.github.allanhladki.flat2java</groupId>
                 <artifactId>flat2java-processor</artifactId>
-                <version>0.0.1-rc2</version>
+                <version>0.1.0</version>
             </path>
         </annotationProcessorPaths>
     </configuration>
 </plugin>
 ```
 
+<details>
+<summary>Gradle</summary>
 
-### IntelliJ IDEA
-
-1. Go to **File** → **Project Structure**
-2. Select **Modules** → **Dependencies**
-3. Add the processor as a **Provided** dependency
-4. Ensure **Annotation Processing** is enabled in **Compiler** settings
-
-### Eclipse
-
-1. Right-click on your project → **Properties**
-2. Go to **Java Compiler** → **Annotation Processing**
-3. Enable **Enable annotation processing**
-4. Add the processor to your classpath
-
-## 📝 Error Messages
-
-The processor provides clear, actionable error messages:
-
-```
-[ERROR] @FlatField 'length' must be a positive integer, current: 0
-[ERROR] @FlatField 'precision' (6) must be smaller than 'length' (5)
-[ERROR] @FlatField 'dateTimeFormat' has invalid pattern: invalid - Unknown pattern letter: i
+```kotlin
+dependencies {
+    annotationProcessor("io.github.allanhladki.flat2java:flat2java-processor:0.1.0")
+}
 ```
 
-Each error message includes:
-- The specific field name
-- The current invalid value
-- What the value should be
-- Context about the validation rule
+</details>
 
-## ✅ Benefits
+> [!TIP]
+> If the build already declares other processors in `annotationProcessorPaths`, such as Lombok or
+> MapStruct, add this one to the same list.
 
-1. **Early Error Detection**: Catch configuration errors during compilation
-2. **Improved Developer Experience**: Clear error messages with context
-3. **Reduced Runtime Errors**: Prevent invalid configurations from reaching production
-4. **IDE Support**: Works with IntelliJ IDEA, Eclipse, and other IDEs
-5. **Build Integration**: Fails builds with invalid configurations
-6. **Quality Assurance**: Ensures consistent field configuration across the project
+## Checks
 
-## ⚠️ Limitations
+| Area | Rule |
+|---|---|
+| Length | `length` greater than zero. |
+| Precision | Not negative, smaller than `length`, and only on `BigDecimal`. |
+| Type | A supported scalar, a concrete nested class or record with `@FlatField` fields, or a `List`/array of those. `Object`, interfaces, abstract classes and type variables are rejected. |
+| Dates | `dateTimeFormat` present on `LocalDate`/`LocalDateTime` fields only. It must be a valid pattern with a fixed width equal to `length`, and keep the century (no `yy`). |
+| Padding | Only on `String` fields. |
+| Modifiers | `@FlatField` not on `static` fields. |
+| Position | All-or-nothing across the class hierarchy, unique and contiguous from 1. |
+| Nested records | `length` equal to the sum of the nested fields, no cycles, a no-arg constructor (not required for Java records). Inner classes must be `static`. |
+| Lists and arrays | `occurs` set, greater than zero and only on those fields; elements that are not lists or arrays; no raw `List` or wildcard. |
 
-- Only validates `@FlatField` annotations
-- Limited to compile-time validation (runtime validation still occurs)
-- Requires annotation processing to be enabled in your build
-- Some complex configurations may require runtime validation
+## Example output
 
-## 🔧 Troubleshooting
-
-### Processor Not Running
-- Ensure the dependency is added with `scope=provided`
-- Check that annotation processing is enabled in your IDE/build tool
-- Verify the processor is on the classpath during compilation
-- Check Maven/Gradle configuration for annotation processor paths
-
-### False Positives
-- Some valid configurations might be flagged if they depend on runtime values
-- Use runtime validation for complex scenarios
-- Check that all required dependencies are available during compilation
-
-### Build Failures
-- Ensure all `@FlatField` annotations have valid configurations
-- Check field lengths are positive integers
-- Verify precision values are smaller than field lengths
-- Validate date format patterns are correct
-
-## 📋 Requirements
-
-- Java 11 or higher
-- Annotation processing support in your build tool/IDE
-- flat2java-core dependency
-- Maven 3.6+ or Gradle 6.0+
-
-## 🧪 Testing
-
-The processor includes comprehensive tests covering:
-- Valid field configurations
-- Invalid field configurations
-- Edge cases and boundary conditions
-- Error message accuracy
-- Integration with different build tools
-
-## 📚 Related Documentation
-
-- **[Main README](../README.md)**: Complete project overview
-- **[Core Module](../flat2java-core/README.md)**: Core library documentation
-- **[Project Review](../PROJECT_REVIEW.md)**: Comprehensive project analysis
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details. 
+```text
+Payment.java:12: error: Payment.date: dateTimeFormat 'yyyyMMdd' produces 8 characters, but length is 10
+    private LocalDate date;
+                      ^
+```

@@ -1,0 +1,40 @@
+name: Bug report
+description: A record is written or read incorrectly, or a valid mapping is rejected.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: flat2java version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: java
+    attributes:
+      label: Java version
+      placeholder: "21"
+    validations:
+      required: true
+  - type: textarea
+    id: mapping
+    attributes:
+      label: Mapped class
+      description: The class with its @FlatField declarations, reduced to the fields involved.
+      render: java
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Input, output or exception message. Replace any personal data.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
