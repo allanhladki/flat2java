@@ -60,22 +60,42 @@ A new rule goes there, with a test in both modules, so that both report the same
   `fix(core): reject signs in numeric columns`. Use `!` for breaking changes (`feat!: ...`).
 - `master` is protected: changes go through a pull request, with the `verify` and
   `release artifacts` checks passing and the branch up to date.
+- [CODEOWNERS](.github/CODEOWNERS) requests a review from the maintainer on every pull request.
+  Approval is not required to merge.
 
 ## Releasing
 
-Maintainers only.
+Maintainers only. A release is a pull request with the `release` label: merging it publishes the
+version in the POM.
 
-1. Set the version (drop `-SNAPSHOT`) and date the CHANGELOG section, in a pull request.
-2. After the merge, tag the merge commit and push the tag:
+1. Open a pull request that:
+   - sets the release version in every module, dropping `-SNAPSHOT`:
 
-   ```bash
-   git tag -s v0.1.0 -m "flat2java 0.1.0"
-   git push origin v0.1.0
-   ```
+     ```bash
+     mvn versions:set -DnewVersion=0.1.0 -DgenerateBackupPoms=false
+     ```
 
-3. The [Release workflow](.github/workflows/release.yml) checks that the tag matches the project
-   version, publishes to Maven Central and creates the GitHub release from the CHANGELOG.
-4. Set the next `-SNAPSHOT` version in a pull request.
+   - dates the version's CHANGELOG section: `## [0.1.0] - 2026-10-26`;
+   - has the **`release`** label.
+2. Merge it. The [Release workflow](.github/workflows/release.yml) then:
+   1. checks that the merged pull request has the `release` label, that the version is not a
+      `-SNAPSHOT`, that the tag `v0.1.0` does not exist yet, and that the CHANGELOG section is
+      dated;
+   2. builds, signs and publishes the artifacts to Maven Central, and waits until they are live;
+   3. creates the tag `v0.1.0` on the merge commit, signed with the release key;
+   4. creates the GitHub release with the CHANGELOG section as notes.
+3. Open a pull request that sets the next `-SNAPSHOT` version and adds an empty
+   `## [Unreleased]` section to the CHANGELOG. Do not label it.
+
+> [!IMPORTANT]
+> The `release` label is the only switch. A merged pull request without it never publishes, even
+> when the version has no `-SNAPSHOT`. Add the label only to the release pull request: Maven
+> Central does not allow a published version to be removed or replaced.
+
+If the workflow fails, fix the cause and use **Re-run failed jobs** on the run in the Actions tab.
+Each step skips what is already done: a version already on Maven Central is not deployed again,
+and an existing tag or release is kept. When the fix needs a code change, merge it in a new pull
+request with the `release` label; the version stays the same.
 
 ## License
 
